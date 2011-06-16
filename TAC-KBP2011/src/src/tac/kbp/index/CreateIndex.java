@@ -3,7 +3,7 @@
  * 
  */
 
-package tac.kbp.index;
+package src.tac.kbp.index;
 
 import java.io.IOException;
 
