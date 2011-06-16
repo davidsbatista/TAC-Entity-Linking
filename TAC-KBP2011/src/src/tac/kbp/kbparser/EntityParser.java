@@ -2,7 +2,7 @@
  * @author dsbatista
  */
 
-package tac.kbp.kbparser;
+package src.tac.kbp.kbparser;
 
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
@@ -32,9 +32,7 @@ public class EntityParser {
 		System.out.println("facts: ");
 
 		HashMap facts = entity.getFacts();
-
-		System.out.println(facts);
-
+		
 		System.out.println("number of facts: " + facts.size());
 		Iterator it = facts.entrySet().iterator();
 		while (it.hasNext()) {
@@ -42,7 +40,7 @@ public class EntityParser {
 			System.out.println(pairs.getKey() + " = " + pairs.getValue());
 		}
 
-		// System.out.println("wiki_text: " + entity.getWiki_text());
+		//System.out.println("wiki_text: " + entity.getWiki_text());
 		System.out.println("\n");
 
 		this.entities.add(entity);
@@ -72,29 +70,32 @@ public class EntityParser {
 		digester.addObjectCreate("knowledge_base/entity", Entity.class);
 
 		// set different properties of Entity instance using specified methods
-		digester.addCallMethod("knowledge_base/entity/wiki_text",
-				"setWiki_text", 0);
+		digester.addCallMethod("knowledge_base/entity/wiki_text","setWiki_text", 0);
 
 		// set properties of Entity instance when attributes are found
-		digester.addSetProperties("knowledge_base/entity", "wiki_title",
-				"wiki_title");
+		digester.addSetProperties("knowledge_base/entity", "wiki_title","wiki_title");
 		digester.addSetProperties("knowledge_base/entity", "type", "type");
 		digester.addSetProperties("knowledge_base/entity", "id", "id");
 		digester.addSetProperties("knowledge_base/entity", "name", "name");
-		digester.addSetProperties("knowledge_base/entity/facts", "class",
-				"infobox_class");
-
-		// instantiate an Hashmap
+		digester.addSetProperties("knowledge_base/entity/facts", "class", "infobox_class");
+		
+		// instantiate an Hashmap		
 		digester.addObjectCreate("knowledge_base/entity/facts", HashMap.class);
+		digester.addSetNext("knowledge_base/entity/facts", "setFacts");
 		digester.addCallMethod("knowledge_base/entity/facts/fact", "put", 2);
-		digester.addCallParam("knowledge_base/entity/facts/fact/name", 0,
-				"name");
+		digester.addCallParam("knowledge_base/entity/facts/fact/", 0, "name");
 		digester.addCallParam("knowledge_base/entity/facts/fact", 1);
-
-		// call 'addEntity' method when the next 'knowledge_base/entity' pattern
-		// is seen
+		
+		digester.addObjectCreate("knowledge_base/entity/fact/link", HashMap.class);
+		//digester.addSetNext("knowledge_base/entity/fact/link", "setFacts");
+		digester.addCallParam("knowledge_base/entity/facts/fact/link", 0, "entity_id");
+		digester.addCallParam("knowledge_base/entity/facts/fact/link", 1);
+		
+		
+		
+		// call 'addEntity' method when the next 'knowledge_base/entity' pattern is seen
 		digester.addSetNext("knowledge_base/entity", "addEntity");
-
+		
 		// now that rules and actions are configured, start the parsing process
 		EntityParser entity = (EntityParser) digester.parse(new File(args[0]));
 	}
@@ -209,7 +210,7 @@ public class EntityParser {
 			return this.facts;
 		}
 
-		public void setFacts(HashMap<String, String> facts) {
+		public void setFacts(HashMap facts) {
 			this.facts = facts;
 
 		}
