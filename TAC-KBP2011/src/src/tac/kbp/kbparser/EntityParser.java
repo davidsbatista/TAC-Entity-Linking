@@ -31,8 +31,27 @@ public class EntityParser {
 		System.out.println("name: " + entity.getName());
 		System.out.println("infobox_class: " + entity.getInfobox_class());
 		System.out.println("facts: ");
-		System.out.println("number of facts: " + entity.facts.facts.size());
-
+		
+		for (Iterator iterator = entity.facts.iterator(); iterator.hasNext();) {
+			Fact fact = (Fact) iterator.next();
+			
+			if (fact.fact != null) {
+				System.out.print(fact.name + " : " + fact.fact);
+			}
+			else System.out.print(fact.name + " : ");			
+			if (fact.factlink.size()>0) {
+				for (Iterator iterator2 = fact.factlink.iterator(); iterator2.hasNext();) {
+					FactLink factlink = (FactLink) iterator2.next();
+					if (factlink.e_id == null) {
+						System.out.println(factlink.link);
+					}
+					else System.out.print(factlink.e_id + ": " + factlink.link);
+				}
+			}
+		System.out.println("\n");	
+		}
+		
+		
 		//System.out.println("wiki_text: " + entity.getWiki_text());
 		System.out.println("\n");
 
@@ -71,16 +90,19 @@ public class EntityParser {
 		digester.addSetProperties("knowledge_base/entity", "id", "id");
 		digester.addSetProperties("knowledge_base/entity", "name", "name");
 		digester.addSetProperties("knowledge_base/entity/facts", "class", "infobox_class");
-		
-		// Fact object to hold facts 
-		digester.addObjectCreate("knowledge_base/entity/facts", Facts.class);
-		digester.addSetNext("knowledge_base/entity/facts", "setFacts");		
-		digester.addCallMethod("knowledge_base/entity/facts/fact", "addFact", 4);
-        digester.addCallParam("knowledge_base/entity/facts/fact", 0, "name");
-        digester.addCallParam("knowledge_base/entity/facts/fact/link", 1, "entity_id");
-        digester.addCallParam("knowledge_base/entity/facts/fact/link", 2);
-        digester.addCallParam("knowledge_base/entity/facts/fact/", 3);
+		 
+		digester.addObjectCreate("knowledge_base/entity/facts/fact", Fact.class);
+		digester.addSetNext("knowledge_base/entity/facts/fact", "addFact");
+		digester.addCallMethod("knowledge_base/entity/facts/fact/", "setFact", 0);
+        digester.addSetProperties("knowledge_base/entity/facts/fact", "setName", "name");
+
+        digester.addObjectCreate("knowledge_base/entity/facts/fact/link", FactLink.class);
+        digester.addSetNext("knowledge_base/entity/facts/fact/link", "setFactLink");
         
+        digester.addCallMethod("knowledge_base/entity/facts/fact/link", "setLink", 0);
+		digester.addSetProperties("knowledge_base/entity/facts/fact/link", "entity_id","e_id");
+
+		
 		// call 'addEntity' method when the next 'knowledge_base/entity' pattern is seen
 		digester.addSetNext("knowledge_base/entity", "addEntity");
 		
@@ -88,46 +110,10 @@ public class EntityParser {
 		EntityParser entity = (EntityParser) digester.parse(new File(args[0]));
 	}
 	
-	public static class Fact {
-		
-		public String name;
-		public String fact;
-		public String eid;
-		public String link;
-		
-		
-		public Fact(String name, String e_id, String links, String fact){
-			this.name = name;
-			this.fact = fact;
-			this.eid = e_id;
-			this.link = links;
-		}
-		
-	}
-	
-	public static class Facts {
-		
-		public Vector<Fact> facts = new Vector<EntityParser.Fact>();
-		
-		public void addFact(String name, String e_id, String link, String fact){
-			this.facts.add(new Fact(name,e_id,link,fact));
-			System.out.println(name + " = " + fact + " eid: " + e_id + " link: " + link);
-		}
-
-	}
-	
 	public static class FactLink {
-		
-		private String name;
-		private String e_id;
-		
-		public String getName() {
-			return name;
-		}
-		
-		public void setName(String name) {
-			this.name = name;
-		}
+
+		public String e_id = null;
+		public String link = null;
 		
 		public String getE_id() {
 			return e_id;
@@ -135,6 +121,35 @@ public class EntityParser {
 		
 		public void setE_id(String e_id) {
 			this.e_id = e_id;
+		}
+		
+		public String getLink() {
+			return link;
+		}
+		
+		public void setLink(String link) {
+			this.link = link;
+		}
+		
+
+	}
+	
+	public static class Fact {
+		
+		public String name;
+		public String fact;
+		public Vector<FactLink> factlink = new Vector<EntityParser.FactLink>();
+		
+		public void setFactLink(FactLink factlink){
+			this.factlink.add(factlink);
+		}
+		
+		public void setName(String name){
+			this.name = name;
+		}
+		
+		public void setFact(String fact){
+			this.fact = fact;
 		}
 
 	}
@@ -145,21 +160,19 @@ public class EntityParser {
 		private String type;
 		private String id;
 		private String name;
-		private Facts facts;
+		private Vector<Fact> facts = new Vector<EntityParser.Fact>();
 		private String infobox_class;
 		private String wiki_text;
-
-		/**
-		 * @return the wiki_title
-		 */
+		
+		public void addFact(Fact fact){
+			this.facts.add(fact);
+		}
+		
 		public String getWiki_title() {
 			return wiki_title;
 		}
 
-		/**
-		 * @param wiki_title
-		 *            the wiki_title to set
-		 */
+
 		public void setWiki_title(String wiki_title) {
 			this.wiki_title = wiki_title;
 		}
@@ -194,57 +207,38 @@ public class EntityParser {
 			this.id = id;
 		}
 
-		/**
-		 * @return the name
-		 */
+
 		public String getName() {
 			return name;
 		}
 
-		/**
-		 * @param name
-		 *            the name to set
-		 */
+
 		public void setName(String name) {
 			this.name = name;
 		}
 
-		/**
-		 * @return the wiki_text
-		 */
+
 		public String getWiki_text() {
 			return wiki_text;
 		}
 
-		/**
-		 * @param wiki_text
-		 *            the wiki_text to set
-		 */
+
 		public void setWiki_text(String wiki_text) {
 			this.wiki_text = wiki_text;
 		}
 
-		/**
-		 * @return the infobox_class
-		 */
 		public String getInfobox_class() {
 			return infobox_class;
 		}
 
-		/**
-		 * @param infobox_class
-		 *            the infobox_class to set
-		 */
+
 		public void setInfobox_class(String infobox_class) {
 			this.infobox_class = infobox_class;
 		}
 
-		public Facts getFacts() {
+		public Vector<Fact> getFacts() {
 			return this.facts;
 		}
 
-		public void setFacts(Facts facts) {
-			this.facts = facts;
-		}
 	}
 }
