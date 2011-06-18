@@ -21,6 +21,7 @@ import org.apache.lucene.util.Version;
 
 import tac.kbp.kb.EntityParser.Entity;
 import tac.kbp.kb.EntityParser.Fact;
+import tac.kbp.kb.EntityParser.FactLink;
 
 
 public class Index {
@@ -59,17 +60,36 @@ public class Index {
 		//wiki_text
 		doc.add(new Field("infobox", entity.getName(), Field.Store.YES, Field.Index.ANALYZED));
 		
-		//facts
-		
-		System.out.println(doc);
+		//facts		
+		StringBuilder facts = new StringBuilder();
 		
 		for (Iterator<Fact> iterator = entity.getFacts().iterator(); iterator.hasNext();) {
+			
 			Fact fact = (Fact) iterator.next();
-			System.out.println(fact);
-		}
+			
+			System.out.println(fact.fact+":"+fact.fact.length());
+						
+			if (fact.fact!=null) {
+				facts.append(fact.name+" "+fact.fact+"\n");
+			}
 
+			if (fact.factlink.size()>0) {
+				for (Iterator<FactLink> iterator2 = fact.factlink.iterator(); iterator2.hasNext();) {
+					FactLink factlink = (FactLink) iterator2.next();
+						if (factlink.e_id!=null) {
+							facts.append(fact.name+" "+factlink.e_id+" "+factlink.link+"\n");
+						}
+						else {
+							facts.append(fact.name+" "+factlink.link+"\n");
+						}
+				}
+			}
+		}
 		
-	}
-	
-	
+		System.out.println(facts);
+		
+		String factsString = new String(facts); 		
+		doc.add(new Field("facts", factsString, Field.Store.YES, Field.Index.ANALYZED));
+		
+	}	
 }
