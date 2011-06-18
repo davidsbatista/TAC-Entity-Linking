@@ -9,53 +9,16 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Vector;
 
-/**
- * Parses the contents of KB XML file. The name of the file to parse must be
- * specified as the first command line argument.
- */
 
 public class EntityParser {
 
 	private static Vector<EntityParser.Entity> entities = new Vector<Entity>();
 
 	public void addEntity(Entity entity) {
-		
-		/*
-		System.out.println("wiki_title: " + entity.getWiki_title());
-		System.out.println("type: " + entity.getType());
-		System.out.println("id: " + entity.getId());
-		System.out.println("name: " + entity.getName());
-		System.out.println("infobox_class: " + entity.getInfobox_class());
-		System.out.println("facts: ");
-		
-		for (Iterator<Fact> iterator = entity.facts.iterator(); iterator.hasNext();) {
-			Fact fact = (Fact) iterator.next();
-			
-			if (fact.fact != null) {
-				System.out.print(fact.name + ": " + fact.fact);
-			}
-			
-			else System.out.print(fact.name + ": ");			
-			
-			if (fact.factlink.size()>0) {
-				for (Iterator<FactLink> iterator2 = fact.factlink.iterator(); iterator2.hasNext();) {
-					FactLink factlink = (FactLink) iterator2.next();
-					if (factlink.e_id == null) {
-						System.out.println(factlink.link);
-					}
-					else System.out.print(factlink.e_id + ": " + factlink.link);
-				}
-			}
-		System.out.println("\n");	
-		}
-		
-		System.out.println("\n");
-		*/
-		
-		this.entities.add(entity);
+		System.out.print(".");
+		EntityParser.entities.add(entity);
 	}
 
 	/**

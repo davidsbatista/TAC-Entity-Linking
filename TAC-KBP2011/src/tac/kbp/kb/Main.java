@@ -40,6 +40,7 @@ public class Main {
 				Index.indexEntities(indexDir, entity);
 			}
 		} 
+		indexDir.close();
 	} 			
 }
 
