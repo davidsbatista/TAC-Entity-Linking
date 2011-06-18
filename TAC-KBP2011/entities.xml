@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<knowledge_base>
+<entity wiki_title="Hoodoo_Man_Blues" type="UKN" id="E0584544" name="Hoodoo Man Blues">
+<facts class="Infobox Album">
+<fact name="Name">Hoodoo Man Blues</fact>
+<fact name="Type">studio</fact>
+<fact name="Artist"><link entity_id="E0187433">Junior Wells' Chicago Blues Band</link></fact>
+<fact name="Released">1965</fact>
+<fact name="Recorded">Sept. 22 – Sept. 23, 1965</fact>
+<fact name="Genre"><link entity_id="E0124098">Blues</link></fact>
+<fact name="Length">46:30</fact>
+<fact name="Label"><link>Delmark</link></fact>
+<fact name="Producer"><link>Bob Koester</link></fact>
+<fact name="Reviews"><link entity_id="E0153126">Allmusic</link> link</fact>
+<fact name="This album">Hoodoo Man Blues
+(1965)</fact>
+<fact name="Next album"><link>It's My Life, Baby!</link>
+(1966)</fact>
+</facts>
+<wiki_text><![CDATA[Hoodoo Man Blues
+
+Hoodoo Man Blues is the 1965 debut album of blues vocalist and harmonica player
+Junior Wells, performing with the Junior Wells' Chicago Blues Band, an early
+collaboration with Grammy Award-winning artist Buddy Guy. Released on LP by
+Delmark Records, the album has been subsequently reissued on CD and LP by
+Delmark and Analogue Productions.
+
+The album of Chicago blues music was solicited by Bob Koester, the founder of
+Delmark Records, who liked Wells' music enough to give the musician considerable
+freedom on the album in spite of concerns of commercial response. The resultant
+innovative album became Delmark's best seller, establishing Wells' career and
+receiving critical acclaim as being among the best albums Wells ever produced
+and even among the greatest blues albums ever made.
+
+ Background
+
+Record producer Bob Koester, the founder of Delmark Records who is credited with
+discovering Wells along with producer Sam Charters, recalls that at the time he
+was considering releasing an album by Wells, he was anxious about both the
+audience for Wells' music and the expense of studio time and sidemen, but that
+he liked the music too much to resist. Wells was given the liberty to select his
+own sidemen and track list, without the usual limitation of songs two or three
+minutes long, and the album that resulted became Delmark's then best-seller, a
+distinction that had not been surpassed as of 2003.
+
+Koester remembers particular complications working with Guy, who was incorrectly
+believed to be legally entailed with Leonard Chess of Chess Records. Chess
+approved Guy's participation on the album, but refused to allow Guy's name to be
+listed in the credits until it was realized that his participation was not
+contractually disallowed. Guy was, at the time of release, credited as "Friendly
+Chap", a name proposed by Peter Brown, who later founded Down with the Game
+Records in the UK, with the explanation that "A buddy is a friend, a guy is a
+chap". For parts of the session, Guy's guitar amplifier was not working, and his
+guitar was wired instead through the Leslie speaker of the studio's Hammond
+organ. Koester said, "I've always been amazed at how rarely reviewers commented
+on the guitar-organ tracks".
+
+Koester also recalls that 15 minutes of "releasable music", including a duet
+between Guy and Wells, was lost, with the tapes probably having been used later
+to record a rehearsal.
+
+Wells related to The Chicago Tribune in 1993 that the song from which the title
+of the album was drawn almost didn't make the album. He had earlier recorded
+"Hoodoo Man Blues" on a 78 years before, but when the song was presented to
+radio personnel for possible rotation they had rejected it violently, throwing
+it on the floor and stomping on it. Wells, too disappointed to want to try
+again, credits Koester's encouragement with the song's presence on the album.
+
+ Critical reception
+
+The album, characterized by Little Labels—Big Sound as "blatantly non-
+commercial", demonstrated to audiences that Chicago Blues could be effectively
+captured on album. "[O]ne of the first to fully document the smoky ambience of a
+night at a West side nightspot in the superior acoustics of a recording studio",
+according to Bill Dahl of Allmusic, it popularized Wells, opening doors for him
+at other, larger studios. But though it was only the first of many successful
+albums for Wells, it remains among his most acclaimed. Rolling Stone, in a 1970
+review of Wells' later album South Side Blues Jam, declared it "a classic, some
+of the best blues Chicago has to offer". In 1998, The New York Times described
+it as among the artist's best recorded works. In 2008, The Times declared it to
+be Wells' "most celebrated album". In their 2005 biography of Howlin' Wolf,
+James Segrest and Mark Hoffman make note that it is one of the albums usually
+cited by critics as "one of the greatest blues albums ever released."
+
+ Track listing
+
+ Personnel
+]]></wiki_text>
+</entity>
+<entity wiki_title="Harta,_Hungary" type="UKN" id="E0584545" name="Harta, Hungary">
+<facts class="Infobox Settlement">
+<fact name="subdivision_type"><link>Country</link></fact>
+<fact name="subdivision_name"><link entity_id="E0557437">Hungary</link></fact>
+<fact name="timezone"><link>CET</link></fact>
+<fact name="utc_offset">+1</fact>
+<fact name="timezone_DST"><link>CEST</link></fact>
+<fact name="utc_offset_DST">+2</fact>
+<fact name="official_name">Harta</fact>
+<fact name="picture">Harta</fact>
+<fact name="subdivision_type1"><link>County</link></fact>
+<fact name="subdivision_name1">Bács-Kiskun</fact>
+<fact name="area_total_km2">129.68</fact>
+<fact name="population_as_of">2001</fact>
+<fact name="population_total">3758</fact>
+<fact name="population_density_km2">29</fact>
+<fact name="postal_code_type"><link>Postal code</link></fact>
+<fact name="postal_code">6326</fact>
+<fact name="area_code">78</fact>
+<fact name="latd">46.693</fact>
+<fact name="longd">19.031</fact>
+</facts>
+<wiki_text><![CDATA[Harta, Hungary
+
+Harta (Croatian: Hartava and Kartava) is a village in Bács-Kiskun county,
+Hungary.
+
+ Demography
+
+
+
+
+
+Coordinates:
+]]></wiki_text>
+</entity>
+<entity wiki_title="Mulberry_High_School" type="ORG" id="E0584546" name="Mulberry High School">
+<facts class="Infobox high school">
+<fact name="name">Mulberry High School</fact>
+<fact name="motto">Where today meets tomorrow's goals</fact>
+<fact name="established">1914</fact>
+<fact name="type"><link>Public</link></fact>
+<fact name="principal">George Hatch</fact>
+<fact name="enrollment">1005</fact>
+<fact name="students"><link>9th</link> through <link>12th</link> grades</fact>
+<fact name="city"><link entity_id="E0581828">Mulberry</link></fact>
+<fact name="state"><link entity_id="E0373950">Florida</link></fact>
+<fact name="country"><link entity_id="E0679687">United States</link></fact>
+<fact name="colors"><link entity_id="E0308567">Gray</link>, <link entity_id="E0007486">royal blue</link>, <link entity_id="E0583907">white</link></fact>
+<fact name="mascot">Panthers</fact>
+<fact name="district"><link entity_id="E0520386">Polk County</link> Public Schools</fact>
+<fact name="location">One Panther Place
+(Northeast Fourth Circle)
+Mulberry, FL 33860</fact>
+<fact name="coordinates">27°53′49″N 81°58′19″W ﻿ / ﻿ 27.89694, -81.97194 <link>Coordinates</link> : 27°53′49″N 81°58′19″W ﻿ / ﻿ 27.89694, -81.97194</fact>
+<fact name="information">+1-863-701-1104</fact>
+<fact name="website">schools.polk-fl.net/MHS/</fact>
+</facts>
+<wiki_text><![CDATA[Mulberry High School
+
+Mulberry High School (also referred to as Mulberry Senior High School) is a
+four-year public high school located in Mulberry, Florida, serving the city and
+surrounding areas. Its enrollment is 1005 students.
+
+ History
+
+Mulberry's then-only public school began high school classes in 1907. In 1914, a
+separate high school was constructed; it was a two-story brick building with six
+classrooms and an auditorium, costing approximately $12,500.
+
+In 1921, the first edition of the MHS yearbook was published, titled The
+Mulberry Tree in honor of the city's famed mulberry tree.
+
+In 1922, land was donated for the construction of a new high school, on the east
+side of what is now Northeast First Avenue; construction was completed in 1924.
+Also in 1924, MHS began inter-school football play.
+
+During the Great Depression, many schools cut their terms or lost their
+accreditation, and the state of Florida ran out of money, but MHS was able to
+stay open thanks to taxes paid by area phosphate firms.
+
+In 1955, the current school was constructed on 65 acres of land given by
+Virginia-Carolina Chemical Corporation and International Minerals and Chemical
+Corporation ; the old high school was converted to an elementary school,
+Purcell.
+
+ Notable alumni
+]]></wiki_text>
+</entity>
+</knowledge_base>
