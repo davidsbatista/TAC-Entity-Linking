@@ -23,6 +23,7 @@ public class EntityParser {
 
 	public void addEntity(Entity entity) {
 		
+		/*
 		System.out.println("wiki_title: " + entity.getWiki_title());
 		System.out.println("type: " + entity.getType());
 		System.out.println("id: " + entity.getId());
@@ -34,9 +35,11 @@ public class EntityParser {
 			Fact fact = (Fact) iterator.next();
 			
 			if (fact.fact != null) {
-				System.out.print(fact.name + " : " + fact.fact);
+				System.out.print(fact.name + ": " + fact.fact);
 			}
-			else System.out.print(fact.name + " : ");			
+			
+			else System.out.print(fact.name + ": ");			
+			
 			if (fact.factlink.size()>0) {
 				for (Iterator<FactLink> iterator2 = fact.factlink.iterator(); iterator2.hasNext();) {
 					FactLink factlink = (FactLink) iterator2.next();
@@ -49,10 +52,9 @@ public class EntityParser {
 		System.out.println("\n");	
 		}
 		
-		
-		//System.out.println("wiki_text: " + entity.getWiki_text());
 		System.out.println("\n");
-
+		*/
+		
 		this.entities.add(entity);
 	}
 
@@ -151,6 +153,27 @@ public class EntityParser {
 		public void setFact(String fact){
 			this.fact = fact;
 		}
+		
+		/*
+		public String toString(){
+			StringBuilder result = new StringBuilder();
+ 			
+			if (fact.length()==0) {
+				result.append(name+":"+fact);
+			}
+			
+			return result.toString();
+			
+			/*
+			else if (fact.length()>0) {
+
+				for (Iterator iterator = factlink.iterator(); iterator.hasNext();) {
+					FactLink fact = (FactLink) iterator.next();
+					result.append()
+					
+				}
+			}
+			*/
 
 	}
 	
