@@ -5,7 +5,6 @@
 
 package tac.kbp.kb;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -14,25 +13,23 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.apache.lucene.store.SimpleFSDirectory;
 
 import tac.kbp.kb.EntityParser.Entity;
 import tac.kbp.kb.EntityParser.Fact;
 import tac.kbp.kb.EntityParser.FactLink;
+import tac.kbp.kb.utils.CollectionSimilarityIndexer;
 
 
 public class Index {
 
 	public static IndexWriter createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		
 		//Directory dir = new RAMDirectory();
-		Directory dir = new SimpleFSDirectory(new File("/tmp/KB"));
-		
-		IndexWriter indexDir = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
+		IndexWriter indexDir = new IndexWriter(FSDirectory.getDirectory("/tmp"), new WhitespaceAnalyzer(),IndexWriter.MaxFieldLength.UNLIMITED);		
+		CollectionSimilarityIndexer similarity = new CollectionSimilarityIndexer();
+		indexDir.setSimilarity(similarity);
 		
 		return indexDir;
 	}
@@ -68,26 +65,24 @@ public class Index {
 			Fact fact = (Fact) iterator.next();
 
 			if (fact.fact.length()>0) {
-				facts.append(fact.name+"_FACT_"+fact.fact+"\n");
+				facts.append("FACT:"+fact.name+"_"+fact.fact+"; ");
 			}
 
 			if (fact.factlink.size()>0) {
 				for (Iterator<FactLink> iterator2 = fact.factlink.iterator(); iterator2.hasNext();) {
 					FactLink factlink = (FactLink) iterator2.next();
 						if (factlink.e_id!=null) {
-							facts.append(fact.name+"_EID_"+factlink.e_id+"_LINK_"+factlink.link+"\n");
+							facts.append("FACT:"+fact.name+"_EID:"+factlink.e_id+"_LINK:"+factlink.link+"; ");
 						}
 						else {
-							facts.append(fact.name+"_FACT_"+factlink.link+"\n");
+							facts.append("FACT:"+fact.name+"_"+factlink.link+"; ");
 						}
 				}
 			}
 		}
 		
-		
 		String factsString = new String(facts); 		
-		doc.add(new Field("facts", factsString, Field.Store.YES, Field.Index.NOT_ANALYZED));
-				
+		doc.add(new Field("facts", factsString, Field.Store.YES, Field.Index.ANALYZED));
 		index.addDocument(doc);
 	}
 }
