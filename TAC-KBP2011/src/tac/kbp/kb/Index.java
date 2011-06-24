@@ -24,10 +24,10 @@ import tac.kbp.kb.utils.CollectionSimilarityIndexer;
 
 public class Index {
 
-	public static IndexWriter createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
+	public static IndexWriter createIndex(String dir) throws CorruptIndexException, LockObtainFailedException, IOException {
 		
 		//Directory dir = new RAMDirectory();
-		IndexWriter indexDir = new IndexWriter(FSDirectory.getDirectory("/tmp"), new WhitespaceAnalyzer(),IndexWriter.MaxFieldLength.UNLIMITED);		
+		IndexWriter indexDir = new IndexWriter(FSDirectory.getDirectory(dir), new WhitespaceAnalyzer(),IndexWriter.MaxFieldLength.UNLIMITED);		
 		CollectionSimilarityIndexer similarity = new CollectionSimilarityIndexer();
 		indexDir.setSimilarity(similarity);
 		
