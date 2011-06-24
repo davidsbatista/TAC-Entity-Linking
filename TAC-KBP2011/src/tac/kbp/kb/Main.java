@@ -49,7 +49,7 @@ public class Main {
 			
 			//starts indexing the parsed entities
 			for (int i=0; i < s.length; i++) { 
-				System.out.println("Processing " + s[i]);
+				System.out.println("\nProcessing " + s[i]);
 				Vector<Entity> entities = EntityParser.process(args[0]+s[i]);
 				
 				for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
