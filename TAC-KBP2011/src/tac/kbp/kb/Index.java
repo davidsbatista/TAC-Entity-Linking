@@ -16,10 +16,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 
-import tac.kbp.kb.EntityParser.Entity;
-import tac.kbp.kb.EntityParser.Fact;
-import tac.kbp.kb.EntityParser.FactLink;
 import tac.kbp.kb.utils.CollectionSimilarityIndexer;
+import tac.kbp.kb.xml.Entity;
+import tac.kbp.kb.xml.Fact;
+import tac.kbp.kb.xml.FactLink;
 
 
 public class Index {
@@ -57,7 +57,7 @@ public class Index {
 		//wiki_text
 		doc.add(new Field("wiki_text", entity.getWiki_text(), Field.Store.YES, Field.Index.ANALYZED));
 		
-		//facts		
+		//facts
 		StringBuilder facts = new StringBuilder();
 		
 		for (Iterator<Fact> iterator = entity.getFacts().iterator(); iterator.hasNext();) {

@@ -5,17 +5,16 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Vector;
 
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryParser.ParseException;
 import org.xml.sax.SAXException;
 
-import tac.kbp.kb.EntityParser.Entity;
 import tac.kbp.kb.utils.CollectionSimilarityIndexer;
 import tac.kbp.kb.utils.OnlyExt;
+import tac.kbp.kb.xml.Entity;
 
 /**
  * @author dsbatista
@@ -34,26 +33,27 @@ public class Main {
 		
 		File dir = new File(args[0]);
 		FilenameFilter only = new OnlyExt("xml"); 
-		String s[] = dir.list(only);
+		String fileList[] = dir.list(only);
 		
-		if (s.length == 0) {
+		if (fileList.length == 0) {
 			System.out.println("No XML files found");
 			System.exit(0);
 		}
 		else {
 			
-			System.out.println(s.length + " files loaded");
+			System.out.println(fileList.length + " files loaded");
 			
 			//creates a Lucene index
 			IndexWriter indexDir = Index.createIndex(args[1]);
 			
+			EntityParser parser = new EntityParser();
+			
+			Arrays.sort(fileList);
+			
 			//starts indexing the parsed entities
-			for (int i=0; i < s.length; i++) { 
-				System.out.println("\nProcessing " + s[i]);
-				Vector<Entity> entities = EntityParser.process(args[0]+s[i]);
-				
-				for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
-					Entity entity = (Entity) iterator.next();
+			for (int i=0; i < fileList.length; i++) { 
+				System.out.println("\nProcessing " + fileList[i]);
+				for (Entity entity : parser.process(args[0]+fileList[i]).getEntities()) {
 					Index.indexEntities(indexDir, entity);
 				}
 			}
@@ -117,5 +117,4 @@ public class Main {
 		
 	} 			
 }
-
 

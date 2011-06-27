@@ -17,7 +17,7 @@ public class TimeFormat {
 
 	private static final DecimalFormat	m_oneDigitFormat = new DecimalFormat("####0");
 	private static final DecimalFormat	m_twoDigitFormat = new DecimalFormat("###00");
-	private static final DecimalFormat	m_threeDigitFormat = new DecimalFormat("##000");
+	//private static final DecimalFormat	m_threeDigitFormat = new DecimalFormat("##000");
 
 
 	public static String toString(long secs) {

@@ -4,42 +4,31 @@
 
 package tac.kbp.kb;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Vector;
+import tac.kbp.kb.xml.Entity;
+import tac.kbp.kb.xml.Fact;
+import tac.kbp.kb.xml.FactLink;
+import tac.kbp.kb.xml.KnowledgeBase;
 
 
 public class EntityParser {
-
-	private static Vector<EntityParser.Entity> entities = new Vector<Entity>();
-
-	public void addEntity(Entity entity) {
-		System.out.print(".");
-		EntityParser.entities.add(entity);
-	}
+	// instantiate Digester and disable XML validation
+	private final Digester digester = new Digester();
 
 	/**
 	 * Configures Digester rules and actions, parses the XML file specified as
 	 * the first argument.
 	 */
-
-	/**
-	 * @param args
-	 * @throws IOException
-	 * @throws SAXException
-	 */
-
-	public static Vector<EntityParser.Entity> process(String filepath) throws IOException, SAXException {
-
-		// instantiate Digester and disable XML validation
-		Digester digester = new Digester();
+	public EntityParser() {
 		digester.setValidating(false);
 
 		// instantiate EntityParser class
-		digester.addObjectCreate("knowledge_base", EntityParser.class);
+		digester.addObjectCreate("knowledge_base", KnowledgeBase.class);
 
 		// instantiate Entity class
 		digester.addObjectCreate("knowledge_base/entity", Entity.class);
@@ -68,163 +57,15 @@ public class EntityParser {
 		
 		// call 'addEntity' method when the next 'knowledge_base/entity' pattern is seen
 		digester.addSetNext("knowledge_base/entity", "addEntity");
-		
+	}
+	
+	/**
+	 * @param args
+	 * @throws IOException
+	 * @throws SAXException
+	 */
+	public KnowledgeBase process(String filepath) throws IOException, SAXException {
 		// now that rules and actions are configured, start the parsing process
-		EntityParser entity = (EntityParser) digester.parse(new File(filepath));
-		
-		return entities;
-	}
-	
-	public static class FactLink {
-
-		public String e_id = null;
-		public String link = null;
-		
-		public String getE_id() {
-			return e_id;
-		}
-		
-		public void setE_id(String e_id) {
-			this.e_id = e_id;
-		}
-		
-		public String getLink() {
-			return link;
-		}
-		
-		public void setLink(String link) {
-			this.link = link;
-		}
-		
-
-	}
-	
-	public static class Fact {
-		
-		public String name;
-		public String fact;
-		public Vector<FactLink> factlink = new Vector<EntityParser.FactLink>();
-		
-		public void setFactLink(FactLink factlink){
-			this.factlink.add(factlink);
-		}
-		
-		public void setName(String name){
-			this.name = name;
-		}
-		
-		public void setFact(String fact){
-			this.fact = fact;
-		}
-		
-		/*
-		public String toString(){
-			StringBuilder result = new StringBuilder();
- 			
-			if (fact.length()==0) {
-				result.append(name+":"+fact);
-			}
-			
-			return result.toString();
-			
-			/*
-			else if (fact.length()>0) {
-
-				for (Iterator iterator = factlink.iterator(); iterator.hasNext();) {
-					FactLink fact = (FactLink) iterator.next();
-					result.append()
-					
-				}
-			}
-			*/
-
-	}
-	
-	public static class Entity {
-
-		private String wiki_title;
-		private String type;
-		private String id;
-		private String name;
-		private Vector<Fact> facts = new Vector<EntityParser.Fact>();
-		private String infobox_class;
-		private String wiki_text;
-		
-		public void addFact(Fact fact){
-			this.facts.add(fact);
-		}
-		
-		public String getWiki_title() {
-			return wiki_title;
-		}
-
-
-		public void setWiki_title(String wiki_title) {
-			this.wiki_title = wiki_title;
-		}
-
-		/**
-		 * @return the type
-		 */
-		public String getType() {
-			return type;
-		}
-
-		/**
-		 * @param type
-		 *            the type to set
-		 */
-		public void setType(String type) {
-			this.type = type;
-		}
-
-		/**
-		 * @return the id
-		 */
-		public String getId() {
-			return id;
-		}
-
-		/**
-		 * @param id
-		 *            the id to set
-		 */
-		public void setId(String id) {
-			this.id = id;
-		}
-
-
-		public String getName() {
-			return name;
-		}
-
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-
-		public String getWiki_text() {
-			return wiki_text;
-		}
-
-
-		public void setWiki_text(String wiki_text) {
-			this.wiki_text = wiki_text;
-		}
-
-		public String getInfobox_class() {
-			return infobox_class;
-		}
-
-
-		public void setInfobox_class(String infobox_class) {
-			this.infobox_class = infobox_class;
-		}
-
-		public Vector<Fact> getFacts() {
-			return this.facts;
-		}
-
+		return (KnowledgeBase) digester.parse(new File(filepath));	
 	}
 }

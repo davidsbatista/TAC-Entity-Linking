@@ -14,22 +14,22 @@ public class CollectionSimilarityIndexer extends DefaultSimilarity {
 
 	private static final long serialVersionUID = -2212275281313452563L;
 	
-	private static Map< String,Long> length = new HashMap<String, Long>();
+	private Map< String,Long> length = new HashMap<String, Long>();
 
 	  @Override
 	  public float lengthNorm(String fieldName, int numTokens) {
-		  Long aux = CollectionSimilarityIndexer.length.get(fieldName);
+		  Long aux = length.get(fieldName);
 		  
 		  if (aux==null)
 			  aux = new Long(0);
 		  
 		  aux+=numTokens;
-		  CollectionSimilarityIndexer.length.put(fieldName,aux);
+		  length.put(fieldName,aux);
 		  
 		  return super.lengthNorm(fieldName, numTokens);
 	  }
 	  
-	  public static long getLength(String field){
-	    return CollectionSimilarityIndexer.length.get(field);
+	  public long getLength(String field){
+	    return length.get(field);
 	  }	  
 }
