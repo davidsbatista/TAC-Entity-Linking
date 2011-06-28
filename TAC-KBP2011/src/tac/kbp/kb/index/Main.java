@@ -52,13 +52,13 @@ public class Main {
 			
 			//starts indexing the parsed entities
 			for (int i=0; i < fileList.length; i++) { 
-				System.out.println("\nProcessing " + fileList[i]);
+				System.out.print("\nProcessing " + fileList[i]);
 				for (Entity entity : parser.process(args[0]+fileList[i]).getEntities()) {
 					Index.indexEntities(indexDir, entity);
 				}
 			}
 			
-			// caculates each field average lenght, to be used in BM25
+			// Calculates each field average length, to be used in BM25
 			CollectionSimilarityIndexer similarity = (CollectionSimilarityIndexer) indexDir.getSimilarity();
 					
 			Float numDocs = new Float(indexDir.numDocs());
