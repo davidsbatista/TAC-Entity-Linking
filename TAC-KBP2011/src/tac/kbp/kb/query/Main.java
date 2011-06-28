@@ -20,9 +20,14 @@ public class Main {
 		
 		System.out.println("Loading: " + args[0]);
 		System.out.println("Loading: " + args[1]);
-		System.out.println("Querying for " + args[2]);
+		System.out.println("Querying for \"" + args[2] + "\"");
+		
+		System.out.println();
 		
 		q.BM25(args[2]);
+		
+		System.out.println();
+		
 		q.BM25F(args[2]);
 		
 		long end = new Date().getTime();		

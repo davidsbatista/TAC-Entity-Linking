@@ -39,7 +39,7 @@ public class Query{
 		ScoreDoc[] docs = top.scoreDocs;
 		
 		//Print results
-		System.out.println("Results: ");
+		System.out.println("Results(BM25): ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
 		      System.out.println(docs[i].doc + ":"+docs[i].score);
 		}
@@ -61,7 +61,7 @@ public class Query{
 		ScoreDoc[] docs = top.scoreDocs;
 		
 		//Print results
-		System.out.println("Results: ");
+		System.out.println("Results(BM25F): ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
 		      System.out.println(docs[i].doc + ":"+docs[i].score);
 		}
