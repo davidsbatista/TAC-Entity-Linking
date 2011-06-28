@@ -1,7 +1,7 @@
 /**
  * 
  */
-package tac.kbp.kb.xml;
+package tac.kbp.kb.index.xml;
 
 public class FactLink {
 

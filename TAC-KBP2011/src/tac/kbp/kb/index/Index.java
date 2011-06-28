@@ -3,7 +3,7 @@
  * 
  */
 
-package tac.kbp.kb;
+package tac.kbp.kb.index;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -16,10 +16,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 
+import tac.kbp.kb.index.xml.Entity;
+import tac.kbp.kb.index.xml.Fact;
+import tac.kbp.kb.index.xml.FactLink;
 import tac.kbp.kb.utils.CollectionSimilarityIndexer;
-import tac.kbp.kb.xml.Entity;
-import tac.kbp.kb.xml.Fact;
-import tac.kbp.kb.xml.FactLink;
 
 
 public class Index {

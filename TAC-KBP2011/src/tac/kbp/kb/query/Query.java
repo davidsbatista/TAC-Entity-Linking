@@ -1,4 +1,4 @@
-package tac.kbp.kb;
+package tac.kbp.kb.query;
 
 import java.io.IOException;
 
@@ -14,56 +14,57 @@ import org.ninit.models.bm25.BM25Parameters;
 import org.ninit.models.bm25f.BM25FParameters;
 
 public class Query{
-	
-	public void BM25() throws IOException, ParseException {
-			
-		Searcher searcher = new IndexSearcher(FSDirectory.getDirectory("/tmp/"));
 
-		//Load fields average length
-		BM25Parameters.load("fields_avg_size.txt");
+	//index location
+	Searcher searcher = null;
+	
+	//same analyzer used for indexing
+	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		BM25BooleanQuery query = new BM25BooleanQuery("Austin Texas", "wiki_text",analyzer);
+	public Query(String index, String fields_size) throws NumberFormatException, IOException, ParseException {
+		
+		searcher = new IndexSearcher(FSDirectory.getDirectory(index));
+					
+		//Load fields average length
+		BM25Parameters.load(fields_size);
+			
+	}
+	
+	
+	public void BM25(String query_string) throws IOException, ParseException {
+
+		BM25BooleanQuery query = new BM25BooleanQuery(query_string, "wiki_text", analyzer);
 		
 		TopDocs top = searcher.search(query, null, 10);
 		ScoreDoc[] docs = top.scoreDocs;
 		
 		//Print results
+		System.out.println("Results: ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
 		      System.out.println(docs[i].doc + ":"+docs[i].score);
 		}
+
 	}
 	
-	public void BM25F() throws IOException, ParseException {
-
-		Searcher searcher = new IndexSearcher(FSDirectory.getDirectory("/tmp/"));
+	public void BM25F(String query) throws IOException, ParseException {
 		
-		String[] fields ={"FIELD1","FIELD2"};
-	
-		//Set explicit average Length for each field
-		//BM25FParameters.setAverageLength("FIELD1", 123.5f);
-		//BM25FParameters.setAverageLength("FIELD2", 42.2f);
-		
-		//Load fields average length
-		BM25Parameters.load("fields_avg_size.txt");
+		String[] fields ={"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
 		
 		//Set explicit k1 parameter
 		BM25FParameters.setK1(1.2f);
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		
 		//Using boost and b defaults parameters
-		BM25BooleanQuery queryF = new BM25BooleanQuery("This is my query", fields, analyzer);
+		BM25BooleanQuery queryF = new BM25BooleanQuery(query, fields, analyzer);
 		
 		//Retrieving NOT normalized scorer values
 		TopDocs top = searcher.search(queryF, null, 10);
 		ScoreDoc[] docs = top.scoreDocs;
 		
 		//Print results
+		System.out.println("Results: ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
 		      System.out.println(docs[i].doc + ":"+docs[i].score);
 		}
 		
 	}
 }
-	

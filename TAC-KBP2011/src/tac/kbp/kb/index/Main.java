@@ -1,4 +1,4 @@
-package tac.kbp.kb;
+package tac.kbp.kb.index;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,9 +12,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryParser.ParseException;
 import org.xml.sax.SAXException;
 
+import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.kb.utils.CollectionSimilarityIndexer;
 import tac.kbp.kb.utils.OnlyExt;
-import tac.kbp.kb.xml.Entity;
 
 /**
  * @author dsbatista

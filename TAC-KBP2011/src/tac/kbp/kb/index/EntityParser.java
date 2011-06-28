@@ -2,7 +2,7 @@
  * @author dsbatista
  */
 
-package tac.kbp.kb;
+package tac.kbp.kb.index;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,10 +10,10 @@ import java.io.IOException;
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
 
-import tac.kbp.kb.xml.Entity;
-import tac.kbp.kb.xml.Fact;
-import tac.kbp.kb.xml.FactLink;
-import tac.kbp.kb.xml.KnowledgeBase;
+import tac.kbp.kb.index.xml.Entity;
+import tac.kbp.kb.index.xml.Fact;
+import tac.kbp.kb.index.xml.FactLink;
+import tac.kbp.kb.index.xml.KnowledgeBase;
 
 
 public class EntityParser {
