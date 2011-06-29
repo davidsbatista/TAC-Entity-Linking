@@ -7,7 +7,8 @@ import sys
 import os
 import re
 import time
-import fileinput
+
+from datetime import datetime
 
 queries = {}
 
@@ -76,4 +77,7 @@ def main():
         
 if __name__ == "__main__":
     main()
+<<<<<<< .mine
+s b=======
     
+>>>>>>> .r35
