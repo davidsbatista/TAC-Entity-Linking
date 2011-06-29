@@ -2,21 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import xml.dom.minidom
-import simplejson
-import urllib
-import httplib
 
 import sys
 import os
 import re
 import time
 import fileinput
-
-import MySQLdb
-import StringIO 
-
-from datetime import datetime
-from BeautifulSoup import BeautifulSoup,NavigableString
 
 queries = {}
 
@@ -36,11 +27,14 @@ class Query:
         self.doc_id = document
     
 
-
 def parse_queries_types(file):
     
     for line in fileinput.input(file):
-        query_id,kb_id,entity_type = line.split("\t")
+                
+        line_parts = line.split("\t")
+        query_id = line_parts[0]
+        kb_id = line_parts[1]
+        entity_type = line_parts[2]
         
         try:
             queries[query_id].entity_kb_id = kb_id 
@@ -48,7 +42,8 @@ def parse_queries_types(file):
             
         except:
             print "Error! query: ", query_id, "not parsed"
-    
+
+
 
 def parse_queries(file):
     
@@ -73,24 +68,12 @@ def parse_queries(file):
 
 def main():
 
-    """    
-    if os.path.isdir(sys.argv[1]):
-        
-        dir_list = os.listdir(sys.argv[1])
-        
-        for file in sorted_dir_list:
-            
-            if file.rsplit(".")[1] == 'xml':
-    """
     parse_queries(sys.argv[1])
     parse_queries_types(sys.argv[2])
-
-   
+    
     for q in queries:
-        print queries[q].id, queries[q].string_name, queries[q].doc_id, queries[q].entity_kb_id, queries[q].entity_type, 
+        print queries[q].id, queries[q].string_name, queries[q].doc_id, queries[q].entity_kb_id, queries[q].entity_type 
         
 if __name__ == "__main__":
     main()
     
-
-
