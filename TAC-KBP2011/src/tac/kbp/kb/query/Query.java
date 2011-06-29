@@ -3,6 +3,7 @@ package tac.kbp.kb.query;
 import java.io.IOException;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
@@ -38,10 +39,20 @@ public class Query{
 		TopDocs top = searcher.search(query, null, 10);
 		ScoreDoc[] docs = top.scoreDocs;
 		
+		
+		
+		
 		//Print results
 		System.out.println("Results(BM25): ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
-		      System.out.println(docs[i].doc + ":"+docs[i].score);
+			
+			Document doc = searcher.doc(docs[i].doc);
+		    String id = doc.getField("id").stringValue();
+		    String type = doc.getField("type").stringValue();
+		    String wiki_title = doc.getField("wiki_title").stringValue();
+		    
+		    System.out.println("id: "+id+"  type: "+type+"  wiki_title: "+wiki_title + "\tscore:"+docs[i].score);
+		      
 		}
 
 	}
@@ -51,7 +62,8 @@ public class Query{
 		String[] fields ={"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
 		
 		//Set explicit k1 parameter
-		BM25FParameters.setK1(1.2f);
+		//BM25FParameters.setK1(1.2f);
+		//BM25FParameters.setB(b);
 		
 		//Using boost and b defaults parameters
 		BM25BooleanQuery queryF = new BM25BooleanQuery(query, fields, analyzer);
@@ -63,7 +75,12 @@ public class Query{
 		//Print results
 		System.out.println("Results(BM25F): ");
 		for (int i = 0; i < top.scoreDocs.length; i++) {
-		      System.out.println(docs[i].doc + ":"+docs[i].score);
+			Document doc = searcher.doc(docs[i].doc);
+		    String id = doc.getField("id").stringValue();
+		    String type = doc.getField("type").stringValue();
+		    String wiki_title = doc.getField("wiki_title").stringValue();
+		    
+		    System.out.println("id: "+id+"  type: "+type+"  wiki_title: "+wiki_title + "\tscore:"+docs[i].score);
 		}
 		
 	}
