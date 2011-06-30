@@ -26,13 +26,8 @@ public class BM25Query{
 	
 	// index
 	Searcher searcher = null;
-	
-	//parameters
-	float K1;
-	float B;
-	
 		
-	public BM25Query(Searcher searcher_, String fields_size) throws NumberFormatException, IOException, ParseException {
+	public BM25Query(Searcher searcher_, String fields_size, float k1, float b) throws NumberFormatException, IOException, ParseException {
 					
 		//Load fields average length
 		BM25Parameters.load(fields_size);
@@ -40,7 +35,9 @@ public class BM25Query{
 		// index
 		searcher = searcher_;
 		
-		//Set explicit k1 parameter
+		//Set explicit the k1 and B parameter
+		BM25FParameters.setK1(k1);
+		BM25FParameters.setB(b);
 	}
 	
 	
@@ -79,24 +76,8 @@ public class BM25Query{
 		BM25BooleanQuery queryF = new BM25BooleanQuery(query, fields, analyzer);
 		
 		//Retrieving NOT normalized scorer values
-		return searcher.search(queryF, null, 100);
+		return searcher.search(queryF, null, 10000);
 		
-	}
-
-	public float getK1() {
-		return K1;
-	}
-
-	public void setK1(float k1) {
-		BM25FParameters.setK1(k1);
-	}
-
-	public float getB() {
-		return B;
-	}
-
-	public void setB(float d) {
-		BM25FParameters.setB(d);
 	}
 
 }
