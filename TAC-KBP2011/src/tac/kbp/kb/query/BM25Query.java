@@ -4,11 +4,9 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.FSDirectory;
 import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25.BM25Parameters;
 import org.ninit.models.bm25f.BM25FParameters;
