@@ -17,7 +17,7 @@ public class BM25TuneResults {
 		results.put(query_id, score);
 	}
 	
-	
+
 	public String getResults(){
 		Set<String> keys = results.keySet();
 		

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,13 +16,10 @@ import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.FSDirectory;
 
-import tac.kbp.kb.query.GoldenStandardQuery;
 import tac.kbp.kb.utils.Pair;
 
 public class TuneBM25 {
@@ -29,17 +27,21 @@ public class TuneBM25 {
 	List<GoldenStandardQuery> queries = null;
 	BM25Query bm25query = null;
 	Searcher searcher = null;
+	String fields_size = null;
 	HashMap<Pair, BM25TuneResults> results = null;
-	
-	public TuneBM25(String index, String fields_size, String queries_file) throws NumberFormatException, IOException, ParseException {
+
+
+	public TuneBM25(Searcher index, String fields_size_, String queries_file) throws NumberFormatException, IOException, ParseException {
 		
 		queries = new LinkedList<GoldenStandardQuery>();
 		loadQueries(queries_file);
 		
 		System.out.println( queries.size() + " queries loaded");
 		
-		searcher = new IndexSearcher(FSDirectory.getDirectory(index));
+		searcher = index;
 		results = new HashMap<Pair, BM25TuneResults>();
+		
+		this.fields_size = fields_size_;
 		
 		Float divisor = new Float(10);
 
@@ -51,11 +53,11 @@ public class TuneBM25 {
 				results.put(pair, new BM25TuneResults());
 			}
 		}
-		
-		Set<Pair> keys = results.keySet();
-		
-		
-		
+	}
+
+	public void processBatch(String fields_size) throws IOException, ParseException {
+		Set<Pair> keys = this.results.keySet();
+				
 		for (Iterator<Pair> iterator = keys.iterator(); iterator.hasNext();) {
 			
 			Pair pair = (Pair) iterator.next();
@@ -66,7 +68,6 @@ public class TuneBM25 {
 			results.put(pair, processQueries());
 		
 			// Write results to file
-			
 			FileWriter outFile = new FileWriter("results_"+pair.getK1()+"_"+pair.getB()+".txt");
 			PrintWriter out = new PrintWriter(outFile);
 			
@@ -77,9 +78,42 @@ public class TuneBM25 {
 			
 			out.println(result.getResults());
 			out.close();
-			
 		}
-
+	}
+	
+	public void findBestParameters() {
+		
+		Set<Pair> keys = this.results.keySet();
+		Set<Pair> bestPairs = new HashSet<Pair>();		
+		float bestScore = 0f;
+		
+		for (Iterator<Pair> iterator = keys.iterator(); iterator.hasNext();) {
+			Pair pair = (Pair) iterator.next();
+			
+			float acc = 0f;
+			BM25TuneResults bm25results = this.results.get(pair);			
+			Set<String>	entities_id = bm25results.results.keySet();
+			
+			for (String key : entities_id) {
+				acc += bm25results.results.get(key);
+			}
+			
+			if (acc == bestScore) {
+				bestPairs.add(pair);
+			}
+			else if (acc> bestScore) {
+				bestPairs.clear();
+				bestPairs.add(pair);
+			}
+		}
+		
+		System.out.println("Best K1,B parameters:");
+		for (Pair pair : bestPairs) {
+			System.out.println("K1: "+pair.getK1());
+			System.out.println("B: "+pair.getB());
+			System.out.println();
+		}
+		
 	}
 	
 	public BM25TuneResults processQueries() throws IOException, ParseException {
@@ -88,23 +122,19 @@ public class TuneBM25 {
 		
 		for (GoldenStandardQuery test_query : this.queries) {
 			if (!test_query.entity_kb_id.startsWith("NIL")) {
-				//System.out.print("querying for: " + test_query.name);
 				float score = query(test_query);
 				results.setScore(test_query.query_id, score);
 				}
-			}		
+			}
 		return results;
 
 	}
 	
 	public float query(GoldenStandardQuery query) throws IOException, ParseException {
+				
+		TopDocs top = bm25query.query(query.name);
 		
-		TopDocs top = bm25query.BM25F(query.name);
-		
-		//System.out.println("totalHits: " + top.totalHits);
 		ScoreDoc[] docs = top.scoreDocs;
-		//System.out.print("\ttop.scoreDocs.length: "+ top.scoreDocs.length);
-		//boolean found = false;
 		float score = (float) 0.0;
 		
 		for (int i = 0; i < top.scoreDocs.length; i++) {			
@@ -112,26 +142,15 @@ public class TuneBM25 {
 			Document doc = searcher.doc(docs[i].doc);
 			String id = doc.getField("id").stringValue();
 			
-			if (id==query.entity_kb_id) {
+			if (id.trim().equalsIgnoreCase(query.entity_kb_id.trim())) {
 				score = docs[i].score;
-				//found = true;
 				break;
 			}
 		}
-		
-		/*
-		if (found) {
-			System.out.print("\tFound\n");
-		}
-		else {
-			System.out.print("\tNot Found\n");
-		}
-		*/
-		
+
 		return score;
 	}
 
-	
 	public void loadQueries(String file) {
 		
 		try {

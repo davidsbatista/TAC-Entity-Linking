@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
 import org.ninit.models.bm25.BM25BooleanQuery;
@@ -26,56 +25,27 @@ public class BM25Query{
 	Searcher searcher = null;
 		
 	public BM25Query(Searcher searcher_, String fields_size, float k1, float b) throws NumberFormatException, IOException, ParseException {
-					
+		
+		// index searcher
+		searcher = searcher_;
+		
 		//Load fields average length
 		BM25Parameters.load(fields_size);
-		
-		// index
-		searcher = searcher_;
 		
 		//Set explicit the k1 and B parameter
 		BM25FParameters.setK1(k1);
 		BM25FParameters.setB(b);
 	}
 	
-	
-	public ScoreDoc[] BM25(String query_string) throws IOException, ParseException {
+	public TopDocs query(String query_string) throws IOException, ParseException {
 
-		BM25BooleanQuery query = new BM25BooleanQuery(query_string, "wiki_text", analyzer);
-		
-		TopDocs top = searcher.search(query, null, 10);
-		ScoreDoc[] docs = top.scoreDocs;
-		
-		return docs;
-		
-		/*
-		//Print results
-		System.out.println("Results(BM25): ");
-		for (int i = 0; i < top.scoreDocs.length; i++) {
-			
-			Document doc = searcher.doc(docs[i].doc);
-		    String id = doc.getField("id").stringValue();
-		    String type = doc.getField("type").stringValue();
-		    String wiki_title = doc.getField("wiki_title").stringValue();
-		    
-		    System.out.println("id: "+id+"  type: "+type+"  wiki_title: "+wiki_title + "\tscore:"+docs[i].score);
-		}
-		*/
-		
-
-	}
-	
-	public TopDocs BM25F(String query) throws IOException, ParseException {
-		
 		//String[] fields = {"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
 		String[] fields = {"wiki_text","facts"};
 		
-		//Using boost and b defaults parameters
-		BM25BooleanQuery queryF = new BM25BooleanQuery(query, fields, analyzer);
+		BM25BooleanQuery query = new BM25BooleanQuery(query_string, fields, analyzer);
 		
-		//Retrieving NOT normalized scorer values
-		return searcher.search(queryF, null, 10000);
+		//Using boost and b defaults parameters				
+		return searcher.search(query, null, 100);
 		
 	}
-
 }
