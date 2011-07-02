@@ -26,6 +26,7 @@ public class Main {
 		// to find the best k1 and B parameters, batch queries processing
 		TuneBM25 tune = new TuneBM25(searcher, args[1], args[2]);
 		tune.processBatch(args[1]);
+		tune.findBestParameters();
 		
 		// test with a query from command line
 		
