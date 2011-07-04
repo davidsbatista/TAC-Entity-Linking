@@ -2,6 +2,7 @@ package tac.kbp.kb.query;
 
 import java.io.IOException;
 
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Searcher;
@@ -23,6 +24,9 @@ public class BM25Query{
 	
 	// index
 	Searcher searcher = null;
+	
+	// b params for several Fields
+	float b;
 		
 	public BM25Query(Searcher searcher_, String fields_size, float k1, float b) throws NumberFormatException, IOException, ParseException {
 		
@@ -40,9 +44,11 @@ public class BM25Query{
 	public TopDocs query(String query_string) throws IOException, ParseException {
 
 		//String[] fields = {"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
-		String[] fields = {"wiki_text","facts"};
+		String[] fields = {"name","wiki_text","facts"};
+		float[] boosts =  {1f,1f,1f};
+		float[] bParams =  {b,b,b};
 		
-		BM25BooleanQuery query = new BM25BooleanQuery(query_string, fields, analyzer);
+		BM25BooleanQuery query = new BM25BooleanQuery(query_string, fields, analyzer, boosts, bParams);
 		
 		//Using boost and b defaults parameters				
 		return searcher.search(query, null, 100);
