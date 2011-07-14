@@ -132,7 +132,7 @@ public class TuneBM25 {
 	
 	public float query(GoldenStandardQuery query) throws IOException, ParseException {
 				
-		TopDocs top = bm25query.query(query.name);
+TopDocs top = bm25query.query(query.name);
 		
 		ScoreDoc[] docs = top.scoreDocs;
 		float score = (float) 0.0;
