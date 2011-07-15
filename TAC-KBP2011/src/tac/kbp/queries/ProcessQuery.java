@@ -11,6 +11,8 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -121,6 +123,16 @@ public class ProcessQuery {
 		
 	}
 	
+	public static void findOccurrences(String entity) {
+		
+	    Pattern pat = Pattern.compile("\\b\\w+@XYZ\\.com\\b");
+	    Matcher mat = pat.matcher("t@XYZ.com\n" + "a@XYZ.com\n" + "n@XYZ.com");
+
+	    while (mat.find())
+	      System.out.println("Match: " + mat.group());
+	  }
+	
+	
 	private static void processQuery(Query q) throws Exception {
 		String supportDoc = getSupportDocument(q);
 		Document doc = queryLucene(q);
@@ -129,9 +141,7 @@ public class ProcessQuery {
 		System.out.println("Calling REMBRANDT...");
 		callRembrandt(supportDoc);
 		*/
-		
-		System.out.println(supportDoc);
-		
+
 		
 		if (doc!=null) {		
 			String id = doc.getField("id").stringValue();
