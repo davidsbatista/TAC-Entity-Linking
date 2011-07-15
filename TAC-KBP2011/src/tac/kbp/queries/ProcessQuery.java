@@ -1,14 +1,21 @@
 package tac.kbp.queries;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
@@ -21,7 +28,7 @@ import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25.BM25Parameters;
 import org.ninit.models.bm25f.BM25FParameters;
 
-import tac.kbp.kb.utils.BigFile;
+import tac.kbp.utils.BigFile;
 
 public class ProcessQuery {
 
@@ -65,9 +72,66 @@ public class ProcessQuery {
 	}
 
 	
+	private static void callRembrandt(String text) {
+		
+		HttpClient httpclient = new HttpClient();
+		
+		PostMethod postMethod = new PostMethod("http://agatha.inesc-id.pt:80/Rembrandt/api/rembrandt?");
+		
+		NameValuePair slg = new NameValuePair("slg", "en");
+		NameValuePair lg = new NameValuePair("lg", "en");
+		NameValuePair format = new NameValuePair("format", "dsb");
+		NameValuePair key = new NameValuePair("api_key","db924ad035a9523bcf92358fcb2329dac923bf9c");
+		NameValuePair sentence = new NameValuePair("db",text);
+		
+		postMethod.addParameter(slg);
+		postMethod.addParameter(lg);
+		postMethod.addParameter(format);
+		postMethod.addParameter(key);
+		postMethod.addParameter(sentence);
+		
+		BufferedReader br = null;
+		
+		try{			
+			int returnCode = httpclient.executeMethod(postMethod);
+			
+			if (returnCode == HttpStatus.SC_NOT_IMPLEMENTED) {		    	  
+				System.err.println("The Post method is not implemented by this URI");
+				// still consume the response body
+				postMethod.getResponseBodyAsString();
+			}
+			
+			else {
+				br = new BufferedReader(new InputStreamReader(postMethod.getResponseBodyAsStream()));
+		    	
+				String readLine;
+		    	
+		    	while(((readLine = br.readLine()) != null)) {
+		    		System.err.println(readLine);
+		    	  }
+		      }
+		    
+		} catch (Exception e) {
+		      System.err.println(e);
+		    } finally {
+		    	
+		      postMethod.releaseConnection();
+		      if(br != null) try { br.close(); } catch (Exception fe) {}
+		    }
+		
+	}
+	
 	private static void processQuery(Query q) throws Exception {
-		File supportDoc = getSupportDocument(q);
+		String supportDoc = getSupportDocument(q);
 		Document doc = queryLucene(q);
+		
+		/*
+		System.out.println("Calling REMBRANDT...");
+		callRembrandt(supportDoc);
+		*/
+		
+		System.out.println(supportDoc);
+		
 		
 		if (doc!=null) {		
 			String id = doc.getField("id").stringValue();
@@ -91,12 +155,41 @@ public class ProcessQuery {
 		out.close();		
 	}
 	
-	
-	
-	private static File getSupportDocument(Query q) {
-		File doc = new File(docslocations.get(q.docid));
-		return doc;
+	private static String getSupportDocument(Query q) {
 		
+		StringBuilder contents = new StringBuilder();
+	    
+	    try {
+	    	
+	    	//use buffering, reading one line at a time
+	    	//FileReader always assumes default encoding is OK!
+	    	
+	    	String file = docslocations.get(q.docid).trim()+"/"+q.docid+".sgm";
+	    	
+	    	BufferedReader input =  new BufferedReader(new FileReader(file));
+	    	
+	    	try {
+	    		String line = null; //not declared within while loop
+		        /*
+		        * readLine is a bit quirky :
+		        * it returns the content of a line MINUS the newline.
+		        * it returns null only for the END of the stream.
+		        * it returns an empty String if two newlines appear in a row.
+		        */
+		        while (( line = input.readLine()) != null){
+		          contents.append(line);
+		          contents.append(System.getProperty("line.separator"));
+		        }
+	      }
+	      finally {
+	        input.close();
+	      }
+	    }
+	    catch (IOException ex){
+	      ex.printStackTrace();
+	    }
+	    
+	    return contents.toString();		
 	}
 	
 	
