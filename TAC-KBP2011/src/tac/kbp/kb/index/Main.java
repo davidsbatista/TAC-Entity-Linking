@@ -13,8 +13,7 @@ import org.apache.lucene.queryParser.ParseException;
 import org.xml.sax.SAXException;
 
 import tac.kbp.kb.index.xml.Entity;
-import tac.kbp.kb.utils.CollectionSimilarityIndexer;
-import tac.kbp.kb.utils.OnlyExt;
+import tac.kbp.utils.OnlyExt;
 
 /**
  * @author dsbatista

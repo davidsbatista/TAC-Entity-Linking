@@ -19,7 +19,6 @@ import org.apache.lucene.store.LockObtainFailedException;
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.kb.index.xml.Fact;
 import tac.kbp.kb.index.xml.FactLink;
-import tac.kbp.kb.utils.CollectionSimilarityIndexer;
 
 
 public class Index {

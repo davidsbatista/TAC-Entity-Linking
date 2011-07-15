@@ -20,7 +20,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
 
-import tac.kbp.kb.utils.Pair;
+import tac.kbp.kb.index.Pair;
 
 public class TuneBM25 {
 	
