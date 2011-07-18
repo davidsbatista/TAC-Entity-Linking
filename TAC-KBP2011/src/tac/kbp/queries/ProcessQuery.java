@@ -1,18 +1,19 @@
 package tac.kbp.queries;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -25,6 +26,10 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 
 import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25.BM25Parameters;
@@ -53,9 +58,6 @@ public class ProcessQuery {
 		/* Lucene Index */
 		searcher = new IndexSearcher(FSDirectory.getDirectory(args[1]));
 		
-		System.out.println("Lucene index: ");
-		System.out.println(searcher.toString());
-		
 		//Load fields average length
 		BM25Parameters.load(fields_size);
 		
@@ -74,7 +76,7 @@ public class ProcessQuery {
 	}
 
 	
-	private static void callRembrandt(String text) {
+	private static org.w3c.dom.Document callRembrandt(String text) {
 		
 		HttpClient httpclient = new HttpClient();
 		
@@ -93,6 +95,7 @@ public class ProcessQuery {
 		postMethod.addParameter(sentence);
 		
 		BufferedReader br = null;
+		org.w3c.dom.Document document = null;
 		
 		try{			
 			int returnCode = httpclient.executeMethod(postMethod);
@@ -104,44 +107,65 @@ public class ProcessQuery {
 			}
 			
 			else {
-				br = new BufferedReader(new InputStreamReader(postMethod.getResponseBodyAsStream()));
-		    	
-				String readLine;
-		    	
-		    	while(((readLine = br.readLine()) != null)) {
-		    		System.err.println(readLine);
-		    	  }
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();		
+		        factory.setValidating(false);
+		        factory.setNamespaceAware(false);
+		        
+		        DocumentBuilder loader = factory.newDocumentBuilder();
+		        String response = postMethod.getResponseBodyAsString();
+		        
+		        ByteArrayInputStream json = new ByteArrayInputStream(response.getBytes("UTF-8"));		        
+		        String jsonString = json.toString();
+		        
+		        Object obj = JSONValue.parse(jsonString);		        
+		        JSONArray array = (JSONArray)obj;
+
+		        System.out.println("Size of array");
+		        System.out.println(array.size());
+		        
+		        //System.out.println(array.get(index));
 		      }
-		    
+
+			
 		} catch (Exception e) {
+			
 		      System.err.println(e);
+		      
 		    } finally {
 		    	
 		      postMethod.releaseConnection();
-		      if(br != null) try { br.close(); } catch (Exception fe) {}
+		      
+		      if (br != null)
+		    	  
+		    	  try { 
+		    		  br.close();
+		    	  } 
+		      	  catch (Exception fe) {}
 		    }
-		
+	
+		    return document;
+		    
 	}
-	
-	public static void findOccurrences(String entity) {
-		
-	    Pattern pat = Pattern.compile("\\b\\w+@XYZ\\.com\\b");
-	    Matcher mat = pat.matcher("t@XYZ.com\n" + "a@XYZ.com\n" + "n@XYZ.com");
-
-	    while (mat.find())
-	      System.out.println("Match: " + mat.group());
-	  }
-	
 	
 	private static void processQuery(Query q) throws Exception {
 		String supportDoc = getSupportDocument(q);
 		Document doc = queryLucene(q);
 		
-		/*
 		System.out.println("Calling REMBRANDT...");
-		callRembrandt(supportDoc);
+		org.w3c.dom.Document docRembrandted = callRembrandt(supportDoc);
+		
+		System.out.println(docRembrandted);
+		
+		/*
+		javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+    	NodeList locs = (NodeList) xpath.compile("//ys:reference/ys:woeIds").evaluate(doc,XPathConstants.NODESET);
+    	
 		*/
-
+		
+		/*
+		DocumentBuilderFactory.newDocumentBuilder
+		DocumentBuilder doc = new
+		*/ 
 		
 		if (doc!=null) {		
 			String id = doc.getField("id").stringValue();
@@ -160,7 +184,7 @@ public class ProcessQuery {
 		
 		for (Iterator<Query> iterator = queries.iterator(); iterator.hasNext();) {
 			Query q = (Query) iterator.next();
-			out.println(q.query_id.trim() +" "+q.answer_kb_id.trim());
+			out.println(q.query_id.trim()+"\t"+q.answer_kb_id.trim());
 		}
 		out.close();		
 	}
@@ -202,7 +226,6 @@ public class ProcessQuery {
 	    return contents.toString();		
 	}
 	
-	
 	private static Document queryLucene(Query q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
@@ -235,8 +258,6 @@ public class ProcessQuery {
 		}
 		*/
 	}
-	
-	
 	
 	private static void loadDocsLocations() throws Exception {
 		
