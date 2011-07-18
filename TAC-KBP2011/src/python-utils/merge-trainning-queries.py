@@ -72,7 +72,8 @@ def main():
     parse_queries_types(sys.argv[2])
     
     for q in queries:
-        print queries[q].id,'\t',queries[q].string_name,'\t',queries[q].doc_id,'\t',queries[q].entity_kb_id,'\t',queries[q].entity_type, 
+        #print queries[q].id,'\t',queries[q].string_name,'\t',queries[q].doc_id,'\t',queries[q].entity_kb_id,'\t',queries[q].entity_type, 
+        print queries[q].id,'\t',queries[q].entity_kb_id
         
 if __name__ == "__main__":
     main()
