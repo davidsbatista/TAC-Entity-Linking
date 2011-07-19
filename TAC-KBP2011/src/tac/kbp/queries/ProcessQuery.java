@@ -1,19 +1,23 @@
 package tac.kbp.queries;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathConstants;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -27,13 +31,16 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25.BM25Parameters;
 import org.ninit.models.bm25f.BM25FParameters;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.tidy.Tidy;
+import org.xml.sax.InputSource;
 
 import tac.kbp.utils.BigFile;
 
@@ -76,7 +83,7 @@ public class ProcessQuery {
 	}
 
 	
-	private static org.w3c.dom.Document callRembrandt(String text) {
+	private static JSONObject callRembrandt(String text) {
 		
 		HttpClient httpclient = new HttpClient();
 		
@@ -84,7 +91,7 @@ public class ProcessQuery {
 		
 		NameValuePair slg = new NameValuePair("slg", "en");
 		NameValuePair lg = new NameValuePair("lg", "en");
-		NameValuePair format = new NameValuePair("format", "dsb");
+		NameValuePair format = new NameValuePair("f", "dsb");
 		NameValuePair key = new NameValuePair("api_key","db924ad035a9523bcf92358fcb2329dac923bf9c");
 		NameValuePair sentence = new NameValuePair("db",text);
 		
@@ -95,7 +102,7 @@ public class ProcessQuery {
 		postMethod.addParameter(sentence);
 		
 		BufferedReader br = null;
-		org.w3c.dom.Document document = null;
+		JSONObject jsonObj = null;
 		
 		try{			
 			int returnCode = httpclient.executeMethod(postMethod);
@@ -107,23 +114,8 @@ public class ProcessQuery {
 			}
 			
 			else {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();		
-		        factory.setValidating(false);
-		        factory.setNamespaceAware(false);
-		        
-		        DocumentBuilder loader = factory.newDocumentBuilder();
 		        String response = postMethod.getResponseBodyAsString();
-		        
-		        ByteArrayInputStream json = new ByteArrayInputStream(response.getBytes("UTF-8"));		        
-		        String jsonString = json.toString();
-		        
-		        Object obj = JSONValue.parse(jsonString);		        
-		        JSONArray array = (JSONArray)obj;
-
-		        System.out.println("Size of array");
-		        System.out.println(array.size());
-		        
-		        //System.out.println(array.get(index));
+		        jsonObj = new JSONObject(response);
 		      }
 
 			
@@ -143,7 +135,7 @@ public class ProcessQuery {
 		      	  catch (Exception fe) {}
 		    }
 	
-		    return document;
+	        return jsonObj;
 		    
 	}
 	
@@ -152,20 +144,157 @@ public class ProcessQuery {
 		Document doc = queryLucene(q);
 		
 		System.out.println("Calling REMBRANDT...");
-		org.w3c.dom.Document docRembrandted = callRembrandt(supportDoc);
+		JSONObject jsonObj = callRembrandt(supportDoc);
 		
-		System.out.println(docRembrandted);
+		if (jsonObj!=null) {
+			
+			String documentString = (jsonObj.getJSONObject("message").getJSONObject("document").getString("body"));
+			String cleanedDocumentString = documentString.
+			replaceAll("&amp\\s;", "&amp;").
+			replaceAll("&lt\\s;", "&lt;").
+			replaceAll("&gt\\s;", "&gt;").
+	        replaceAll("&quot\\s;", "&quot;").
+	        replaceAll("&nbsp\\s;", "&nbsp;").
+			replaceAll("&iexcl\\s;", "&iexcl;").
+			replaceAll("&cent\\s;", "&cent;").
+			replaceAll("&&pound\\s;","&pound;").
+			replaceAll("&curren\\s;", "&curren;").
+			replaceAll("&yen\\s;", "&yens;");
+			/*			
+			&brvbar;
+			&sect;
+			&uml;
+			&copy;
+			&ordf;
+			&laquo;
+			&not;
+			&shy;
+			&reg;
+			&macr;
+			&deg;
+			&plusmn;
+			&sup2;
+			&sup3;
+			&acute;
+			&micro;
+			&para;
+			&middot;
+			&cedil;
+			&sup1;
+			&ordm;
+			&raquo;
+			&frac14;
+			&frac12;
+			&frac34;
+			&iquest;
+			&Agrave;
+			&Aacute;
+			&Acirc;
+			&Atilde;
+			&Auml;
+			&Aring;
+			&AElig;
+			&Ccedil;
+			&Egrave;
+			&Eacute;
+			&Ecirc;
+			&Euml;
+			&Igrave;
+			&Iacute;
+			&Icirc;
+			&Iuml;
+			&ETH;
+			&Ntilde;
+			&Ograve;
+			&Oacute;
+			&Ocirc;
+			&Otilde;
+			&Ouml;
+			&times;
+			&Oslash;
+			&Ugrave;
+			&Uacute;
+			&Ucirc;
+			&Uuml;
+			&Yacute;
+			&THORN;
+			&szlig;
+			&agrave;
+			&aacute;
+			&acirc;
+			&atilde;
+			&auml;
+			&aring;
+			&aelig;
+			&ccedil;
+			&egrave;
+			&eacute;
+			&ecirc;
+			&euml;
+			&igrave;
+			&iacute;
+			&icirc;
+			&iuml;
+			&eth;
+			&ntilde;
+			&ograve;
+			&oacute;
+			&ocirc;
+			&otilde;
+			&ouml;
+			&divide;
+			&oslash;
+			&ugrave;
+			&uacute;
+			&ucirc;
+			&uuml;
+			&yacute;
+			&thorn;
+			&yuml;
+			*/
+			
+	        System.out.println(cleanedDocumentString);
+	        
+	        InputSource is = new InputSource();
+	        is.setCharacterStream(new StringReader(cleanedDocumentString));
+	        
+	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();		
+	        factory.setValidating(false);
+	        factory.setNamespaceAware(false);
+	        DocumentBuilder loader = factory.newDocumentBuilder();
+	        
+	        org.w3c.dom.Document XMLDoc =  loader.parse(is);
+	        
+	        NodeList persons = XMLDoc.getElementsByTagName("PERSON");
+	        NodeList organizations = XMLDoc.getElementsByTagName("ORGANIZATION");
+	        NodeList places = XMLDoc.getElementsByTagName("PLACE");
+	        
+	        //TODO: trim() the the text that represents the Entity
+	        
+	        System.out.println("= PERSONS =");
+	        for (int i = 0; i < persons.getLength(); i++) {
+	            Element element = (Element) persons.item(i);
+	            System.out.println(element.getTextContent());
+	        }
+	        
+	        System.out.println("= ORGANIZATIONS =");
+	        for (int i = 0; i < organizations.getLength(); i++) {
+	            Element element = (Element) organizations.item(i);
+	            System.out.println(element.getTextContent());
+	        }
+	        
+	        System.out.println("= PLACES =");
+	        for (int i = 0; i < places.getLength(); i++) {
+	            Element element = (Element) places.item(i);
+	            System.out.println(element.getTextContent());
+	        }
+
+	        
+	        
+	        
+	        
+		}
 		
-		/*
-		javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
-    	NodeList locs = (NodeList) xpath.compile("//ys:reference/ys:woeIds").evaluate(doc,XPathConstants.NODESET);
-    	
-		*/
-		
-		/*
-		DocumentBuilderFactory.newDocumentBuilder
-		DocumentBuilder doc = new
-		*/ 
 		
 		if (doc!=null) {		
 			String id = doc.getField("id").stringValue();
