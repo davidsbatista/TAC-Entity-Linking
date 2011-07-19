@@ -14,8 +14,16 @@ def main():
     tokens = nltk.word_tokenize(document)
     text = nltk.Text(tokens)
     
-    text.concordance(entity)
-    text.collocations(20,2)
-         
+    concordance = nltk.ConcordanceIndex(text)
+    
+    print "context for: " + '"'+entity+'"'
+    
+    offsets = concordance.offsets(entity)
+    
+    #print offsets
+    
+    concordance.print_concordance(entity);
+
+
 if __name__ == "__main__":
     main()

@@ -44,7 +44,10 @@ def main():
     print data
     JSONObject = simplejson.loads(data)
     
+    print JSONObject
+    
     print JSONObject["message"]["document"]["body"]
     
 if __name__ == "__main__":
     main()
+    
