@@ -8,6 +8,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
+import org.json.JSONObject;
 
 public class CallREMBRANDT {
 	
@@ -19,9 +20,9 @@ public class CallREMBRANDT {
 		
 		NameValuePair slg = new NameValuePair("slg", "pt");
 		NameValuePair lg = new NameValuePair("lg", "pt");
-		NameValuePair format = new NameValuePair("format", "dsb");
+		NameValuePair format = new NameValuePair("f", "dsb");
 		NameValuePair key = new NameValuePair("api_key","db924ad035a9523bcf92358fcb2329dac923bf9c");
-		NameValuePair sentence = new NameValuePair("db","Hoje está um dia de calor em Lisboa");
+		NameValuePair sentence = new NameValuePair("db","Hot day in Lisbon, Portugal");
 		
 		postMethod.addParameter(slg);
 		postMethod.addParameter(lg);
@@ -55,16 +56,11 @@ public class CallREMBRANDT {
 				String response = postMethod.getResponseBodyAsString();
 				System.out.println(response);
 		        
-				/*
-				
-				br = new BufferedReader(new InputStreamReader(postMethod.getResponseBodyAsStream()));
-		    	
-				String readLine;
-		    	
-		    	while(((readLine = br.readLine()) != null)) {
-		    		System.err.println(readLine);
-		    	  }
-		    	*/    	
+				JSONObject jsonObj = new JSONObject(response);
+		        
+		        System.out.println(jsonObj);
+		        System.out.println(jsonObj.getJSONObject("message").getJSONObject("document").getString("body"));
+		        
 		      }
 		    
 		} catch (Exception e) {
