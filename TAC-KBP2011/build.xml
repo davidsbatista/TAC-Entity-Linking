@@ -6,7 +6,7 @@
         <jar destfile="/home/dsbatista/workspace/TAC-KBP2011/TAC-KBP2011.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.ProcessQuery"/>
+                <attribute name="Rsrc-Main-Class" value="tac.kbp.utils.TransformForLDAGibbs"/>
                 <attribute name="Class-Path" value="."/>
                 <attribute name="Rsrc-Class-Path" value="./ commons-beanutils.jar commons-collections.jar commons-collections3.jar commons-digester.jar log4j-1.2.jar servlet-api-2.5.jar commons-logging.jar Lucene-BM25-1.0.jar Lucene-BM25-1.0.jar lucene-core-2.4.0.jar"/>
             </manifest>
