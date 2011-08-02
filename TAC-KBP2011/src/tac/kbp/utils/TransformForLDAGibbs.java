@@ -57,6 +57,21 @@ public class TransformForLDAGibbs {
 				
 		return stemmer.toString();	
 	}
+
+	public static String removeStopWords(String text) {
+		
+		StringBuffer words_only = new StringBuffer();				
+		String text_cleaned = text.replaceAll("[^\\w|^\\s|[0-9]]", "");				
+		String[] words = text_cleaned.split("[\\s]");
+		
+		for (int i = 0; i < words.length; i++) {
+			if (!stop_words.contains(words[i].toLowerCase()) && words[i].length()>0) {
+				words_only.append(words[i]+" ");
+			}
+		}
+		
+		return words_only.toString();		
+	}
 	
 	
 	public static void main(String[] args) throws IOException, SAXException {
@@ -75,58 +90,34 @@ public class TransformForLDAGibbs {
 		else {
 			
 			EntityParser parser = new EntityParser();
-			Arrays.sort(fileList);
+			Arrays.sort(fileList);			
+			int num_docs = 0;
 			
-			//starts indexing the parsed entities
+			//use buffering
+			File aFile = new File("KB_one_file_documents.txt");					
+			Writer output = new BufferedWriter(new FileWriter(aFile));
+			
 			for (int i=0; i < fileList.length; i++) {
 				
 				System.out.print("\nProcessing " + fileList[i]);
 				
-				//use buffering
-				File aFile = new File("KB_one_file_documents.txt");					
-				Writer output = new BufferedWriter(new FileWriter(aFile));
-			    
 				for (Entity entity : parser.process(args[0]+fileList[i]).getEntities()) {
 					
 					String id = entity.getId().replaceAll("\\n", " ");
 					String title = entity.getWiki_title().replaceAll("\\n", " ");
 					String infoclass = entity.getInfobox_class().replaceAll("\\n", " ");
-					String text = entity.getWiki_text().replaceAll("\\n", " ");
-					String text_no_stopwords = null;
-					
-					
-					for (Iterator<String> iterator = stop_words.iterator(); iterator.hasNext();) {
-						String stopword = (String) iterator.next();
-						stopword = ".*"+stopword+".*";
-						text_no_stopwords = text.replaceAll(stopword, " ");
-					}
-					
-					/*
-					StringBuffer stemmed = new StringBuffer();
-					
-					String[] words = text_no_stopwords.split(" ");
-					String[] stemmead_words = new String[words.length];
-					
-					for (int j = 0; j < words.length; j++) {
-						stemmead_words[j] =  stemm(words[j]);
-					}
-					
-					for (int j = 0; j < words.length; j++) {
-						stemmed.append(stemmead_words[j] + " ");
-					}
-					
-					System.out.println(text_no_stopwords);
-					System.out.println(stemmed.toString());
-					*/
+					String text = entity.getWiki_text().replaceAll("\\n", " ");					
+					String text_no_stopwords = removeStopWords(text);
 					
 					StringBuffer contents = new StringBuffer();
-					
 					contents.append(title + " " + infoclass + " " + text_no_stopwords);
 					output.write( id + " = " + contents.toString() + "\n");
+					num_docs++;
 
 				}
-				output.close();
 			}
+			output.close();
+			System.out.println(num_docs + " docs parsed");
 		}		
 	}
 }

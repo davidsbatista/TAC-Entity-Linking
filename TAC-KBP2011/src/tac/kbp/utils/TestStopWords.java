@@ -38,19 +38,23 @@ public class TestStopWords {
 	
 	public static void main(String[] args){
 		
-		String text_no_stopwords = null;
+		StringBuffer words_only = new StringBuffer();
 		
 		loadStopWords(args[0]);
 		
-		for (Iterator<String> iterator = stop_words.iterator(); iterator.hasNext();) {
-			String stopword = (String) iterator.next();
-			stopword = ".*"+stopword+".*";
-			
-			System.out.println(text.replaceAll(stopword, " "));
-
+		String text_cleaned = text.replaceAll("[^\\w|^\\s|[0-9]]", "");
+				
+		String[] words = text_cleaned.split("[\\s]");
+		
+		System.out.println(words.length);
+		
+		for (int i = 0; i < words.length; i++) {
+			if (!stop_words.contains(words[i].toLowerCase()) && words[i].length()>0) {
+				words_only.append(words[i]+" ");
+			}
 		}
 		
-		
+		System.out.println(words_only.toString());
 		
 	}
 }
