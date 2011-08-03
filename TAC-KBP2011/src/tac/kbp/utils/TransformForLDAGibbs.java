@@ -12,14 +12,12 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.xml.sax.SAXException;
 
 import tac.kbp.kb.index.EntityParser;
 import tac.kbp.kb.index.xml.Entity;
-import tac.kbp.utils.Stemmer;
 
 public class TransformForLDAGibbs {
 	
@@ -66,7 +64,7 @@ public class TransformForLDAGibbs {
 		
 		for (int i = 0; i < words.length; i++) {
 			if (!stop_words.contains(words[i].toLowerCase()) && words[i].length()>0) {
-				words_only.append(words[i]+" ");
+				words_only.append(words[i].toLowerCase()+" ");
 			}
 		}
 		
@@ -103,15 +101,13 @@ public class TransformForLDAGibbs {
 				
 				for (Entity entity : parser.process(args[0]+fileList[i]).getEntities()) {
 					
-					String id = entity.getId().replaceAll("\\n", " ");
-					String title = entity.getWiki_title().replaceAll("\\n", " ");
 					String infoclass = entity.getInfobox_class().replaceAll("\\n", " ");
 					String text = entity.getWiki_text().replaceAll("\\n", " ");					
 					String text_no_stopwords = removeStopWords(text);
 					
 					StringBuffer contents = new StringBuffer();
-					contents.append(title + " " + infoclass + " " + text_no_stopwords);
-					output.write( id + " = " + contents.toString() + "\n");
+					contents.append( infoclass + " " + text_no_stopwords);
+					output.write( contents.toString() + "\n");
 					num_docs++;
 
 				}
