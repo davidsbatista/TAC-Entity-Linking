@@ -48,11 +48,13 @@ public class QueryLucene {
 		
 		documents = new LinkedList<Document>();
 		
+		StringBuffer query_string = new StringBuffer();
+		
 		for (int i = 1; i < args.length; i++) {
-			Document doc = queryLucene(args[i]);
-			documents.add(doc);
+			query_string.append(" "+args[i]); 
 		}
 		
+		queryLucene(query_string.toString());		
 		dumpDocs(args[0]);
 	}
 	
@@ -103,13 +105,13 @@ public class QueryLucene {
 		
 	}
 	
-	private static Document queryLucene(String query_string) throws IOException, ParseException {
+	private static void queryLucene(String query_string) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		Document doc = null;
 		
-		//String[] fields = {"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
 		String[] fields = {"name","wiki_text","facts"};
+		//String[] fields = {"name","wiki_text","facts"};
 		float[] boosts =  {1f,1f,1f};
 		float[] bParams =  {1.0f,1.0f,1.0f};
 		
@@ -119,10 +121,9 @@ public class QueryLucene {
 		TopDocs top = searcher.search(query, null, 100);				
 		ScoreDoc[] docs = top.scoreDocs;
 		
-		if (top.scoreDocs.length>0) {
-			doc = searcher.doc(docs[0].doc);
+		for (int i = 0; i < docs.length; i++) {
+			doc = searcher.doc(docs[i].doc);
+			documents.add(doc);
 		}
-
-		return doc;
 	}
 }
