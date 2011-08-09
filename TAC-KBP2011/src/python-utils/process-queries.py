@@ -5,6 +5,7 @@ import os,sys
 import re
 import fileinput
 import string
+import StringIO
 
 import nltk
 import MySQLdb
@@ -230,18 +231,25 @@ def remove_stop_words(sentence):
     return word_list
 
 def get_alternative_names(q):
-
-    SQL = """SELECT en_page.page_title FROM en_redirect, en_page WHERE en_redirect.rd_title = '%s' AND en_redirect.rd_from = en_page.page_id """ % (q.string_name)
-    cursor = conn.cursor()    
-    status = cursor.execute(SQL)
-    rows = cursor.fetchall()
-                
-    redirects = []    
-
-    for r in rows:        
-        redirects.append(r[0])
     
-    return redirects
+    #TODO: Problem with strings such as "Champions' League"
+    
+    try:
+        SQL = """SELECT en_page.page_title FROM en_redirect, en_page WHERE en_redirect.rd_title = '%s' AND en_redirect.rd_from = en_page.page_id """ % (q.string_name.replace("'",""))
+        cursor = conn.cursor()    
+        status = cursor.execute(SQL)
+        rows = cursor.fetchall()
+                    
+        redirects = []    
+    
+        for r in rows:        
+            redirects.append(r[0])
+        
+        return redirects
+    
+    except Execption, e:
+        print e
+        print SQL
 
 def get_topics(query):
     
@@ -302,49 +310,76 @@ def query_lucene(q):
     print "context occurences: ", q.support_doc_context_occurences 
     """
     
+    args = StringIO.StringIO()
+    args.write(' '+q.string_name.encode("utf8")+' ')
+    
+    
     try:
-        persons = open(lda_models+"/"+q.id+"/"+'persons.txt', 'w')
+        #persons = open(lda_models+"/"+q.id+"/"+'persons.txt', 'w')
         for p in q.support_doc_persons:
-            persons.write(p.encode("utf8")+"\n")
-        persons.close()
+            #persons.write(p.encode("utf8")+"\n")
+            args.write(p.encode("utf8")+" ") 
+        #persons.close()
         
-        organizations = open(lda_models+"/"+q.id+"/"+'organizations.txt', 'w')
+        #organizations = open(lda_models+"/"+q.id+"/"+'organizations.txt', 'w')
         for o in q.support_doc_organizations:
-            organizations.write(o.encode("utf8")+"\n")
-        organizations.close()
+            #organizations.write(o.encode("utf8")+"\n")
+            args.write(o.encode("utf8")+" ")
+        #organizations.close()
         
-        places = open(lda_models+"/"+q.id+"/"+'places.txt', 'w')
+        #places = open(lda_models+"/"+q.id+"/"+'places.txt', 'w')
         for p in q.support_doc_places:
-            places.write(p.encode("utf8")+"\n")
-        places.close()
+            #places.write(p.encode("utf8")+"\n")
+            args.write(p.encode("utf8")+" ")
+        #places.close()
             
-        ocurrences = open(lda_models+"/"+q.id+"/"+'occurrences.txt', 'w')
+        #ocurrences = open(lda_models+"/"+q.id+"/"+'occurrences.txt', 'w')
         for o in q.support_doc_context_occurences:
-            ocurrences.write((" ".join(o)).encode("utf8")+"\n")
-        ocurrences.close()
+            #ocurrences.write((" ".join(o)).encode("utf8")+"\n")
+            args.write(" ".join(o).encode("utf8")+" ")
+        #ocurrences.close()
         
     except Exception, e:
         print "error in ", q.id
+        print e
     
-    """
+
     command = "java -jar /collections/TAC-2011/TACKBP.jar"
-    outputdir = q.id
-    args = " "
-    """
+    outputdir = " /collections/TAC-2011/lda_models/" + q.id + "_no_topics/"
+    args_string = args.getvalue()
+    
+    full_comand = command + outputdir + args_string.decode("utf8")
+    
+    print "Querying Lucene...", full_comand
+                                            
+    p = Popen(full_comand,shell=True,stdout=PIPE,stderr=PIPE)
+    output, stderr_output = p.communicate()
+    
+    print stderr_output     
+    print output
+
+
+def generate_output():
+    print ""
+
 
 def start():
     for q in queries:
         print "Processing query: " + q.id +' "'+ q.string_name +'"'
         
         """ create directory with query_id to store information regarding the query """
-        os.mkdir(lda_models+q.id)
+        os.mkdir(lda_models+q.id+"_no_topics/")
         
         print "Looking for alternative names"
         q.alternative_names =  get_alternative_names(q);
         analyze_support_document(q)
-        get_topics(q)
+        
+        #get_topics(q)        
         query_lucene(q)
+        
         #topics similarity
+        #generate_output(q)
+        
               
 def help():
     print "Usage:"
