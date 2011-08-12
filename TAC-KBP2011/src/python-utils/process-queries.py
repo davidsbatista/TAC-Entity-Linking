@@ -90,8 +90,9 @@ def parse_queries(file):
                 query = Query(id,name,docid)
                 queries.append(query)
     
-    except:
+    except Exception, e:
         print "Error parsing queries"
+        print e
 
 def call_rembrandt(document):
 
@@ -318,26 +319,34 @@ def query_lucene(q):
         #persons = open(lda_models+"/"+q.id+"/"+'persons.txt', 'w')
         for p in q.support_doc_persons:
             #persons.write(p.encode("utf8")+"\n")
-            args.write(p.encode("utf8")+" ") 
+            args.write(p.replace("'","").encode("utf8")+" ") 
         #persons.close()
         
         #organizations = open(lda_models+"/"+q.id+"/"+'organizations.txt', 'w')
         for o in q.support_doc_organizations:
             #organizations.write(o.encode("utf8")+"\n")
-            args.write(o.encode("utf8")+" ")
+            args.write(o.replace("'","").encode("utf8")+" ")
         #organizations.close()
         
         #places = open(lda_models+"/"+q.id+"/"+'places.txt', 'w')
         for p in q.support_doc_places:
             #places.write(p.encode("utf8")+"\n")
-            args.write(p.encode("utf8")+" ")
+            args.write(p.replace("'","").encode("utf8")+" ")
         #places.close()
             
         #ocurrences = open(lda_models+"/"+q.id+"/"+'occurrences.txt', 'w')
         for o in q.support_doc_context_occurences:
             #ocurrences.write((" ".join(o)).encode("utf8")+"\n")
-            args.write(" ".join(o).encode("utf8")+" ")
+            for w in o:
+                w.replace("'","")
+                args.write(w.encode("utf8")+" ")
         #ocurrences.close()
+        
+        for a in q.alternative_names:
+            if a.endswith("_(disambiguation)"):
+                args.write(a.split("_(")[0].replace("'","").encode("utf8")+" ")
+            else:
+                args.write(a.replace("'","").encode("utf8")+" ")
         
     except Exception, e:
         print "error in ", q.id
