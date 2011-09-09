@@ -101,8 +101,9 @@ def calculateIC(cursor):
             except:
                 print word
         
-        namesEC.append((row[0],nameEC))
-        
+        namesEC.append((row[1],nameEC))
+    
+
     sql = "INSERT INTO entity_Ec (kb_id,nameEC) VALUES (%s,%s)" 
     print "status: ", insertBD(cursor,sql,namesEC)
 
