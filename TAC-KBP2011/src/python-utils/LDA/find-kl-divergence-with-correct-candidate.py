@@ -20,20 +20,21 @@ def copy_data():
         parts = line.split("\t")
         query = parts[0].strip()
         correct_candidate = parts[1]        
-        id = parts[1].split("E")[1].strip()
+        id = int(parts[1].split("E")[1].strip())
 
         """
         get the topics distribution for the correct_candiate:
-        it's the big file: KB_one_file_documents_rare_words_removed.txt.theta
         the line number in the file corresponds to the entity ID 
         """
-    
-        command = "head -n " + id + " /collections/TAC-2011/lda_distribution_knowledge_base/KB_one_file_documents_rare_words_removed.txt.theta | tail -n 1"
+        
+        command = "head -n " + str(id-1) + " /collections/TAC-2011/trained_model_200_iterations/model-final.theta | tail -n 1"
         p = Popen(command,shell=True,stdout=PIPE,stderr=PIPE)
         output, stderr_output = p.communicate()
-        print stderr_output     
-
-        f = open(id+".theta", 'w')
+        print stderr_output
+        
+        print correct_candidate
+        
+        f = open("KB_entities/"+str(id)+".theta", 'w')
         f.write(output)
         f.close()
         
@@ -42,9 +43,13 @@ def copy_data():
         (.theta file in the "/collections/TAC-2011/lda_distribution_queries/parts[0]" directory)
         """
         
+        """
         dir = "/collections/TAC-2011/lda_distribution_queries/"+ query        
         command = "mkdir queries/" + query + ";cp " + dir + "/*.theta " + "queries/" + query + "/"
         p = Popen(command,shell=True,stdout=PIPE,stderr=PIPE)
+        output, stderr_output = p.communicate()
+        print stderr_output
+        """
 
 
 def load_gold_standard():
@@ -61,7 +66,7 @@ def calculate_divergence_gold_standard():
         query = e[0]        
         id = e[1]
         
-        correct_entity = "/collections/TAC-2011/find-kl-divergence-with-correct-candidate/KB_entities/"+id+"/"+id+".theta"
+        correct_entity = "/collections/TAC-2011/find-kl-divergence-with-correct-candidate/KB_entities/"+str(int(id))+".theta"
         document_dir = "/collections/TAC-2011/find-kl-divergence-with-correct-candidate/queries/"+query+"/"
 
         dirList = os.listdir(document_dir)
@@ -87,8 +92,8 @@ def calculate_divergence_random_entity():
         random_entity = int(random.random()*num_entities)
         while random_entity == int(e[1]):
             random_entity = int(random.random()*num_entities)
-        
-        command = "head -n " + str(random_entity) + " /collections/TAC-2011/lda_distribution_knowledge_base/KB_one_file_documents_rare_words_removed.txt.theta | tail -n 1"
+                
+        command = "head -n " + str(random_entity-1) + " /collections/TAC-2011/trained_model_200_iterations/model-final.theta | tail -n 1"
         p = Popen(command,shell=True,stdout=PIPE,stderr=PIPE)
         output, stderr_output = p.communicate()
         
