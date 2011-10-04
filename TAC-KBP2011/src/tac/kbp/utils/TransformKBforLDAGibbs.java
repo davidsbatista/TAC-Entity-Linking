@@ -71,7 +71,6 @@ public class TransformKBforLDAGibbs {
 		return words_only.toString();		
 	}
 	
-	
 	public static void main(String[] args) throws IOException, SAXException {
 		
 		loadStopWords(args[1]);
@@ -104,9 +103,10 @@ public class TransformKBforLDAGibbs {
 					String infoclass = entity.getInfobox_class().replaceAll("\\n", " ");
 					String text = entity.getWiki_text().replaceAll("\\n", " ");					
 					String text_no_stopwords = removeStopWords(text);
+					String text_stemmed = stemm(text_no_stopwords);
 					
 					StringBuffer contents = new StringBuffer();
-					contents.append( infoclass + " " + text_no_stopwords);
+					contents.append( infoclass + " " + text_stemmed);
 					output.write( contents.toString() + "\n");
 					num_docs++;
 
