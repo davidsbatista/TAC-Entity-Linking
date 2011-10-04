@@ -62,7 +62,7 @@ def load_gold_standard():
 
 def calculate_divergence_gold_standard():
     
-    for e in gold_standard:        
+    for e in gold_standard:
         query = e[0]        
         id = e[1]
         
