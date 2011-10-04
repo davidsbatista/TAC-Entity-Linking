@@ -24,7 +24,13 @@ def load(dict):
     """
     
     for k in h_keys:
-        mc.set(k.strip().replace(" ","_").encode("utf8"),dict[k])
+        
+        try:
+            mc.set(k.strip().replace(" ","_").encode("utf8"),dict[k])
+                      
+        except Exception, e:
+            print e
+        
 
 
 def main():
