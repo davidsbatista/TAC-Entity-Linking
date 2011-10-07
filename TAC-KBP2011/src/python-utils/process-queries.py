@@ -24,7 +24,7 @@ wordmaps_lda = dict()
 
 conn = MySQLdb.connect(host="agatha.inesc-id.pt", user="publico", passwd="publ1c0", db="wikipedia", charset="utf8", use_unicode=True)
 
-lda_models = "/collections/TAC-2011/lda_models/"
+lda_models = "/collections/TAC-2011/lda_trained_model/"
 
 class Query:
     
@@ -275,13 +275,14 @@ def get_topics(query):
     doc_lda_format.close()
     
     command = "/home/dsbatista/GibbsLDA++-0.2/src/lda"
-    args = " -inf -dir /collections/TAC-2011/lda_models/ -model model-01000 -dfile " + query.id+"/"+query.doc_id+'_lda_format'
+    args = " -inf -dir /collections/TAC-2011/lda_trained_model/ -model model-final -niters 20 -dfile " + query.id+"/"+query.doc_id+'_lda_format'
     
     print "Calling GibbsLDA++... ", command + args                                         
     p = Popen(command+args,shell=True,stdout=PIPE,stderr=PIPE)
     output, stderr_output = p.communicate()
     print stderr_output     
     print output
+
     
 def analyze_support_document(query):
     
@@ -354,7 +355,7 @@ def query_lucene(q):
     
 
     command = "java -jar /collections/TAC-2011/TACKBP.jar"
-    outputdir = " /collections/TAC-2011/lda_models/" + q.id + "_no_topics/"
+    outputdir = " /collections/TAC-2011/" + lda_models + "/" + q.id
     args_string = args.getvalue()
     
     full_comand = command + outputdir + args_string.decode("utf8")
@@ -367,7 +368,6 @@ def query_lucene(q):
     print stderr_output     
     print output
 
-
 def generate_output():
     print ""
 
@@ -377,15 +377,14 @@ def start():
         print "Processing query: " + q.id +' "'+ q.string_name +'"'
         
         """ create directory with query_id to store information regarding the query """
-        os.mkdir(lda_models+q.id+"_no_topics/")
+        os.mkdir(lda_models+q.id)
         
-        print "Looking for alternative names"
-        q.alternative_names =  get_alternative_names(q);
-        analyze_support_document(q)
+        #print "Looking for alternative names"
+        #q.alternative_names =  get_alternative_names(q);
+        #analyze_support_document(q)
+        get_topics(q)
         
-        #get_topics(q)        
-        query_lucene(q)
-        
+        #query_lucene(q)
         #topics similarity
         #generate_output(q)
         
@@ -395,19 +394,15 @@ def help():
     print "\t process-queries support-documents-locations-file queries-file"
 
 def main():
-    if len(sys.argv) < 4 or len(sys.argv) > 4:
+    if len(sys.argv) < 3 or len(sys.argv) > 3:
         help()
     else:
         print "loading docs locations"
         load_docs_locations(sys.argv[1])
         print len(docs_locations), "docs loaded"
         
-        print "loading LDA wordmaps"
-        load_lda_wordmaps(lda_models+"wordmap.txt")
-        print len(wordmaps_lda), "wordmaps loaded"
-        
         print "loading queries"
-        parse_queries(sys.argv[3])        
+        parse_queries(sys.argv[2])
         print len(queries), "queries loaded"
         print "\n"
         start()
