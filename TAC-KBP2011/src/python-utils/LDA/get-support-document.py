@@ -3,6 +3,7 @@
 
 import sys
 import re
+import string
 
 import xml.dom.minidom
 import fileinput
@@ -11,6 +12,7 @@ from BeautifulSoup import BeautifulSoup
 
 docs_locations = dict()
 queries = []
+stopwords = []
 
 class Query:
     
@@ -39,10 +41,11 @@ class Query:
 def main():
     load_docs_locations(sys.argv[1])
     parse_queries(sys.argv[2])
+    load_stopwords(sys.argv[3])
     text = ''
     
     for q in queries:
-        text+= parse_doc(docs_locations[q.doc_id]+"/"+q.doc_id+".sgm")
+        text+= parse_doc(docs_locations[q.doc_id]+"/"+q.doc_id+".sgm") 
         text+= '\n'
 
     f = open("queries_one_file_documents.txt","wb")
@@ -52,9 +55,21 @@ def main():
 def parse_doc(document):
     xmldoc = xml.dom.minidom.parse(document)
     items = xmldoc.getElementsByTagName('BODY')
-    text = remove_all_tags(items[0].toxml().encode("utf8"))    
+    text = remove_all_tags(items[0].toxml().encode("utf8"))
+    text_no_stopwords = remove_stopwords(text)
     p = re.compile(r'\s+')
-    return p.sub(' ',text)
+    return p.sub(' ',text_no_stopwords)
+
+def remove_stopwords(text):
+    parts = text.split(" ")
+    no_stopwords = []
+    for w in parts:
+        if w.encode("utf8") in stopwords:
+            continue
+        else:
+         no_stopwords.append(w)
+         
+    return string.join(no_stopwords, " ")
 
 def remove_all_tags(data):
     return ''.join(BeautifulSoup(data).findAll(text=True))
@@ -88,23 +103,6 @@ def parse_queries(file):
     except Exception, e:
         print "Error parsing queries"
         print e
-
-def analyze_support_document(query):
-    
-    print "Support document: ", docs_locations[query.doc_id]+"/"+query.doc_id+".sgm"
-    
-    get_entities(query)
-    get_context(query)
-    
-    """ remove stop words from context occurrences """
-    occurences_no_stopwords = []
-    
-    for occ in query.support_doc_context_occurences:
-        occurences_no_stopwords.append(remove_stop_words(" ".join(occ)))
-    
-    query.support_doc_context_occurences = occurences_no_stopwords
-    
-    print "Number context occurence sentences", len(query.support_doc_context_occurences)
 
 if __name__ == "__main__":
     main()
