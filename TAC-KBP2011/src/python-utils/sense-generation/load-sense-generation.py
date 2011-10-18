@@ -1,12 +1,14 @@
-#!/usr/bin/env python
+#!/opt/python2.6/bin/python2.6
 # -*- coding: utf-8 -*-
 
 import sys
 import pickle
-import memcache
+import redis
+import fileinput
 
-mc = memcache.Client(['127.0.0.1:11211'], debug=1)
+acronyms = dict()
 
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 def read(file):
     pkl_file = open(file, 'rb')
@@ -14,6 +16,21 @@ def read(file):
     return mappings
     pkl_file.close()
 
+
+def load_acronyms(file):
+    
+    for line in fileinput.input(file):
+        
+        parts = line.split("\t")        
+        acronym = parts[0].strip()
+        expansion = parts[-1].strip()
+                
+        try:
+            acronyms[acronym].append(expansion)
+              
+        except:
+            acronyms[acronym] = list()
+            acronyms[acronym].append(expansion)
 
 def load(dict):
     h_keys = dict.keys()
@@ -26,29 +43,35 @@ def load(dict):
     for k in h_keys:
         
         try:
-            mc.set(k.strip().replace(" ","_").encode("utf8"),dict[k])
+            r.set(k, dict[k])
                       
         except Exception, e:
             print e
-        
-
 
 def main():
     
-    disambiguation = pickle.load(open("disambiguation_pages.pkl"))    
+    print "loading disambiguation"
+    disambiguation = pickle.load(open("disambiguation_pages.pkl"))
     print "nº disambiguation entries to load: ", len(disambiguation)
     load (disambiguation)
-    print mc.stats
+    print r.info
     
+    print "loading normalized"
     normalized = pickle.load(open('normalized_articles_and_redirects.pkl'))
     print "nº normalized entries to load: ", len(normalized)
     load (normalized)
-    print mc.stats    
+    print r.info    
     
+    print "loading anchors"
     anchors = pickle.load(open("anchors_to_title_page.pkl"))
     print "nº anchors entries to load: ", len(normalized)
     load(anchors)
-    print mc.stats
+    print r.info
+    
+    print "loading anchors"
+    load_acronyms(sys.argv[1])
+    load(acronyms)
+    
     
 if __name__ == "__main__":
     main()
