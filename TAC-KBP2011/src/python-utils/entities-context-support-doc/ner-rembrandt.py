@@ -31,7 +31,6 @@ class Query:
     entity_kb_id = None
     entity_type = None
     
-    alternative_names = None
     support_doc_persons = None
     support_doc_organizations = None
     support_doc_places = None
@@ -45,7 +44,6 @@ class Query:
         self.support_doc_organizations = xml.dom.minidom.NodeList
         self.support_doc_places = xml.dom.minidom.NodeList
         self.support_doc_context_occurences = []
-        self.alternative_names = set()
    
 def parse_doc(document):
     xmldoc = xml.dom.minidom.parse(document)
@@ -179,30 +177,30 @@ def analyze_support_document(query):
     print "Support document: ", docs_locations[query.doc_id]+"/"+query.doc_id+".sgm"
     
     get_entities(query)
-    #get_context(query)
+        
+    f_entities = open(q.id+'-named-entities.txt','w+')
+        
+    f_entities.write("PERSONS:\n")         
+    for e in q.support_doc_persons:
+        f_entities.write(e.firstChild.toxml()+"\n")
+        
+    f_entities.write("\n")
+    f_entities.write("PLACES:\n")
+        
+    for e in q.support_doc_places:
+        f_entities.write(e.firstChild.toxml()+"\n")
+        
+    f_entities.write("\n")
+    f_entities.write("ORGANIZATIONS:\n")
+        
+    for e in q.support_doc_organizations: 
+        f_entities.write(e.firstChild.toxml()+"\n")
+
+    f_entities.close()
 
 def load_stopwords(file):
     for line in fileinput.input(file):
         stopwords.append(line.strip())
-
-def get_alternative_names(query):
-        
-    alternative_names = r.get(query.string_name.lower())
-    acronyms = r.get(query.string_name)
-        
-    senses = set()
-    
-    if alternative_names:
-        for el in eval(alternative_names):
-            if el.lower() != query.string_name.lower():
-                senses.add(el)
-    
-    if acronyms:
-        for el in eval(acronyms):
-            if el.lower() != query.string_name.lower():
-                senses.add(el)
-    
-    query.alternative_names = senses
 
 def getConcordance(text,word,offset):
     
@@ -247,36 +245,7 @@ def main():
     load_stopwords(sys.argv[3])
     
     for q in queries:
-        #get_alternative_names(q)
         analyze_support_document(q)
-    
-    
-    for q in queries:
-        
-        f_entities = open(q.id+'-named-entities.txt','w+')
-        
-        f_entities.write("PERSONS:\n")         
-        for e in q.support_doc_persons:
-            f_entities.write(e.firstChild.toxml()+"\n")
-        
-        f_entities.write("\n")
-        f_entities.write("PLACES:\n")
-        
-        for e in q.support_doc_places:
-            f_entities.write(e.firstChild.toxml()+"\n")
-        
-        f_entities.write("\n")
-        f_entities.write("ORGANIZATIONS:\n")
-        
-        for e in q.support_doc_organizations: 
-            f_entities.write(e.firstChild.toxml()+"\n")
-
-        f_entities.close()
-
-        """
-        q.support_doc_organizations = xml.dom.minidom.NodeList
-        q.support_doc_places = xml.dom.minidom.NodeList
-        """
-    
+            
 if __name__ == "__main__":
     main()
