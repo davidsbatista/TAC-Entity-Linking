@@ -40,9 +40,9 @@ class Query:
         self.id = identifier
         self.string_name = string
         self.doc_id = document
-        self.support_doc_persons = xml.dom.minidom.NodeList
-        self.support_doc_organizations = xml.dom.minidom.NodeList
-        self.support_doc_places = xml.dom.minidom.NodeList
+        self.support_doc_persons = xml.dom.minidom.NodeList()
+        self.support_doc_organizations = xml.dom.minidom.NodeList()
+        self.support_doc_places = xml.dom.minidom.NodeList()
         self.support_doc_context_occurences = []
    
 def parse_doc(document):
@@ -178,23 +178,24 @@ def analyze_support_document(query):
     
     get_entities(query)
         
-    f_entities = open(q.id+'-named-entities.txt','w+')
-        
-    f_entities.write("PERSONS:\n")         
-    for e in q.support_doc_persons:
-        f_entities.write(e.firstChild.toxml()+"\n")
-        
-    f_entities.write("\n")
-    f_entities.write("PLACES:\n")
-        
-    for e in q.support_doc_places:
-        f_entities.write(e.firstChild.toxml()+"\n")
-        
-    f_entities.write("\n")
-    f_entities.write("ORGANIZATIONS:\n")
-        
-    for e in q.support_doc_organizations: 
-        f_entities.write(e.firstChild.toxml()+"\n")
+    f_entities = open(query.id+'-named-entities.txt','w+')
+    
+    if len(query.support_doc_persons)>0:
+        f_entities.write("PERSONS:\n")
+        for e in query.support_doc_persons:
+            f_entities.write(e.firstChild.toxml()+"\n")
+    
+    if len(query.support_doc_places)>0:
+        f_entities.write("\n")
+        f_entities.write("PLACES:\n")
+        for e in query.support_doc_places:
+            f_entities.write(e.firstChild.toxml()+"\n")
+    
+    if len(query.support_doc_organizations)>0:
+        f_entities.write("\n")
+        f_entities.write("ORGANIZATIONS:\n")
+        for e in query.support_doc_organizations: 
+            f_entities.write(e.firstChild.toxml()+"\n")
 
     f_entities.close()
 
