@@ -1,8 +1,8 @@
-#!/opt/python2.6/bin/python2.6
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-#!/usr/bin/env python
+#!/opt/python2.6/bin/python2.6
 """
 
 import sys
@@ -13,17 +13,15 @@ import fileinput
 
 import urllib
 import httplib
+import simplejson
 
 import string
-import redis
 
 from BeautifulSoup import BeautifulSoup
 
 docs_locations = dict()
 queries = []
 stopwords = []
-
-r = redis.Redis(host='localhost', port=6379, db=0)
 
 class Query:
     
@@ -87,7 +85,7 @@ def call_rembrandt(document):
         
     data = response.read()
     conn.close()
-    
+
     try:
         JSONObject = simplejson.loads(data)
         return JSONObject["message"]["document"]["body"]
@@ -101,7 +99,6 @@ def get_entities(query):
     
     # let's get the document location
     file = open(docs_locations[query.doc_id]+"/"+query.doc_id+".sgm")
-    #file = open(docs_location+query.doc_id+".sgm")
     document = file.read()
 
     # do NER on the document
@@ -112,7 +109,7 @@ def get_entities(query):
         rembrandted_document_valid_xml = BeautifulSoup(rembrandted_document)
         
         doc = unicode(rembrandted_document_valid_xml)
-    
+        
         try:
             xmldoc = xml.dom.minidom.parseString(doc.encode("utf-8"))
             
@@ -124,9 +121,9 @@ def get_entities(query):
             organizations = xmldoc.getElementsByTagName('organization')
             places = xmldoc.getElementsByTagName('place')
             
-            query.support_doc_persons = getDictWithKeysFromList(persons)
-            query.support_doc_organizations = getDictWithKeysFromList(organizations)
-            query.support_doc_places = getDictWithKeysFromList(places)
+            query.support_doc_persons = persons
+            query.support_doc_organizations = organizations
+            query.support_doc_places = places
     
         except Exception, e:
             print "Error parsing XML returned by REMBRANDT"
@@ -181,8 +178,8 @@ def analyze_support_document(query):
     
     print "Support document: ", docs_locations[query.doc_id]+"/"+query.doc_id+".sgm"
     
-    #get_entities(query)
-    get_context(query)
+    get_entities(query)
+    #get_context(query)
 
 def load_stopwords(file):
     for line in fileinput.input(file):
@@ -250,9 +247,36 @@ def main():
     load_stopwords(sys.argv[3])
     
     for q in queries:
-        get_alternative_names(q)
+        #get_alternative_names(q)
         analyze_support_document(q)
     
+    
+    for q in queries:
+        
+        f_entities = open(q.id+'-named-entities.txt','w+')
+        
+        f_entities.write("PERSONS:\n")         
+        for e in q.support_doc_persons:
+            f_entities.write(e.firstChild.toxml()+"\n")
+        
+        f_entities.write("\n")
+        f_entities.write("PLACES:\n")
+        
+        for e in q.support_doc_places:
+            f_entities.write(e.firstChild.toxml()+"\n")
+        
+        f_entities.write("\n")
+        f_entities.write("ORGANIZATIONS:\n")
+        
+        for e in q.support_doc_organizations: 
+            f_entities.write(e.firstChild.toxml()+"\n")
 
+        f_entities.close()
+
+        """
+        q.support_doc_organizations = xml.dom.minidom.NodeList
+        q.support_doc_places = xml.dom.minidom.NodeList
+        """
+    
 if __name__ == "__main__":
     main()
