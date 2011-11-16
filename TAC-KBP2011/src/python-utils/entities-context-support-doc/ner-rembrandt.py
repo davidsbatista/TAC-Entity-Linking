@@ -180,24 +180,32 @@ def analyze_support_document(query):
         
     f_entities = open(query.id+'-named-entities.txt','w+')
     
-    if len(query.support_doc_persons)>0:
-        f_entities.write("PERSONS:\n")
-        for e in query.support_doc_persons:
-            f_entities.write(e.firstChild.toxml()+"\n")
+    try:
+        if len(query.support_doc_persons)>0:
+            f_entities.write("PERSONS:\n")
+            for e in query.support_doc_persons:
+                f_entities.write(e.firstChild.toxml().encode("utf8")+"\n")
+        
+        if len(query.support_doc_places)>0:
+            f_entities.write("\n")
+            f_entities.write("PLACES:\n")
+            for e in query.support_doc_places:
+                f_entities.write(e.firstChild.toxml().encode("utf8")+"\n")
+        
+        if len(query.support_doc_organizations)>0:
+            f_entities.write("\n")
+            f_entities.write("ORGANIZATIONS:\n")
+            for e in query.support_doc_organizations: 
+                f_entities.write(e.firstChild.toxml().encode("utf8")+"\n")
     
-    if len(query.support_doc_places)>0:
-        f_entities.write("\n")
-        f_entities.write("PLACES:\n")
-        for e in query.support_doc_places:
-            f_entities.write(e.firstChild.toxml()+"\n")
+        if (len(query.support_doc_organizations)+len(query.support_doc_places)+len(query.support_doc_persons) == 0):
+            f_entities.write("none")
     
-    if len(query.support_doc_organizations)>0:
-        f_entities.write("\n")
-        f_entities.write("ORGANIZATIONS:\n")
-        for e in query.support_doc_organizations: 
-            f_entities.write(e.firstChild.toxml()+"\n")
-
-    f_entities.close()
+        f_entities.close()
+        
+    except Exception, e:
+        print e
+        
 
 def load_stopwords(file):
     for line in fileinput.input(file):
