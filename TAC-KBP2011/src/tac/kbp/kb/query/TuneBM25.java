@@ -132,7 +132,7 @@ public class TuneBM25 {
 	
 	public float query(GoldenStandardQuery query) throws IOException, ParseException {
 				
-TopDocs top = bm25query.query(query.name);
+		TopDocs top = bm25query.query(query.name);
 		
 		ScoreDoc[] docs = top.scoreDocs;
 		float score = (float) 0.0;
@@ -155,10 +155,7 @@ TopDocs top = bm25query.query(query.name);
 		
 		try {
 			
-			//Open the file that is the first
-			
 			System.out.println("opening queries file: " + file);
-			
 			FileInputStream fstream = new FileInputStream(file);
 			
 			// Get the object of DataInputStream
