@@ -6,310 +6,229 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-import org.json.JSONObject;
-import org.ninit.models.bm25.BM25BooleanQuery;
-import org.ninit.models.bm25.BM25Parameters;
-import org.ninit.models.bm25f.BM25FParameters;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
+import redis.clients.jedis.BinaryJedis;
 import tac.kbp.utils.BigFile;
 
-public class ProcessQuery {
+import com.google.common.base.Joiner;
 
-	static String docs = "documents-locations.txt";
-	static String fields_size = "fields_avg_size.txt";
+public class ProcessQuery {
+	
 	static HashMap<String, String> docslocations = new HashMap<String, String>();
 	static IndexSearcher searcher = null; 
-	static List<Query> queries = null;
+	
+	static List<KBPQuery> queries = null;
+	static HashMap<String, QueryGoldStandard> queriesGold = new HashMap<String, QueryGoldStandard>();
+	
+	static String named_entities_supportDoc = "/collections/TAC-2011/named-entities";
+	
+	static int total_n_docs = 0;
+	static int n_found = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
 		/* Load the queries file */
-		queries = tac.kbp.queries.xml.ParseXML.loadQueries(args);
+		queries = tac.kbp.queries.xml.ParseXML.loadQueries(args[0]);
 		System.err.println(queries.size() + " queries loaded");
 		
 		/* Load the text file with location of support documents */
-		loadDocsLocations();		
-		System.out.println(docslocations.size() + " documents locations loaded");
+		//loadDocsLocations(args[1]);		
+		//System.out.println(docslocations.size() + " documents locations loaded");
 		
 		/* Lucene Index */
-		searcher = new IndexSearcher(FSDirectory.getDirectory(args[1]));
+		searcher = new IndexSearcher(FSDirectory.getDirectory(args[2]));
 		
+		/*
 		//Load fields average length
 		BM25Parameters.load(fields_size);
 		
 		//Set explicit the k1 and B parameter
 		BM25FParameters.setK1(0.1f);
 		BM25FParameters.setB(1.0f);
+		*/
 		
-		for (Iterator<Query> iterator = queries.iterator(); iterator.hasNext();) {
-			Query query = (Query) iterator.next();
-			System.out.println("Processing query: " + query.query_id);
-			processQuery(query);
+		int port = 6379;
+		String host = "agatha";
+		BinaryJedis binaryjedis = new BinaryJedis(host, port);
+		
+		for (Iterator<KBPQuery> iterator = queries.iterator(); iterator.hasNext();) {
+			KBPQuery query = (KBPQuery) iterator.next();
+			
+			System.out.print(query.query_id + " \"" + query.name + '"');
+			getSenses(binaryjedis, query);
+			loadGoldStandard(args[3]);
+			processQuery(query);			
 		}
-		
-		generateOutput(args[2]);
-	
+		System.out.println("Total Docs: " + Integer.toString(total_n_docs));
+		System.out.println("Total Queries: " + Integer.toString(queries.size()));
+		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) queries.size()));
+		System.out.println("Found: " + n_found);
+
 	}
 
+	private static void loadNamedEntities(KBPQuery q){
+		
+	}
 	
-	private static JSONObject callRembrandt(String text) {
+	private static String cleanString(String sense) {
 		
-		HttpClient httpclient = new HttpClient();
+		/*
+		'Du Wei'
+		'Du Wei(footballer)']
+		[u'Du_wei'
+		*/
 		
-		PostMethod postMethod = new PostMethod("http://agatha.inesc-id.pt:80/Rembrandt/api/rembrandt?");
+		String cleaned =  sense.replace("[u'","").replace("']", "").replace("u'", "").replace("[","").
+				replace("'","").replace("['", "").trim().replace("_", " ");
 		
-		NameValuePair slg = new NameValuePair("slg", "en");
-		NameValuePair lg = new NameValuePair("lg", "en");
-		NameValuePair format = new NameValuePair("f", "dsb");
-		NameValuePair key = new NameValuePair("api_key","db924ad035a9523bcf92358fcb2329dac923bf9c");
-		NameValuePair sentence = new NameValuePair("db",text);
+		return cleaned;
+	}
+
+	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
+	
+	try {
+
+		byte[] queryStringbyteArray = query.name.getBytes("UTF-8");
+		byte[] queryStringLowbyteArray = query.name.toLowerCase().getBytes("UTF-8");
 		
-		postMethod.addParameter(slg);
-		postMethod.addParameter(lg);
-		postMethod.addParameter(format);
-		postMethod.addParameter(key);
-		postMethod.addParameter(sentence);
+		byte[] acronyms = binaryjedis.get(queryStringLowbyteArray);
+		byte[] senses = binaryjedis.get(queryStringbyteArray);
 		
-		BufferedReader br = null;
-		JSONObject jsonObj = null;
-		
-		try{			
-			int returnCode = httpclient.executeMethod(postMethod);
+		if (acronyms != null) {						
+			String acr = new String(acronyms, "UTF8");
+			String[] acronymsArray = acr.split(",\\s");
 			
-			if (returnCode == HttpStatus.SC_NOT_IMPLEMENTED) {		    	  
-				System.err.println("The Post method is not implemented by this URI");
-				// still consume the response body
-				postMethod.getResponseBodyAsString();
+			for (int i = 0; i < acronymsArray.length; i++) {
+				
+				String cleaned = cleanString(acronymsArray[i]);
+				
+				if (cleaned.compareToIgnoreCase(query.name) != 0) {
+					query.alternative_names.add(cleaned);
+				}
+										
 			}
+		}
+		
+		if (senses != null) {
+			String ses = new String(senses, "UTF8");
+			String[] sensesArray = ses.split(",\\s");
 			
-			else {
-		        String response = postMethod.getResponseBodyAsString();
-		        jsonObj = new JSONObject(response);
-		      }
-
-			
-		} catch (Exception e) {
-			
-		      System.err.println(e);
-		      
-		    } finally {
-		    	
-		      postMethod.releaseConnection();
-		      
-		      if (br != null)
-		    	  
-		    	  try { 
-		    		  br.close();
-		    	  } 
-		      	  catch (Exception fe) {}
-		    }
-	
-	        return jsonObj;
-		    
+			for (int i = 0; i < sensesArray.length; i++) {
+				
+				String cleaned = cleanString(sensesArray[i]);
+				
+				if (cleaned.compareToIgnoreCase(query.name) != 0) {
+					query.alternative_names.add(cleaned);
+				}		
+			}
+		}
+		
 	}
 	
-	private static void processQuery(Query q) throws Exception {
-		String supportDoc = getSupportDocument(q);
-		Document doc = queryLucene(q);
-		
-		System.out.println("Calling REMBRANDT...");
-		JSONObject jsonObj = callRembrandt(supportDoc);
-		
-		if (jsonObj!=null) {
-			
-			String documentString = (jsonObj.getJSONObject("message").getJSONObject("document").getString("body"));
-			String cleanedDocumentString = documentString.
-			replaceAll("&amp\\s;", "&amp;").
-			replaceAll("&lt\\s;", "&lt;").
-			replaceAll("&gt\\s;", "&gt;").
-	        replaceAll("&quot\\s;", "&quot;").
-	        replaceAll("&nbsp\\s;", "&nbsp;").
-			replaceAll("&iexcl\\s;", "&iexcl;").
-			replaceAll("&cent\\s;", "&cent;").
-			replaceAll("&&pound\\s;","&pound;").
-			replaceAll("&curren\\s;", "&curren;").
-			replaceAll("&yen\\s;", "&yens;");
-			/*			
-			&brvbar;
-			&sect;
-			&uml;
-			&copy;
-			&ordf;
-			&laquo;
-			&not;
-			&shy;
-			&reg;
-			&macr;
-			&deg;
-			&plusmn;
-			&sup2;
-			&sup3;
-			&acute;
-			&micro;
-			&para;
-			&middot;
-			&cedil;
-			&sup1;
-			&ordm;
-			&raquo;
-			&frac14;
-			&frac12;
-			&frac34;
-			&iquest;
-			&Agrave;
-			&Aacute;
-			&Acirc;
-			&Atilde;
-			&Auml;
-			&Aring;
-			&AElig;
-			&Ccedil;
-			&Egrave;
-			&Eacute;
-			&Ecirc;
-			&Euml;
-			&Igrave;
-			&Iacute;
-			&Icirc;
-			&Iuml;
-			&ETH;
-			&Ntilde;
-			&Ograve;
-			&Oacute;
-			&Ocirc;
-			&Otilde;
-			&Ouml;
-			&times;
-			&Oslash;
-			&Ugrave;
-			&Uacute;
-			&Ucirc;
-			&Uuml;
-			&Yacute;
-			&THORN;
-			&szlig;
-			&agrave;
-			&aacute;
-			&acirc;
-			&atilde;
-			&auml;
-			&aring;
-			&aelig;
-			&ccedil;
-			&egrave;
-			&eacute;
-			&ecirc;
-			&euml;
-			&igrave;
-			&iacute;
-			&icirc;
-			&iuml;
-			&eth;
-			&ntilde;
-			&ograve;
-			&oacute;
-			&ocirc;
-			&otilde;
-			&ouml;
-			&divide;
-			&oslash;
-			&ugrave;
-			&uacute;
-			&ucirc;
-			&uuml;
-			&yacute;
-			&thorn;
-			&yuml;
-			*/
-			
-	        System.out.println(cleanedDocumentString);
-	        
-	        InputSource is = new InputSource();
-	        is.setCharacterStream(new StringReader(cleanedDocumentString));
-	        
-	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();		
-	        factory.setValidating(false);
-	        factory.setNamespaceAware(false);
-	        DocumentBuilder loader = factory.newDocumentBuilder();
-	        
-	        org.w3c.dom.Document XMLDoc =  loader.parse(is);
-	        
-	        NodeList persons = XMLDoc.getElementsByTagName("PERSON");
-	        NodeList organizations = XMLDoc.getElementsByTagName("ORGANIZATION");
-	        NodeList places = XMLDoc.getElementsByTagName("PLACE");
-	        
-	        //TODO: trim() the the text that represents the Entity
-	        
-	        System.out.println("= PERSONS =");
-	        for (int i = 0; i < persons.getLength(); i++) {
-	            Element element = (Element) persons.item(i);
-	            System.out.println(element.getTextContent());
-	        }
-	        
-	        System.out.println("= ORGANIZATIONS =");
-	        for (int i = 0; i < organizations.getLength(); i++) {
-	            Element element = (Element) organizations.item(i);
-	            System.out.println(element.getTextContent());
-	        }
-	        
-	        System.out.println("= PLACES =");
-	        for (int i = 0; i < places.getLength(); i++) {
-	            Element element = (Element) places.item(i);
-	            System.out.println(element.getTextContent());
-	        }
+	catch (Exception e) {
+			// Catch exception if any
+			System.out.println(e);
+			System.err.println("Error: " + e.getMessage());
+		}
+	}
 
-	        
-	        
-	        
-	        
-		}
+	private static void processQuery(KBPQuery q) throws Exception {
 		
+		//String supportDoc = getSupportDocument(q);
+		HashMap<String, ScoreDoc[]> docs = queryKB(q);
 		
-		if (doc!=null) {		
-			String id = doc.getField("id").stringValue();
-			q.answer_kb_id = id;
-		}
+		ScoreDoc[] docsTitles = docs.get("titles");
+		ScoreDoc[] docsWikiText = docs.get("wikitext");
 		
-		else {
-			q.answer_kb_id = "NIL";
-		}
+		total_n_docs += docsTitles.length+docsWikiText.length;
+		
+		//System.out.print(" \t nº docs: " + Integer.toString(docsTitles.length+docsWikiText.length));
 
+		findCorrectEntity(q, docs);
+	}
+
+	private static void findCorrectEntity(KBPQuery q, HashMap<String, ScoreDoc[]> docs) throws CorruptIndexException, IOException {
+		
+		Set<String> keys = docs.keySet();
+		
+		QueryGoldStandard q_gold = queriesGold.get(q.query_id);
+		
+		for (String key : keys) {
+			
+			for (int i = 0; i < docs.get(key).length; i++) {
+				
+				Document doc = searcher.doc(docs.get(key)[i].doc);
+				String id = doc.getField("id").stringValue();
+				//String wiki_title = doc.getField("wiki_title").stringValue();
+				//String type = doc.getField("type").stringValue();
+				//String wiki_text = doc.getField("wiki_text").stringValue();
+				if (id.equalsIgnoreCase(q_gold.answer)) {
+					System.out.print('\t' + " found");
+					n_found++;
+					break;
+				}
+				q.answers.add(id);
+			}
+
+			if (docs.get(key).length==0) {
+				q.answers.add("NIL");
+			}
+		}
+		
+		System.out.println();
+	}
+	
+	private static void loadGoldStandard(String filename) throws IOException {
+		
+		BufferedReader input;
+		
+		try {
+		
+			input = new BufferedReader(new FileReader(filename));
+			String line = null;
+	        
+			while (( line = input.readLine()) != null){
+	          String[] contents = line.split("\t");	          
+	          QueryGoldStandard gold = new QueryGoldStandard(contents[0], contents[1], contents[2], contents[3], contents[4]);
+	          queriesGold.put(contents[0], gold);
+	        }
+	        
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();    	
+		}
 	}
 	
 	private static void generateOutput(String output) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (Iterator<Query> iterator = queries.iterator(); iterator.hasNext();) {
-			Query q = (Query) iterator.next();
+		for (Iterator<KBPQuery> iterator = queries.iterator(); iterator.hasNext();) {
+			KBPQuery q = (KBPQuery) iterator.next();
 			out.println(q.query_id.trim()+"\t"+q.answer_kb_id.trim());
 		}
 		out.close();		
 	}
 	
-	private static String getSupportDocument(Query q) {
+	private static String getSupportDocument(KBPQuery q) {
 		
 		StringBuilder contents = new StringBuilder();
 	    
@@ -346,42 +265,97 @@ public class ProcessQuery {
 	    return contents.toString();		
 	}
 	
-	private static Document queryLucene(Query q) throws IOException, ParseException {
+	private static HashMap<String, ScoreDoc[]> queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		Document doc = null;
 		
-		//String[] fields = {"wiki_title","type","id","name","infobox_class","wiki_text","facts"};
-		String[] fields = {"name","wiki_text","facts"};
-		float[] boosts =  {1f,1f,1f};
-		float[] bParams =  {1.0f,1.0f,1.0f};
+		HashMap<String, HashSet<String>> query = generateQuery(q); 
+
+		Joiner orJoiner = Joiner.on(" OR ");
 		
-		BM25BooleanQuery query = new BM25BooleanQuery(q.name, fields, analyzer, boosts, bParams);
+		HashSet<String> strings = query.get("strings");
+		HashSet<String> tokens = query.get("tokens");
 		
-		//Using boost and b defaults parameters	
-		TopDocs top = searcher.search(query, null, 100);				
-		ScoreDoc[] docs = top.scoreDocs;
+		String qString = orJoiner.join(strings);		
+		String qTokens = orJoiner.join(tokens);
 		
-		if (top.scoreDocs.length>0) {
-			doc = searcher.doc(docs[0].doc);
+		String queryString =  qString + " OR " + qTokens;
+		
+		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
+		MultiFieldQueryParser queryParserTitle = new MultiFieldQueryParser(new String[] {"name", "wiki_title"}, analyzer);			
+		ScoreDoc[] docsTitles = null;
+		
+		//query the wiki_text with the alternative names 
+		Query queryText = new TermQuery(new Term("wiki_text", qTokens));
+		ScoreDoc[] docsWikiText = null;
+		
+		HashMap<String, ScoreDoc[]> results = new HashMap<String, ScoreDoc[]>();
+		
+		try {
+			
+			TopDocs titles = searcher.search(queryParserTitle.parse(queryString), 50);
+			docsTitles = titles.scoreDocs;
+			
+			TopDocs wikiText = searcher.search(queryText,30);
+			docsWikiText = wikiText.scoreDocs;
+			
+			results.put("titles", docsTitles);
+			results.put("wikitext", docsWikiText);
+			
+		} catch (Exception e) {
+			//TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0);
 		}
 
-		return doc;
+		//BM25BooleanQuery query = new BM25BooleanQuery(q.name, fields, analyzer, boosts, bParams);
 		
-		/*
-		for (int i = 0; i < top.scoreDocs.length; i++) {
-			Document doc = searcher.doc(docs[i].doc);
-			String id = doc.getField("id").stringValue();
-			String wiki_title = doc.getField("wiki_title").stringValue();
-			String type = doc.getField("type").stringValue();
-			System.out.println(id+": "+wiki_title+" "+type);
+		return results;
+	}
+
+	private static HashMap<String, HashSet<String>> generateQuery(KBPQuery q) {
+		
+		HashSet<String> queryStrings = new HashSet<String>(); 		
+		HashSet<String> queryTokens = new HashSet<String>();
+			
+		HashMap<String, HashSet<String>> query = new HashMap<String,HashSet<String>>();
+		
+		queryStrings.add('"' + q.name + '"');
+		
+		String[] tmp = q.name.split("\\s");
+		for (int z = 0; z < tmp.length; z++) {
+			if (!tmp[z].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
+				queryTokens.add(tmp[z]);
+			}
 		}
-		*/
+		
+		for (Iterator<String> iterator = q.alternative_names.iterator(); iterator.hasNext();) {
+			String alternative = (String) iterator.next();
+			
+			String queryParsed = alternative.replaceAll("\\(", "").replaceAll("\\)","").
+										replaceAll("\\]", "").replaceAll("\\[", "").replaceAll("\"", "");
+			
+			queryStrings.add('"' + queryParsed + '"');
+			
+			String[] tokens = queryParsed.split("\\s");
+			
+			for (int i = 0; i < tokens.length; i++) {
+				if (!tokens[i].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
+					queryTokens.add(tokens[i]);
+				}
+			}
+		}
+		
+		query.put("strings", queryStrings);
+		query.put("tokens", queryTokens);
+				
+		return query;
+		
 	}
 	
-	private static void loadDocsLocations() throws Exception {
+	private static void loadDocsLocations(String filename) throws Exception {
 		
-		BigFile file = new BigFile(docs);
+		BigFile file = new BigFile(filename);
 		String[] parts;
 		
 		for (String line : file) {		

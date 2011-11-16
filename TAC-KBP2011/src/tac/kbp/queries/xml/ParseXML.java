@@ -12,13 +12,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import tac.kbp.queries.Query;
+import tac.kbp.queries.KBPQuery;
 
 public class ParseXML {
 	
-	public static List<Query> loadQueries(String[] args) {
+	public static List<KBPQuery> loadQueries(String filename) {
 		
-		List<Query> queries = new LinkedList<Query>();
+		List<KBPQuery> queries = new LinkedList<KBPQuery>();
 		
 		/*
 		 * XML query structure:
@@ -32,7 +32,7 @@ public class ParseXML {
 
 		try {
 
-			File fXmlFile = new File(args[0]);
+			File fXmlFile = new File(filename);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(fXmlFile);
@@ -51,7 +51,7 @@ public class ParseXML {
 					String name = getTagValue("name", eElement);
 					String docid = getTagValue("docid", eElement);
 					
-					Query query = new Query(query_id, name, docid);
+					KBPQuery query = new KBPQuery(query_id, name, docid);
 					queries.add(query);
 
 				}
