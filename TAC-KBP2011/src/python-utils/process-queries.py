@@ -179,51 +179,6 @@ def getDictWithKeysFromList(lst):
     
     return d
 
-def getConcordance(text,word,offset):
-    
-    tokens = re.findall(u'\w+',text,re.U)
-    listOfIndexes  = list(find_all_in_list( tokens,word))
-    
-    listOfConcordance = []
-    
-    for i in listOfIndexes:
-        
-        start = i - offset
-        
-        if start < 0:
-            start = 0
-        
-        end = i + offset + 1
-         
-        if end > len(text):
-            end = len(text)
-        
-        listOfConcordance.append(tokens[start:end])
-    
-    return listOfConcordance
-
-def find_all_in_list(a_str, sub):
-    
-    start = 0
-    
-    while True:
-         
-        try:
-            start = start + a_str[start:].index(sub)
-        except ValueError:
-            return
-        yield start
-        
-        start+=1
-
-def get_context(query):
-    
-    # let's get the document location
-    file = open(docs_locations[query.doc_id]+"/"+query.doc_id+".sgm")
-    document = file.read()
-    occurrences = []
-    query.support_doc_context_occurences = getConcordance(document,query.string_name,10)
-
 def remove_stop_words(sentence):
     word_list = nltk.word_tokenize(sentence)
     for word in word_list: # iterate over word_list
@@ -379,12 +334,12 @@ def start():
         """ create directory with query_id to store information regarding the query """
         os.mkdir(lda_models+q.id)
         
-        #print "Looking for alternative names"
-        #q.alternative_names =  get_alternative_names(q);
-        #analyze_support_document(q)
+        print "Looking for alternative names"
+        q.alternative_names =  get_alternative_names(q);
+        analyze_support_document(q)
         get_topics(q)
         
-        #query_lucene(q)
+        query_lucene(q)
         #topics similarity
         #generate_output(q)
         

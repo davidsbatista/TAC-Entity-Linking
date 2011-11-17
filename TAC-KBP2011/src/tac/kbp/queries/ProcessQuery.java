@@ -36,12 +36,13 @@ public class ProcessQuery {
 	static IndexSearcher searcher = null; 
 	
 	static List<KBPQuery> queries = null;
-	static HashMap<String, QueryGoldStandard> queriesGold = new HashMap<String, QueryGoldStandard>();
+	static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
 	
 	static String named_entities_supportDoc = "/collections/TAC-2011/named-entities";
 	
 	static int total_n_docs = 0;
 	static int n_found = 0;
+	static int n_queries_zero_docs = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -75,19 +76,71 @@ public class ProcessQuery {
 			System.out.print(query.query_id + " \"" + query.name + '"');
 			getSenses(binaryjedis, query);
 			loadGoldStandard(args[3]);
-			processQuery(query);			
+			processQuery(query);		
 		}
-		System.out.println("Total Docs: " + Integer.toString(total_n_docs));
-		System.out.println("Total Queries: " + Integer.toString(queries.size()));
+		
+		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
+		System.out.println("Queries: " + Integer.toString(queries.size()));
 		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) queries.size()));
+		System.out.println("Queries 0 docs returned: " + Integer.toString(n_queries_zero_docs));
 		System.out.println("Found: " + n_found);
 
 	}
 
-	private static void loadNamedEntities(KBPQuery q){
+	private static void loadNamedEntities(KBPQuery q) throws IOException{
+		BufferedReader input;
 		
-	}
+		try {
 	
+			input = new BufferedReader(new FileReader(named_entities_supportDoc+"/"+q.query_id+"-named-entities.txt"));
+			String line = null;
+			boolean persons = false;
+			boolean org = false;
+			boolean place = false;
+	        
+			while (( line = input.readLine()) != null){
+				if (line.equalsIgnoreCase("")) {
+					continue;
+				}
+				
+				if (line.equalsIgnoreCase("PERSONS:")) {
+					persons = true;
+					org = false;
+					place = false;
+					continue;
+				}
+				
+				if (line.equalsIgnoreCase("PLACES:")) {
+					org = true;
+					persons = false;
+					place = false;
+					continue;
+				}
+				
+				if (line.equalsIgnoreCase("ORGANIZATIONS:")) {
+					place = true;
+					persons = false;
+					org = false;
+					continue;
+				}
+				
+				if (place)
+					q.places.add( '"' + line.trim() + '"');
+				
+				if (org)
+					q.organizations.add('"' + line.trim() + '"');
+				
+				if (persons)
+					q.persons.add('"' + line.trim() + '"');
+
+	        }
+	        
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();    	
+		}
+	}
+
 	private static String cleanString(String sense) {
 		
 		/*
@@ -102,6 +155,7 @@ public class ProcessQuery {
 		return cleaned;
 	}
 
+	
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
 	
 	try {
@@ -153,29 +207,34 @@ public class ProcessQuery {
 	private static void processQuery(KBPQuery q) throws Exception {
 		
 		//String supportDoc = getSupportDocument(q);
-		HashMap<String, ScoreDoc[]> docs = queryKB(q);
 		
+		//load the recognized named-entities in the support document
+		loadNamedEntities(q);
+		
+		ScoreDoc[] docs = queryKB(q);
+		
+		/*
 		ScoreDoc[] docsTitles = docs.get("titles");
 		ScoreDoc[] docsWikiText = docs.get("wikitext");
+		*/
+				
+		total_n_docs += docs.length;
 		
-		total_n_docs += docsTitles.length+docsWikiText.length;
+		if (docs.length == 0)
+			n_queries_zero_docs++;
 		
-		//System.out.print(" \t nº docs: " + Integer.toString(docsTitles.length+docsWikiText.length));
-
+		System.out.print("\t correct answer: "+ queriesGold.get(q.query_id).answer);
+		
 		findCorrectEntity(q, docs);
 	}
 
-	private static void findCorrectEntity(KBPQuery q, HashMap<String, ScoreDoc[]> docs) throws CorruptIndexException, IOException {
-		
-		Set<String> keys = docs.keySet();
-		
-		QueryGoldStandard q_gold = queriesGold.get(q.query_id);
-		
-		for (String key : keys) {
-			
-			for (int i = 0; i < docs.get(key).length; i++) {
+	private static void findCorrectEntity(KBPQuery q, ScoreDoc[] docs) throws CorruptIndexException, IOException {
 				
-				Document doc = searcher.doc(docs.get(key)[i].doc);
+		GoldStandardQuery q_gold = queriesGold.get(q.query_id);
+		
+		for (int i = 0; i < docs.length; i++) {
+				
+				Document doc = searcher.doc(docs[i].doc);
 				String id = doc.getField("id").stringValue();
 				//String wiki_title = doc.getField("wiki_title").stringValue();
 				//String type = doc.getField("type").stringValue();
@@ -187,15 +246,11 @@ public class ProcessQuery {
 				}
 				q.answers.add(id);
 			}
-
-			if (docs.get(key).length==0) {
-				q.answers.add("NIL");
-			}
-		}
 		
 		System.out.println();
-	}
-	
+		
+		}
+		
 	private static void loadGoldStandard(String filename) throws IOException {
 		
 		BufferedReader input;
@@ -207,7 +262,7 @@ public class ProcessQuery {
 	        
 			while (( line = input.readLine()) != null){
 	          String[] contents = line.split("\t");	          
-	          QueryGoldStandard gold = new QueryGoldStandard(contents[0], contents[1], contents[2], contents[3], contents[4]);
+	          GoldStandardQuery gold = new GoldStandardQuery(contents[0], contents[1], contents[2], contents[3], contents[4]);
 	          queriesGold.put(contents[0], gold);
 	        }
 	        
@@ -265,7 +320,28 @@ public class ProcessQuery {
 	    return contents.toString();		
 	}
 	
-	private static HashMap<String, ScoreDoc[]> queryKB(KBPQuery q) throws IOException, ParseException {
+	private static String concatenateEntities(String str1, String str2) {
+		
+		String result = new String();
+		
+		Joiner orJoiner = Joiner.on(" OR ");
+		
+		if (str1.length() > 0 && str2.length()>0) {
+			result = orJoiner.join(str1, str2);
+		}
+		
+		else if (str1.length()>0 && str2.length()==0) {
+			result = str1;
+		}
+		
+		else if (str1.length()==0 && str2.length()>0) {
+			result = str2;
+		}
+		
+		return result;
+	}
+	
+	private static ScoreDoc[] queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		
@@ -281,26 +357,31 @@ public class ProcessQuery {
 		
 		String queryString =  qString + " OR " + qTokens;
 		
+		String persons = orJoiner.join(q.persons); 
+		String organizations = orJoiner.join(q.organizations);
+		String places = orJoiner.join(q.places);
+		
+		String queryEntities = concatenateEntities(persons, organizations);
+		queryEntities += concatenateEntities(queryEntities, places);
+		
+		//System.out.println("queryString:" + queryString);
+		//System.out.println("queryEntities:" + queryEntities);
+		
+		q.query.put("queryEntities", queryEntities);
+		q.query.put("queryString", qString);
+		q.query.put("queryTokens", qTokens);
+		
+		//System.out.println(queryString);
+		
+		//queryString += " OR " + queryEntities;
+		
 		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
-		MultiFieldQueryParser queryParserTitle = new MultiFieldQueryParser(new String[] {"name", "wiki_title"}, analyzer);			
-		ScoreDoc[] docsTitles = null;
-		
-		//query the wiki_text with the alternative names 
-		Query queryText = new TermQuery(new Term("wiki_text", qTokens));
-		ScoreDoc[] docsWikiText = null;
-		
-		HashMap<String, ScoreDoc[]> results = new HashMap<String, ScoreDoc[]>();
+		MultiFieldQueryParser queryParserTitle = new MultiFieldQueryParser(new String[] {"name", "wiki_title","wiki_text"}, analyzer);					
+		ScoreDoc[] scoreDocs = null;
 		
 		try {
-			
-			TopDocs titles = searcher.search(queryParserTitle.parse(queryString), 50);
-			docsTitles = titles.scoreDocs;
-			
-			TopDocs wikiText = searcher.search(queryText,30);
-			docsWikiText = wikiText.scoreDocs;
-			
-			results.put("titles", docsTitles);
-			results.put("wikitext", docsWikiText);
+			TopDocs docs = searcher.search(queryParserTitle.parse(queryString), 30);
+			scoreDocs = docs.scoreDocs;
 			
 		} catch (Exception e) {
 			//TODO Auto-generated catch block
@@ -310,7 +391,7 @@ public class ProcessQuery {
 
 		//BM25BooleanQuery query = new BM25BooleanQuery(q.name, fields, analyzer, boosts, bParams);
 		
-		return results;
+		return scoreDocs;
 	}
 
 	private static HashMap<String, HashSet<String>> generateQuery(KBPQuery q) {
@@ -341,7 +422,7 @@ public class ProcessQuery {
 			
 			for (int i = 0; i < tokens.length; i++) {
 				if (!tokens[i].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
-					queryTokens.add(tokens[i]);
+					queryTokens.add(tokens[i].trim());
 				}
 			}
 		}
