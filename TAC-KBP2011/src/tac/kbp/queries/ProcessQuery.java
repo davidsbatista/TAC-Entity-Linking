@@ -1,10 +1,13 @@
 package tac.kbp.queries;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +21,7 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -32,9 +36,11 @@ import com.google.common.base.Joiner;
 
 public class ProcessQuery {
 	
-	static HashMap<String, String> docslocations = new HashMap<String, String>();
-	static IndexSearcher searcher = null; 
+	static IndexSearcher searcher = null;
 	
+	static HashMap<String, String> docslocations = new HashMap<String, String>();
+	static Set<String> stop_words = new HashSet<String>();
+	 
 	static List<KBPQuery> queries = null;
 	static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
 	
@@ -43,6 +49,8 @@ public class ProcessQuery {
 	static int total_n_docs = 0;
 	static int n_found = 0;
 	static int n_queries_zero_docs = 0;
+	static int n_docs_not_found_and_answer_is_NIL = 0;
+	static int n_docs_not_found = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -54,8 +62,16 @@ public class ProcessQuery {
 		//loadDocsLocations(args[1]);		
 		//System.out.println(docslocations.size() + " documents locations loaded");
 		
+		/* load english stopwords list */
+		loadStopWords(args[2]);
+		System.out.println(stop_words.size() + " stopwords loaded");
+		
+		/* load query-gold standard queries */
+		loadGoldStandard(args[3]);
+		System.out.println(queriesGold.size() + " queries gold standard loaded");
+		
 		/* Lucene Index */
-		searcher = new IndexSearcher(FSDirectory.getDirectory(args[2]));
+		searcher = new IndexSearcher(FSDirectory.getDirectory(args[4]));
 		
 		/*
 		//Load fields average length
@@ -75,15 +91,16 @@ public class ProcessQuery {
 			
 			System.out.print(query.query_id + " \"" + query.name + '"');
 			getSenses(binaryjedis, query);
-			loadGoldStandard(args[3]);
 			processQuery(query);		
 		}
 		
 		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
 		System.out.println("Queries: " + Integer.toString(queries.size()));
 		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) queries.size()));
-		System.out.println("Queries 0 docs returned: " + Integer.toString(n_queries_zero_docs));
-		System.out.println("Found: " + n_found);
+		System.out.println("Queries with 0 docs returned: " + Integer.toString(n_queries_zero_docs));
+		System.out.println("Queries NIL and not found: "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
+		System.out.println("Queries not NIL and not found: "+ Integer.toString(n_docs_not_found));
+		System.out.println("Queries not NIL and found " + n_found);
 
 	}
 
@@ -140,6 +157,27 @@ public class ProcessQuery {
 			e1.printStackTrace();    	
 		}
 	}
+	
+	private static void loadStopWords(String file) { 
+		
+		try{
+			  FileInputStream fstream = new FileInputStream(file);
+			  DataInputStream in = new DataInputStream(fstream);
+			  BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			  String strLine;
+			  
+			  while ((strLine = br.readLine()) != null)   {				  
+				  stop_words.add(strLine.trim());
+			  }
+			  
+			  in.close();
+			  
+			}
+		
+			catch (Exception e) {
+				System.err.println("Error: " + e.getMessage());
+			}
+	}
 
 	private static String cleanString(String sense) {
 		
@@ -155,7 +193,6 @@ public class ProcessQuery {
 		return cleaned;
 	}
 
-	
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
 	
 	try {
@@ -227,6 +264,8 @@ public class ProcessQuery {
 				
 		GoldStandardQuery q_gold = queriesGold.get(q.query_id);
 		
+		boolean found = false;
+		
 		for (int i = 0; i < docs.length; i++) {
 				
 				Document doc = searcher.doc(docs[i].doc);
@@ -237,10 +276,17 @@ public class ProcessQuery {
 				if (id.equalsIgnoreCase(q_gold.answer)) {
 					System.out.print('\t' + " found");
 					n_found++;
+					found = true;
 					break;
 				}
 				q.answers.add(id);
 			}
+		
+		if (!found && q_gold.answer.startsWith("NIL"))
+			n_docs_not_found_and_answer_is_NIL++;
+		
+		if (!found && !q_gold.answer.startsWith("NIL"))
+			n_docs_not_found++;
 		
 		System.out.println();
 		
@@ -347,10 +393,15 @@ public class ProcessQuery {
 		HashSet<String> strings = query.get("strings");
 		HashSet<String> tokens = query.get("tokens");
 		
+		/* remove stop words */
+		strings.removeAll(stop_words);
+		tokens.removeAll(stop_words);
+		
+		
 		String qString = orJoiner.join(strings);		
 		String qTokens = orJoiner.join(tokens);
 		
-		String queryString =  qString + " OR " + qTokens;
+		String qStringTokens =  qString + " OR " + qTokens;
 		
 		String persons = orJoiner.join(q.persons); 
 		String organizations = orJoiner.join(q.organizations);
@@ -359,23 +410,36 @@ public class ProcessQuery {
 		String queryEntities = concatenateEntities(persons, organizations);
 		queryEntities += concatenateEntities(queryEntities, places);
 		
-		//System.out.println("queryString:" + queryString);
-		//System.out.println("queryEntities:" + queryEntities);
+		/*
+		System.out.println("\n");
+		System.out.println("queryString:" + qString);
+		System.out.println("queryEntities:" + queryEntities);
+		System.out.println("queryTokens:" + qTokens);
+		System.out.println("\n");
+		*/
 		
 		q.query.put("queryEntities", queryEntities);
 		q.query.put("queryString", qString);
 		q.query.put("queryTokens", qTokens);
 		
 		if (queryEntities.length() > 0) {
-			queryString += " OR " + queryEntities;
+			qStringTokens += " OR " + queryEntities;
 		}
 
 		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
-		MultiFieldQueryParser queryParserTitle = new MultiFieldQueryParser(new String[] {"name", "wiki_title","wiki_text"}, analyzer);					
+		MultiFieldQueryParser queryParser = new MultiFieldQueryParser(new String[] {"name", "wiki_title","wiki_text"}, analyzer);		
 		ScoreDoc[] scoreDocs = null;
 		
+		/*
+		QueryParser queryParser = new QueryParser("name", analyzer); 
+		String queryS = "name: " + qStringTokens + " OR wiki_text: " + qStringTokens + " OR wiki_text: " + qStringTokens;
+		Query queryString = queryParser.parse(queryS);
+		*/
+		//System.out.println(queryString.toString());
+		
+		
 		try {
-			TopDocs docs = searcher.search(queryParserTitle.parse(queryString), 30);
+			TopDocs docs = searcher.search(queryParser.parse(qStringTokens), 50);
 			scoreDocs = docs.scoreDocs;
 			
 		} catch (Exception e) {
