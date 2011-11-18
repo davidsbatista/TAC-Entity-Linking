@@ -212,12 +212,7 @@ public class ProcessQuery {
 		loadNamedEntities(q);
 		
 		ScoreDoc[] docs = queryKB(q);
-		
-		/*
-		ScoreDoc[] docsTitles = docs.get("titles");
-		ScoreDoc[] docsWikiText = docs.get("wikitext");
-		*/
-				
+
 		total_n_docs += docs.length;
 		
 		if (docs.length == 0)
@@ -371,10 +366,10 @@ public class ProcessQuery {
 		q.query.put("queryString", qString);
 		q.query.put("queryTokens", qTokens);
 		
-		//System.out.println(queryString);
-		
-		//queryString += " OR " + queryEntities;
-		
+		if (queryEntities.length() > 0) {
+			queryString += " OR " + queryEntities;
+		}
+
 		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
 		MultiFieldQueryParser queryParserTitle = new MultiFieldQueryParser(new String[] {"name", "wiki_title","wiki_text"}, analyzer);					
 		ScoreDoc[] scoreDocs = null;
