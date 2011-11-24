@@ -3,7 +3,7 @@
     <!--this file was created by Eclipse Runnable JAR Export Wizard-->
     <!--ANT 1.7 is required                                        -->
     <target name="create_run_jar">
-        <jar destfile="/home/dsbatista/workspace/TAC-KBP2011/TAC-KBP2011.jar">
+        <jar destfile="/home/dsbatista/workspace/TAC-EntityLinking/TAC-EL.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
                 <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.ProcessQueries"/>
@@ -36,6 +36,6 @@
         </jar>
     </target>
     <target name="send">
-	<scp file="TAC-KBP2011.jar" todir="dsbatista@agatha.inesc-id.pt:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
+	<scp file="TAC-EL.jar" todir="dsbatista@agatha.inesc-id.pt:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
     </target>
 </project>
