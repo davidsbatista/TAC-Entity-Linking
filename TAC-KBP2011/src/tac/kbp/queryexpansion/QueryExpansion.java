@@ -163,9 +163,7 @@ public class QueryExpansion {
 				HashMap<String, Float> similarities =  compareStrings(query.name,entity.string_name);
 				
 				Set<String> keys = similarities.keySet();
-				
-				float acc = 0; 
-				
+								
 				for (Iterator<String> iterator = keys.iterator(); iterator.hasNext();) {
 					
 					String key = iterator.next();
