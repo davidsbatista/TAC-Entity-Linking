@@ -17,6 +17,7 @@ public class GoldStandardQuery {
 		this.genre = genre;
 	}
 	
+
 	public GoldStandardQuery(String query_id, String answer, String type) {
 		super();
 		this.query_id = query_id;
