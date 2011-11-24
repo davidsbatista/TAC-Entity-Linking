@@ -26,9 +26,7 @@ public class Index {
 
 	public static IndexWriter createIndex(String dir) throws CorruptIndexException, LockObtainFailedException, IOException {
 		
-		IndexWriter indexDir = new IndexWriter(FSDirectory.open(new File(dir)), new WhitespaceAnalyzer(),IndexWriter.MaxFieldLength.UNLIMITED);		
-		CollectionSimilarityIndexer similarity = new CollectionSimilarityIndexer();
-		indexDir.setSimilarity(similarity);
+		IndexWriter indexDir = new IndexWriter(FSDirectory.open(new File(dir)), new WhitespaceAnalyzer(),IndexWriter.MaxFieldLength.UNLIMITED);	
 		
 		return indexDir;
 	}
