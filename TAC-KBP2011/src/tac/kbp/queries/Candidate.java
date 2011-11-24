@@ -2,7 +2,9 @@ package tac.kbp.queries;
 
 import java.util.HashSet;
 
-import com.sun.xml.internal.stream.Entity;
+import tac.kbp.kb.index.xml.Entity;
+import edu.stanford.nlp.ie.AbstractSequenceClassifier;
+import edu.stanford.nlp.ie.crf.CRFClassifier;
 
 public class Candidate {
 	
@@ -17,10 +19,5 @@ public class Candidate {
 	float jaro;
 	float jaroWinkler;
 	float levenshtein;
-	
-	
-	public void extractNamedEntities(){
-		
-	}
-	
+
 }

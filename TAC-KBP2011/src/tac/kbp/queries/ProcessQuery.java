@@ -48,6 +48,8 @@ public class ProcessQuery {
 	//static String named_entities_supportDoc = "/collections/TAC-2011/named-entities";
 	static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	
+	static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
+	
 	static int total_n_docs = 0;
 	static int n_found = 0;
 	static int n_queries_zero_docs = 0;
@@ -78,7 +80,7 @@ public class ProcessQuery {
 		/* Spellchecker Index */
 		FSDirectory spellDirectory = FSDirectory.open(new File(args[5]));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
-
+ 
 		int port = 6379;
 		String host = "agatha";
 		BinaryJedis binaryjedis = new BinaryJedis(host, port);
