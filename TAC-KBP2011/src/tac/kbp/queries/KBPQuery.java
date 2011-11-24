@@ -12,7 +12,7 @@ public class KBPQuery {
 	public String answer_kb_id;
 	
 	public HashSet<String> alternative_names;
-	public HashSet<String> answers;
+	public HashSet<String> candidates;
 	
 	public HashSet<String> persons;
 	public HashSet<String> places;
@@ -27,7 +27,7 @@ public class KBPQuery {
 		this.docid = docid;
 		this.answer_kb_id = null;
 		this.alternative_names = new HashSet<String>();
-		this.answers = new HashSet<String>();  
+		this.candidates = new HashSet<String>();  
 		
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
