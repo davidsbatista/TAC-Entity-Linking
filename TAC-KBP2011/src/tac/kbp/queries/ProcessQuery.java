@@ -16,10 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
@@ -30,9 +26,6 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import com.google.common.base.Joiner;
 
@@ -102,106 +95,10 @@ public class ProcessQuery {
 		System.out.println("Queries: " + Integer.toString(queries.size()));
 		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) queries.size()));
 		System.out.println("Queries with 0 docs returned: " + Integer.toString(n_queries_zero_docs));
-		System.out.println("Queries NIL and not found: "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
-		System.out.println("Queries not NIL and not found: "+ Integer.toString(n_docs_not_found));
-		System.out.println("Queries not NIL and found " + n_found);
+		System.out.println("Queries NIL and not found (NIL): "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
+		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
+		System.out.println("Queries not NIL and found (Found)" + n_found);
 
-	}
-	
-	private static void loadNamedEntitiesXML(KBPQuery q) throws ParserConfigurationException, SAXException, IOException {
-		
-		String filename = named_entities_supportDoc+"/"+q.query_id+"-CRF-named-entities.xml";
-		
-		File fXmlFile = new File(filename);
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		org.w3c.dom.Document doc = dBuilder.parse(fXmlFile);
-		doc.getDocumentElement().normalize();
- 
-		NodeList persons = doc.getElementsByTagName("PERSON");
-		NodeList organizations = doc.getElementsByTagName("ORGANIZATION");
-		NodeList locations = doc.getElementsByTagName("LOCATION");
-		
-		addEntitiesToQuery(q, persons, "PERSON");
-		addEntitiesToQuery(q, organizations, "ORGANIZATION");
-		addEntitiesToQuery(q, locations, "LOCATION");
-	}
-
-	static void addEntitiesToQuery(KBPQuery q, NodeList nodeList, String tag) {
-		
-		for (int temp = 0; temp < nodeList.getLength(); temp++) { 
-		   Node nNode = nodeList.item(temp);
-		   String name = nNode.getTextContent();	
-		   
-		   String entity = name.replace("*", "").replace("\n", " ").replace("!", "");
-		   
-		   if (entity.length()>1) {
-			   
-			   if (tag.equalsIgnoreCase("PERSON"))
-			      	q.persons.add('"' + entity.trim() + '"');
-			      
-			   if (tag.equalsIgnoreCase("ORGANIZATION"))
-			    	  q.organizations.add('"' + entity.trim() + '"');
-			      
-			   if (tag.equalsIgnoreCase("LOCATION"))
-			    	  q.places.add('"' + entity.trim() + '"');
-		   }
-		}
-	}
-
-	private static void loadNamedEntities(KBPQuery q) throws IOException{
-		
-		BufferedReader input;
-		
-		try {
-	
-			input = new BufferedReader(new FileReader(named_entities_supportDoc+"/"+q.query_id+"-named-entities.txt"));
-			String line = null;
-			boolean persons = false;
-			boolean org = false;
-			boolean place = false;
-	        
-			while (( line = input.readLine()) != null){
-				if (line.equalsIgnoreCase("")) {
-					continue;
-				}
-				
-				if (line.equalsIgnoreCase("PERSONS:")) {
-					persons = true;
-					org = false;
-					place = false;
-					continue;
-				}
-				
-				if (line.equalsIgnoreCase("PLACES:")) {
-					org = true;
-					persons = false;
-					place = false;
-					continue;
-				}
-				
-				if (line.equalsIgnoreCase("ORGANIZATIONS:")) {
-					place = true;
-					persons = false;
-					org = false;
-					continue;
-				}
-				
-				if (place)
-					q.places.add( '"' + line.trim() + '"');
-				
-				if (org)
-					q.organizations.add('"' + line.trim() + '"');
-				
-				if (persons)
-					q.persons.add('"' + line.trim() + '"');
-
-	        }
-	        
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();    	
-		}
 	}
 	
 	private static void loadStopWords(String file) { 
@@ -390,43 +287,6 @@ public class ProcessQuery {
 		out.close();		
 	}
 	
-	private static String getSupportDocument(KBPQuery q) {
-		
-		StringBuilder contents = new StringBuilder();
-	    
-	    try {
-	    	
-	    	//use buffering, reading one line at a time
-	    	//FileReader always assumes default encoding is OK!
-	    	
-	    	String file = docslocations.get(q.docid).trim()+"/"+q.docid+".sgm";
-	    	
-	    	BufferedReader input =  new BufferedReader(new FileReader(file));
-	    	
-	    	try {
-	    		String line = null; //not declared within while loop
-		        /*
-		        * readLine is a bit quirky :
-		        * it returns the content of a line MINUS the newline.
-		        * it returns null only for the END of the stream.
-		        * it returns an empty String if two newlines appear in a row.
-		        */
-		        while (( line = input.readLine()) != null){
-		          contents.append(line);
-		          contents.append(System.getProperty("line.separator"));
-		        }
-	      }
-	      finally {
-	        input.close();
-	      }
-	    }
-	    catch (IOException ex){
-	      ex.printStackTrace();
-	    }
-	    
-	    return contents.toString();		
-	}
-	
 	private static String concatenateEntities(String str1, String str2) {
 		
 		String result = new String();
@@ -456,7 +316,7 @@ public class ProcessQuery {
 		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> l = spellchecker.suggestSimilar(sense, 10);
+			List<SuggestWord> l = spellchecker.suggestSimilar(sense, 30);
 			suggestedwords.addAll(l);
 		}
 		
@@ -470,7 +330,7 @@ public class ProcessQuery {
 			String queryS = "id:" + suggestWord.eid;
 			TopDocs docs = searcher.search(queryParser.parse(queryS), 1);
 			
-			//System.out.println("  num docs:" + docs.totalHits);
+			//System.out.println(" num docs:" + docs.totalHits);
 			
 			if (docs.totalHits == 0) {
 				continue;				
@@ -485,12 +345,13 @@ public class ProcessQuery {
 
 		}
 		
+		/*
 		Joiner orJoiner = Joiner.on(" OR ");
 		
 		HashSet<String> strings = query.get("strings");
 		HashSet<String> tokens = query.get("tokens");
 		
-		/* remove stop words */
+		// remove stop words
 		strings.removeAll(stop_words);
 		tokens.removeAll(stop_words);
 		
@@ -507,37 +368,17 @@ public class ProcessQuery {
 		String queryEntities = concatenateEntities(persons, organizations);
 		queryEntities += concatenateEntities(queryEntities, places);
 		
-		/*
-		System.out.println("\n");
-		System.out.println("queryString:" + qString);
-		*/
-		//System.out.println("queryEntities:" + queryEntities);
-		/*
-		System.out.println("queryTokens:" + qTokens);
-		System.out.println("\n");
-		
-		q.query.put("queryEntities", queryEntities);
-		q.query.put("queryString", qString);
-		q.query.put("queryTokens", qTokens);
-		
 		if (queryEntities.length() > 0) {
 			qStringTokens += " OR " + queryEntities;
 		}
-		*/
 
 		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
 		MultiFieldQueryParser multiFieldqueryParser = new MultiFieldQueryParser(org.apache.lucene.util.Version.LUCENE_30, new String[] {"name", "wiki_title","wiki_text"}, analyzer);		
 		scoreDocs = null;
-		
-		/*
-		QueryParser queryParser = new QueryParser("name", analyzer); 
-		String queryS = "name: " + qStringTokens + " OR wiki_text: " + qStringTokens + " OR wiki_text: " + qStringTokens;
-		Query queryString = queryParser.parse(queryS);
-		*/
-		
+
 		try {
 			
-			TopDocs docs = searcher.search(multiFieldqueryParser.parse(qStringTokens), 50);
+			TopDocs docs = searcher.search(multiFieldqueryParser.parse(qStringTokens), 30);
 			scoreDocs = docs.scoreDocs;
 			
 			for (int i = 0; i < scoreDocs.length; i++) {
@@ -551,6 +392,7 @@ public class ProcessQuery {
 			e.printStackTrace();
 			System.exit(0);		
 		}
+		*/
 		
 		return q.candidates.size();
 	}
