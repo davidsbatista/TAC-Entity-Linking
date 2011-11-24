@@ -18,7 +18,6 @@ import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25.BM25Parameters;
 import org.ninit.models.bm25f.BM25FParameters;
 
-
 public class QueryLucene {
 	
 	static IndexSearcher searcher = null;
@@ -36,7 +35,7 @@ public class QueryLucene {
 	public static void main(String[] args) throws Exception {
 		
 		/* Lucene Index */
-		searcher = new IndexSearcher(FSDirectory.getDirectory(index));
+		searcher = new IndexSearcher(FSDirectory.open(new File(index)));
 		
 		//Load fields average length
 		BM25Parameters.load(fields_size);
