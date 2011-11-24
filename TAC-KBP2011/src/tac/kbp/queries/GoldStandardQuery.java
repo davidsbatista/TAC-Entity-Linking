@@ -17,6 +17,13 @@ public class GoldStandardQuery {
 		this.genre = genre;
 	}
 	
+	public GoldStandardQuery(String query_id, String answer, String type) {
+		super();
+		this.query_id = query_id;
+		this.answer = answer;
+		this.type = type;
+	}
+
 	@Override
 	public String toString() {
 		return "QueryGoldStandard [query_id=" + query_id + ", answer=" + answer
