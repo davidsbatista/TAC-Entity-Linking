@@ -6,12 +6,12 @@
         <jar destfile="/home/dsbatista/workspace/TAC-EntityLinking/TAC-EL.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.ProcessQueries"/>
+                <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.ProcessQuery"/>
                 <attribute name="Class-Path" value="."/>
                 <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar commons-collections.jar servlet-api-2.5.jar commons-logging.jar commons-beanutils.jar commons-codec.jar commons-logging-api.jar commons-logging-adapters.jar commons-httpclient.jar jcaller.jar jtidy.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar junit.jar bliki-core-3.0.16.jar secondstring-20060615.jar stanford-ner.jar google-collect-1.0-rc2.jar mysql-connector-java-5.1.10.jar lucene-core-3.0.3.jar lucene-spellchecker-3.0.3.jar"/>
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
-            <fileset dir="/home/dsbatista/workspace/TAC-KBP2011/bin"/>
+            <fileset dir="/home/dsbatista/workspace/TAC-EntityLinking/bin"/>
             <zipfileset dir="/usr/share/java" includes="commons-digester.jar"/>
             <zipfileset dir="/usr/share/java" includes="commons-collections.jar"/>
             <zipfileset dir="/usr/share/java" includes="servlet-api-2.5.jar"/>
@@ -35,7 +35,7 @@
             <zipfileset dir="/home/dsbatista/lucene-3.0.3/contrib/spellchecker" includes="lucene-spellchecker-3.0.3.jar"/>
         </jar>
     </target>
-    <target name="send">
-	<scp file="TAC-EL.jar" todir="dsbatista@agatha.inesc-id.pt:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
+    <target name="send" depends="create_run_jar">
+		<scp file="TAC-EL.jar" todir="dsbatista@agatha.inesc-id.pt:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
     </target>
 </project>
