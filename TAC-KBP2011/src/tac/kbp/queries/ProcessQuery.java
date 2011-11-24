@@ -236,7 +236,7 @@ public class ProcessQuery {
 		
 		BufferedReader input;
 		
-		if (filename.contains("2009")) {
+		if (filename.contains("2009") || filename.contains("2010/trainning")) {
 			
 			try {
 				
