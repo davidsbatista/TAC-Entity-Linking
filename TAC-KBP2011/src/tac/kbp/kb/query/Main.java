@@ -1,5 +1,6 @@
 package tac.kbp.kb.query;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
@@ -21,7 +22,7 @@ public class Main {
 		
 		long start = new Date().getTime();
 		
-		IndexSearcher searcher = new IndexSearcher(FSDirectory.getDirectory(args[0]));
+		IndexSearcher searcher = new IndexSearcher(FSDirectory.open(new File(args[0])));
 		
 		// to find the best k1 and B parameters, batch queries processing
 		TuneBM25 tune = new TuneBM25(searcher, args[1], args[2]);
