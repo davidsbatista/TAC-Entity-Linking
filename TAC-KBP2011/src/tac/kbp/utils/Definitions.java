@@ -18,6 +18,9 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
+import edu.stanford.nlp.ie.AbstractSequenceClassifier;
+import edu.stanford.nlp.ie.crf.CRFClassifier;
+
 import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.queries.GoldStandardQuery;
 import tac.kbp.queries.KBPQuery;
@@ -38,12 +41,15 @@ public class Definitions {
 	public static IndexSearcher searcher = null;
 	public static SpellChecker spellchecker = null;
 
+	/* StanfordNER CRF classifier */
+	public static AbstractSequenceClassifier classifier = null;
+	
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex) throws Exception {
 		
 		/* Lucene Index */
 		searcher = new IndexSearcher(FSDirectory.open(new File(kbIndex)));
 		
-		/* Spellchecker Index */
+		/* SpellChecker Index */
 		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
@@ -53,6 +59,12 @@ public class Definitions {
 		
 		System.out.println("Loading queries");
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+
+		loadClassifier(serializedClassifier);
+	}
+	
+	public static void loadClassifier(String filename) {
+		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
 	}
 	
 	public static void loadDocsLocations(String filename) throws Exception {

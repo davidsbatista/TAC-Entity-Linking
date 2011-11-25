@@ -136,9 +136,17 @@ public class ProcessQuery {
 		
 		System.out.print("\t correct answer: "+ tac.kbp.utils.Definitions.queriesGold.get(q.query_id).answer);
 		findCorrectEntity(q);
+		System.out.println();
 
 		//load the recognized named-entities in the support document
 		q.loadNamedEntitiesXML();
+		for (Candidate c : q.candidates) {
+			c.nameSimilarities(q.name);
+			c.getNamedEntities();
+			System.out.println("organizations:" + c.organizations.size());
+			System.out.println("persons:" + c.persons.size());
+			System.out.println("places" + c.places.size());
+		}
 		
 	}
 
@@ -163,8 +171,6 @@ public class ProcessQuery {
 		
 		if (!found && !q_gold.answer.startsWith("NIL"))
 			n_docs_not_found++;
-		
-		System.out.println();
 		}
 	
 	private static void generateOutput(String output) throws FileNotFoundException {

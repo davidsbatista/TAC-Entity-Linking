@@ -26,6 +26,8 @@ public class Candidate {
 	public float jaroWinkler;
 	public float levenshtein;
 	
+	public HashMap<String, Float> similarities = new HashMap<String, Float>();
+	
 	public Candidate(org.apache.lucene.document.Document doc) {
 		entity = new Entity();
 		entity.id = doc.getField("id").stringValue();			
@@ -37,15 +39,12 @@ public class Candidate {
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 	}
-
-	public void getCandidateData() {
-		
-	}
 	
-	public void getNamedEntities(AbstractSequenceClassifier classifier) throws Exception {
+	public void getNamedEntities() throws Exception {
 		
-		String wiki_text_classified = classifier.classifyWithInlineXML(entity.getWiki_text());
-		Document doc = tac.kbp.utils.XMLUtils.loadXMLFromString(wiki_text_classified);
+		String wiki_text_classified = tac.kbp.utils.Definitions.classifier.classifyToString(entity.getWiki_text(), "xml", true);
+		
+		Document doc = tac.kbp.utils.XMLUtils.loadXMLFromString( "<wiki_text>" + wiki_text_classified.trim() + "</wiki_text>" );
 		
 		NodeList persons = doc.getElementsByTagName("PERSON");
 		NodeList organizations = doc.getElementsByTagName("ORGANIZATION");
@@ -79,13 +78,7 @@ public class Candidate {
 	}
 		
 	public void nameSimilarities(String query) {
-		
-		HashMap<String, Float> similarities = tac.kbp.utils.StringSimilarities.compareStrings(query,this.entity.name);
-		Set<String> keys = similarities.keySet();
-								
-		for (Iterator<String> iterator = keys.iterator(); iterator.hasNext();) {
-			String key = iterator.next();
-			System.out.println(key + ":" + similarities.get(key));					
-		}
+				
+		this.similarities = tac.kbp.utils.StringSimilarities.compareStrings(query,this.entity.name);
 	}
 }
