@@ -37,7 +37,7 @@ public class ParseXML {
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(fXmlFile);
 			doc.getDocumentElement().normalize();
-
+			
 			NodeList nList = doc.getElementsByTagName("query");
 
 			for (int temp = 0; temp < nList.getLength(); temp++) {

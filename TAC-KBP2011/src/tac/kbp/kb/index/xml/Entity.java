@@ -16,6 +16,10 @@ public class Entity {
 	public String infobox_class;
 	public String wiki_text;
 	
+	public Entity() {
+		super();
+	}
+	
 	public void addFact(Fact fact){
 		this.facts.add(fact);
 	}

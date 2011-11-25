@@ -2,6 +2,7 @@ package tac.kbp.utils;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -9,18 +10,51 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.FSDirectory;
+
+import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.queries.GoldStandardQuery;
+import tac.kbp.queries.KBPQuery;
 
 public class Definitions {
 	
-	public static HashMap<String, String> docslocations = new HashMap<String, String>();
+	/* queries */
+	public static List<KBPQuery> queries = null;	
 	public static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
+	
+	/* resources locations */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
+	public static HashMap<String, String> docslocations = new HashMap<String, String>();
 	public static Set<String> stop_words = new HashSet<String>();
+	
+	/* lucene indexes */
+	public static IndexSearcher searcher = null;
+	public static SpellChecker spellchecker = null;
 
+	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex) throws Exception {
+		
+		/* Lucene Index */
+		searcher = new IndexSearcher(FSDirectory.open(new File(kbIndex)));
+		
+		/* Spellchecker Index */
+		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
+		spellchecker = new SpellChecker(spellDirectory, "name", "id");
+		
+		//loadDocsLocations(docLocationsPath);
+		loadStopWords(stopWordsFile);
+		loadGoldStandard(goldStandardPath);
+		
+		System.out.println("Loading queries");
+		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+	}
+	
 	public static void loadDocsLocations(String filename) throws Exception {
 		
 		BigFile file = new BigFile(filename);

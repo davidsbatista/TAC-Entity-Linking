@@ -16,6 +16,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import tac.kbp.kb.index.xml.Entity;
+
 public class KBPQuery {
 	
 	public String query_id;
@@ -23,12 +25,12 @@ public class KBPQuery {
 	public String docid;
 	public String answer_kb_id;
 	
-	public HashSet<String> alternative_names;
-	public HashSet<String> candidates;
-	
+	public HashSet<String> alternative_names;	
 	public HashSet<String> persons;
 	public HashSet<String> places;
 	public HashSet<String> organizations;
+	
+	public HashSet<Candidate> candidates;
 	
 	public HashMap<String,String> query;
 	public String supportDocument = new String();
@@ -40,7 +42,7 @@ public class KBPQuery {
 		this.docid = docid;
 		this.answer_kb_id = null;
 		this.alternative_names = new HashSet<String>();
-		this.candidates = new HashSet<String>();  
+		this.candidates = new HashSet<Candidate>();  
 		
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();

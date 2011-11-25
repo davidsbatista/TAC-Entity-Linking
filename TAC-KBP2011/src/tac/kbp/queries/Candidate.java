@@ -26,12 +26,20 @@ public class Candidate {
 	public float jaroWinkler;
 	public float levenshtein;
 	
-	public Candidate(){
-		super();
-		this.entity = new Entity();
+	public Candidate(org.apache.lucene.document.Document doc) {
+		entity = new Entity();
+		entity.id = doc.getField("id").stringValue();			
+		entity.type = doc.getField("type").stringValue();
+		entity.name = doc.getField("name").stringValue();
+		entity.wiki_text = doc.getField("wiki_text").stringValue();
+		
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
+	}
+
+	public void getCandidateData() {
+		
 	}
 	
 	public void getNamedEntities(AbstractSequenceClassifier classifier) throws Exception {

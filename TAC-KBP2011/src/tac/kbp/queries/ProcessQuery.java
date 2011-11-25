@@ -1,6 +1,5 @@
 package tac.kbp.queries;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,32 +15,15 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.BinaryJedis;
-import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
 
 import com.google.common.base.Joiner;
 
 public class ProcessQuery {
-	
-	static IndexSearcher searcher = null;
-	static SpellChecker spellchecker = null;
-	
-	static HashMap<String, String> docslocations = new HashMap<String, String>();
-	static Set<String> stop_words = new HashSet<String>();
-	 
-	static List<KBPQuery> queries = null;
-	static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
-	
-	//static String named_entities_supportDoc = "/collections/TAC-2011/named-entities";
-	static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
-	
-	//static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
 	
 	static int total_n_docs = 0;
 	static int n_found = 0;
@@ -51,34 +33,18 @@ public class ProcessQuery {
 	
 	public static void main(String[] args) throws Exception {
 		
-		/* Load the queries file */
-		queries = tac.kbp.queries.xml.ParseXML.loadQueries(args[0]);
-		System.err.println(queries.size() + " queries loaded");
+		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5]);
+
+		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
+		System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
+		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
+		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
 		
-		/* Load the text file with location of support documents */
-		tac.kbp.utils.Definitions.loadDocsLocations(args[1]);
-		System.out.println(docslocations.size() + " documents locations loaded");
-		
-		/* load english stopwords list */
-		tac.kbp.utils.Definitions.loadStopWords(args[2]);
-		System.out.println(stop_words.size() + " stopwords loaded");
-		
-		/* load query-gold standard queries */
-		tac.kbp.utils.Definitions.loadGoldStandard(args[3]);
-		System.out.println(queriesGold.size() + " queries gold standard loaded");
-		
-		/* Lucene Index */
-		searcher = new IndexSearcher(FSDirectory.open(new File(args[4])));
-		
-		/* Spellchecker Index */
-		FSDirectory spellDirectory = FSDirectory.open(new File(args[5]));
-		spellchecker = new SpellChecker(spellDirectory, "name", "id");
- 
 		int port = 6379;
 		String host = "agatha";
 		BinaryJedis binaryjedis = new BinaryJedis(host, port);
 		
-		for (Iterator<KBPQuery> iterator = queries.iterator(); iterator.hasNext();) {
+		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery query = (KBPQuery) iterator.next();
 			
 			System.out.print(query.query_id + " \"" + query.name + '"');
@@ -87,8 +53,8 @@ public class ProcessQuery {
 		}
 		
 		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
-		System.out.println("Queries: " + Integer.toString(queries.size()));
-		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) queries.size()));
+		System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
+		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) tac.kbp.utils.Definitions.queries.size()));
 		System.out.println("Queries with 0 docs returned: " + Integer.toString(n_queries_zero_docs));
 		System.out.println("Queries NIL and not found (NIL): "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
 		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
@@ -168,7 +134,7 @@ public class ProcessQuery {
 		if (n_docs == 0)
 			n_queries_zero_docs++;
 		
-		System.out.print("\t correct answer: "+ queriesGold.get(q.query_id).answer);
+		System.out.print("\t correct answer: "+ tac.kbp.utils.Definitions.queriesGold.get(q.query_id).answer);
 		findCorrectEntity(q);
 
 		//load the recognized named-entities in the support document
@@ -176,17 +142,14 @@ public class ProcessQuery {
 		
 	}
 
-	private static void getCandidates() {
-		
-	}
-	
 	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 				
-		GoldStandardQuery q_gold = queriesGold.get(q.query_id);
+		GoldStandardQuery q_gold = tac.kbp.utils.Definitions.queriesGold.get(q.query_id);
 		
 		boolean found = false;
 		
-		for (String eid : q.candidates) {
+		for (Candidate c : q.candidates) {			
+			String eid = c.entity.id;
 			if (eid.equalsIgnoreCase(q_gold.answer)) {
 				System.out.print('\t' + " found");
 				n_found++;
@@ -208,7 +171,7 @@ public class ProcessQuery {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (Iterator<KBPQuery> iterator = queries.iterator(); iterator.hasNext();) {
+		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery q = (KBPQuery) iterator.next();
 			out.println(q.query_id.trim()+"\t"+q.answer_kb_id.trim());
 		}
@@ -244,7 +207,7 @@ public class ProcessQuery {
 		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> l = spellchecker.suggestSimilar(sense, 30);
+			List<SuggestWord> l = tac.kbp.utils.Definitions.spellchecker.suggestSimilar(sense, 10);
 			suggestedwords.addAll(l);
 		}
 		
@@ -253,12 +216,8 @@ public class ProcessQuery {
 		
 		for (SuggestWord suggestWord : suggestedwords) {
 			
-			//System.out.print("suggestWord: " + suggestWord.string + "  " + suggestWord.eid);
-					
 			String queryS = "id:" + suggestWord.eid;
-			TopDocs docs = searcher.search(queryParser.parse(queryS), 1);
-			
-			//System.out.println(" num docs:" + docs.totalHits);
+			TopDocs docs = tac.kbp.utils.Definitions.searcher.search(queryParser.parse(queryS), 1);
 			
 			if (docs.totalHits == 0) {
 				continue;				
@@ -266,9 +225,9 @@ public class ProcessQuery {
 			
 			else {
 				scoreDocs = docs.scoreDocs;
-				Document doc = searcher.doc(scoreDocs[0].doc);
-				String id = doc.getField("id").stringValue();
-				q.candidates.add(id);
+				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
+				Candidate c = new Candidate(doc);				
+				q.candidates.add(c);
 			}
 
 		}
