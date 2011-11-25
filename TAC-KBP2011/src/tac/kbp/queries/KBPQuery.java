@@ -18,8 +18,6 @@ import org.xml.sax.SAXException;
 
 public class KBPQuery {
 	
-	public String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
-	
 	public String query_id;
 	public String name;
 	public String docid;
@@ -33,7 +31,6 @@ public class KBPQuery {
 	public HashSet<String> organizations;
 	
 	public HashMap<String,String> query;
-	
 	public String supportDocument = new String();
 	
 	public KBPQuery(String query_id, String name, String docid) {
@@ -54,7 +51,7 @@ public class KBPQuery {
 	
 	public void loadNamedEntitiesXML() throws ParserConfigurationException, SAXException, IOException {
 		
-		String filename = named_entities_supportDoc+"/"+this.query_id+"-CRF-named-entities.xml";
+		String filename = tac.kbp.utils.Definitions.named_entities_supportDoc+"/"+this.query_id+"-CRF-named-entities.xml";
 		
 		File fXmlFile = new File(filename);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -96,10 +93,10 @@ public class KBPQuery {
 	public void loadNamedEntities() throws IOException{
 		
 		BufferedReader input;
-		
+
 		try {
 	
-			input = new BufferedReader(new FileReader(named_entities_supportDoc+"/"+this.query_id+"-named-entities.txt"));
+			input = new BufferedReader(new FileReader(tac.kbp.utils.Definitions.named_entities_supportDoc+"/"+this.query_id+"-named-entities.txt"));
 			String line = null;
 			boolean persons = false;
 			boolean org = false;

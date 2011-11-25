@@ -1,14 +1,9 @@
 package tac.kbp.queries;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +14,6 @@ import java.util.Set;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -27,12 +21,11 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 
-import com.google.common.base.Joiner;
-
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
-import tac.kbp.utils.BigFile;
+
+import com.google.common.base.Joiner;
 
 public class ProcessQuery {
 	
@@ -48,7 +41,7 @@ public class ProcessQuery {
 	//static String named_entities_supportDoc = "/collections/TAC-2011/named-entities";
 	static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	
-	static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
+	//static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
 	
 	static int total_n_docs = 0;
 	static int n_found = 0;
@@ -210,7 +203,7 @@ public class ProcessQuery {
 		
 		System.out.println();
 		}
-		
+	
 	private static void generateOutput(String output) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
