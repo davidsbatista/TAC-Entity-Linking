@@ -63,15 +63,15 @@ public class ProcessQuery {
 		System.err.println(queries.size() + " queries loaded");
 		
 		/* Load the text file with location of support documents */
-		//loadDocsLocations(args[1]);
-		//System.out.println(docslocations.size() + " documents locations loaded");
+		tac.kbp.utils.Definitions.loadDocsLocations(args[1]);
+		System.out.println(docslocations.size() + " documents locations loaded");
 		
 		/* load english stopwords list */
-		loadStopWords(args[2]);
+		tac.kbp.utils.Definitions.loadStopWords(args[2]);
 		System.out.println(stop_words.size() + " stopwords loaded");
 		
 		/* load query-gold standard queries */
-		loadGoldStandard(args[3]);
+		tac.kbp.utils.Definitions.loadGoldStandard(args[3]);
 		System.out.println(queriesGold.size() + " queries gold standard loaded");
 		
 		/* Lucene Index */
@@ -103,27 +103,6 @@ public class ProcessQuery {
 
 	}
 	
-	private static void loadStopWords(String file) { 
-		
-		try{
-			  FileInputStream fstream = new FileInputStream(file);
-			  DataInputStream in = new DataInputStream(fstream);
-			  BufferedReader br = new BufferedReader(new InputStreamReader(in));
-			  String strLine;
-			  
-			  while ((strLine = br.readLine()) != null)   {				  
-				  stop_words.add(strLine.trim());
-			  }
-			  
-			  in.close();
-			  
-			}
-		
-			catch (Exception e) {
-				System.err.println("Error: " + e.getMessage());
-			}
-	}
-
 	private static String cleanString(String sense) {
 		
 		/*
@@ -188,14 +167,7 @@ public class ProcessQuery {
 
 	private static void processQuery(KBPQuery q) throws Exception {
 		
-		//String supportDoc = getSupportDocument(q);
-		
-		//load the recognized named-entities in the support document
-		//loadNamedEntities(q);
-		//loadNamedEntitiesXML(q);
-		
 		int n_docs = queryKB(q);
-		
 		System.out.print("  " + n_docs);
 		
 		total_n_docs += n_docs;
@@ -204,10 +176,17 @@ public class ProcessQuery {
 			n_queries_zero_docs++;
 		
 		System.out.print("\t correct answer: "+ queriesGold.get(q.query_id).answer);
-		
 		findCorrectEntity(q);
+
+		//load the recognized named-entities in the support document
+		q.loadNamedEntitiesXML();
+		
 	}
 
+	private static void getCandidates() {
+		
+	}
+	
 	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 				
 		GoldStandardQuery q_gold = queriesGold.get(q.query_id);
@@ -232,52 +211,6 @@ public class ProcessQuery {
 		System.out.println();
 		}
 		
-	private static void loadGoldStandard(String filename) throws IOException {
-		
-		BufferedReader input;
-		
-		if (filename.contains("2009") || filename.contains("2010/trainning")) {
-			
-			try {
-				
-				input = new BufferedReader(new FileReader(filename));
-				String line = null;
-		        
-				while (( line = input.readLine()) != null){
-		          String[] contents = line.split("\t");	          
-		          GoldStandardQuery gold = new GoldStandardQuery(contents[0], contents[1], contents[2]);
-		          queriesGold.put(contents[0], gold);
-		        }
-		        
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();    	
-			}
-			
-		}
-		
-		else {
-			
-			try {
-				
-				input = new BufferedReader(new FileReader(filename));
-				String line = null;
-		        
-				while (( line = input.readLine()) != null){
-		          String[] contents = line.split("\t");	          
-		          GoldStandardQuery gold = new GoldStandardQuery(contents[0], contents[1], contents[2], contents[3], contents[4]);
-		          queriesGold.put(contents[0], gold);
-		        }
-		        
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();    	
-			}
-			
-		}
-
-	}
-	
 	private static void generateOutput(String output) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
@@ -438,16 +371,5 @@ public class ProcessQuery {
 		return query;
 		
 	}
-	
-	private static void loadDocsLocations(String filename) throws Exception {
-		
-		BigFile file = new BigFile(filename);
-		String[] parts;
-		
-		for (String line : file) {		
-			parts = line.split(".sgm");			
-			docslocations.put(parts[0], parts[1]);
-		}
-		
-	}
+
 }

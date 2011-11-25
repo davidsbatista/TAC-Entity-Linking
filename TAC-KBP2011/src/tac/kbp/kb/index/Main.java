@@ -56,55 +56,7 @@ public class Main {
 					Index.indexEntities(indexDir, entity);
 				}
 			}
-			
-			// Calculates each field average length, to be used in BM25
-			CollectionSimilarityIndexer similarity = (CollectionSimilarityIndexer) indexDir.getSimilarity();
-					
-			Float numDocs = new Float(indexDir.numDocs());
-			
-			Float wiki_title_length = similarity.getLength("wiki_title") / numDocs; 
-			Float type_length = similarity.getLength("type") / numDocs;
-			Float id_length = similarity.getLength("id") / numDocs;;
-			Float name_length = similarity.getLength("name") / numDocs;;
-			Float infobox_length = similarity.getLength("infobox") / numDocs;;
-			Float wiki_text_length = similarity.getLength("wiki_text") / numDocs;;
-			Float facts_length = similarity.getLength("facts") / numDocs;;
-			
-			// write everything to file to be loaded at query time
-			try{
-				  // Create file 
-				  FileWriter fstream = new FileWriter("fields_avg_size.txt");
-				  BufferedWriter out = new BufferedWriter(fstream);
-	
-				  out.write("wiki_title\n");
-				  out.write(Float.toString(wiki_title_length)+"\n");
-				  
-				  out.write("type\n");
-				  out.write(Float.toString(type_length)+"\n");
-				  
-				  out.write("id\n");
-				  out.write(Float.toString(id_length)+"\n");
-				  
-				  out.write("name\n");
-				  out.write(Float.toString(name_length)+"\n");
-				  
-				  out.write("infobox\n");
-				  out.write(Float.toString(infobox_length)+"\n");
-				  
-				  out.write("wiki_text\n");
-				  out.write(Float.toString(wiki_text_length)+"\n");
-				  
-				  out.write("facts\n");
-				  out.write(Float.toString(facts_length)+"\n");
-				  
-				  //Close the output stream
-				  out.close();
-				  
-			}	catch (Exception e) {
-					//Catch exception if any
-					System.err.println("Error: " + e.getMessage());
-				}
-			
+
 			indexDir.close();
 			
 			long end = new Date().getTime();		

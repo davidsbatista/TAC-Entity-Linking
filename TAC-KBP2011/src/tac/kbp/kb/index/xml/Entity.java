@@ -8,13 +8,13 @@ import java.util.Vector;
 
 public class Entity {
 
-	private String wiki_title;
-	private String type;
-	private String id;
-	private String name;
-	private Vector<Fact> facts = new Vector<Fact>();
-	private String infobox_class;
-	private String wiki_text;
+	public String wiki_title;
+	public String type;
+	public String id;
+	public String name;
+	public Vector<Fact> facts = new Vector<Fact>();
+	public String infobox_class;
+	public String wiki_text;
 	
 	public void addFact(Fact fact){
 		this.facts.add(fact);
