@@ -76,6 +76,7 @@ public class Candidate {
 		features.candidateNameStartsQuery = query.toLowerCase().startsWith(entity.name);		
 		features.candidateNameEndsQuery = query.toLowerCase().endsWith(entity.name);
 		
+		/*
 		if (tac.kbp.utils.StringUtils.isUpper(query)) {
 			if (isAcroynym(query, entity.name)) {
 				features.queryStringAcronymOfCandidate = true;
@@ -84,5 +85,6 @@ public class Candidate {
 				features.candidateAcronymOfqueryString = true;
 			}	
 		}
+		*/
 	}
 }
