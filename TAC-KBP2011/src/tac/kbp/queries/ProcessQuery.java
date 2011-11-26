@@ -143,9 +143,6 @@ public class ProcessQuery {
 		for (Candidate c : q.candidates) {
 			c.nameSimilarities(q.name);
 			c.getNamedEntities();
-			System.out.println("organizations:" + c.organizations.size());
-			System.out.println("persons:" + c.persons.size());
-			System.out.println("places" + c.places.size());
 		}
 		
 	}
@@ -230,9 +227,10 @@ public class ProcessQuery {
 			}
 			
 			else {
-				scoreDocs = docs.scoreDocs;
+				scoreDocs = docs.scoreDocs; 
 				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
-				Candidate c = new Candidate(doc);				
+				Candidate c = new Candidate(doc);
+				c.features.lucene_score = scoreDocs[0].score; 
 				q.candidates.add(c);
 			}
 

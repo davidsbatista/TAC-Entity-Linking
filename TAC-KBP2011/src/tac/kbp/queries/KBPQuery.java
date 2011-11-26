@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -15,8 +16,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import tac.kbp.kb.index.xml.Entity;
 
 public class KBPQuery {
 	
@@ -142,7 +141,6 @@ public class KBPQuery {
 	        }
 	        
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();    	
 		}
 	}
@@ -182,5 +180,50 @@ public class KBPQuery {
 	    }
 	    
 	    this.supportDocument = contents.toString();		
+	}
+
+	public void namedEntitiesIntersection(){
+		
+		Set<String> all = new HashSet<String>();
+		
+		all.addAll(places);
+		all.addAll(organizations);
+		all.addAll(persons);
+		
+		for (Candidate c : candidates) {
+			
+			Set<String> candidatesAll = new HashSet<String>();
+			candidatesAll.addAll(c.places);
+			candidatesAll.addAll(c.organizations);
+			candidatesAll.addAll(c.persons);
+			
+			Set<String> intersection = new HashSet<String>(candidatesAll);
+			intersection.retainAll(all);
+			
+			c.features.namedEntitiesIntersection = intersection.size();
+		}		
+	}
+
+	
+	public void StringSimilarity() {
+		
+		for (Candidate c : candidates) {
+			
+			
+		}
+		
+		/*
+		exact match
+		substring of each other
+		query starts candidate name
+		query ends candidate name
+		candidate's name starts query
+		candidate's name ends query
+		common name words
+		named entity comparison
+		query string is acronym of candidate or vice-versa?
+		contains query
+		substring in query
+		*/		
 	}
 }
