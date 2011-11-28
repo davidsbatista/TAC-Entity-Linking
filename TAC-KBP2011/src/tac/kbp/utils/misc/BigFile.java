@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.utils.misc;
 
 import java.util.*;
 import java.io.*;

@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.utils.lda;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,11 +18,12 @@ import org.xml.sax.SAXException;
 
 import tac.kbp.kb.index.EntityParser;
 import tac.kbp.kb.index.xml.Entity;
+import tac.kbp.utils.misc.OnlyExt;
 
 public class TransformKBforLDAGibbs {
 	
 	static Set<String> stop_words = new HashSet<String>();	
-	static Stemmer stemmer = new Stemmer();
+	static EnglishPorterStemmer stemmer = new EnglishPorterStemmer();
 		
 	public static void loadStopWords(String file) { 
 		

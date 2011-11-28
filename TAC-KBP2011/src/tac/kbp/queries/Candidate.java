@@ -4,19 +4,19 @@ import java.util.HashSet;
 import java.util.List;
 
 import tac.kbp.kb.index.xml.Entity;
+import tac.kbp.utils.Definitions;
+import tac.kbp.utils.Definitions.NERType;
+import tac.kbp.utils.misc.JavaRunCommand;
+
 import edu.stanford.nlp.util.Triple;
 
 public class Candidate {
 	
-	Entity entity = null;
+	public Entity entity = null;
 	
 	public HashSet<String> persons = null;
 	public HashSet<String> places = null;
 	public HashSet<String> organizations = null;
-	
-	public float personsIntersction;
-	public float organizationsIntersction;
-	public float placesIntersction;
 	
 	public Features features;
 	
@@ -62,7 +62,7 @@ public class Candidate {
 	
 	public void nameSimilarities(String query) {
 		
-		this.features.similarities = tac.kbp.utils.StringSimilarities.compareStrings(query,this.entity.name);
+		this.features.similarities = tac.kbp.utils.string.StringSimilarities.compareStrings(query,this.entity.name);
 		
 		features.exactMatch = query.equalsIgnoreCase(entity.name);
 		features.querySubStringOfCandidate = entity.name.toLowerCase().contains(query.toLowerCase());
@@ -72,7 +72,7 @@ public class Candidate {
 		features.candidateNameStartsQuery = query.toLowerCase().startsWith(entity.name);		
 		features.candidateNameEndsQuery = query.toLowerCase().endsWith(entity.name);
 		
-		if (tac.kbp.utils.StringUtils.isUpper(query)) {			
+		if (tac.kbp.utils.string.StringUtils.isUpper(query)) {			
 			if (isAcroynym(query, entity.name)) {
 				features.queryStringAcronymOfCandidate = true;
 			}
@@ -101,7 +101,28 @@ public class Candidate {
 		
 		features.queryStringInWikiText = queryStringInWikiText(q);
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
+		features.candidateType = determineType();	
+	}
+	
+	public boolean queryStringNamedEntity() {
+		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);
+	}
+	
+	public NERType determineType(){
+		if (entity.type.equalsIgnoreCase("PER")) {
+			return tac.kbp.utils.Definitions.NERType.PERSON;
+		}
 		
+		if (entity.type.equalsIgnoreCase("ORG")) {
+			return tac.kbp.utils.Definitions.NERType.ORGANIZATION;
+		}
+			
+		if (entity.type.equalsIgnoreCase("GPE")) {
+			return tac.kbp.utils.Definitions.NERType.PLACE;
+		}
+		else return tac.kbp.utils.Definitions.NERType.UNK;
+			
+			
 	}
 	
 	public boolean queryStringInWikiText(KBPQuery q){
@@ -122,4 +143,36 @@ public class Candidate {
 	public boolean candidateNameInSupportDocument(KBPQuery q) {
 		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
 	}
+
+	public void getTopicsDistribution() {
+		
+		String[] entity_id = entity.id.split("E");
+		
+		String command = "head -n " + Integer.parseInt(entity_id[1]) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1";		
+		String output = JavaRunCommand.run(command);
+		
+		String[] parsed_output = output.split("<==");
+		
+		String[] topics = parsed_output[1].split("<==");
+		
+		for (int i = 0; i < topics.length ; i++) {
+			features.topics_distribution[i] =  Float.parseFloat(topics[i]);
+		}
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

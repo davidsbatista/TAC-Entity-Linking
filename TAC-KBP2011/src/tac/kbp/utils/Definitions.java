@@ -19,13 +19,19 @@ import org.apache.lucene.store.FSDirectory;
 import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.queries.GoldStandardQuery;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 
 public class Definitions {
 	
+	/* named-entities type */
+	public enum NERType {
+	    PERSON, ORGANIZATION, PLACE, UNK
+	}
+	
 	/* queries */
-	public static List<KBPQuery> queries = null;	
+	public static List<KBPQuery> queries = null;
 	public static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
 	
 	/* resources locations */
@@ -33,6 +39,7 @@ public class Definitions {
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
 	public static HashMap<String, String> docslocations = new HashMap<String, String>();
 	public static Set<String> stop_words = new HashSet<String>();
+	public static String KB_lda_topics = "/collections/TAC-2011/LDA/model";
 	
 	/* lucene indexes */
 	public static IndexSearcher searcher = null;
@@ -50,14 +57,24 @@ public class Definitions {
 		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
+		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
 		loadStopWords(stopWordsFile);
 		loadGoldStandard(goldStandardPath);
 		
-		System.out.println("Loading queries");
+		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 
 		loadClassifier(serializedClassifier);
+	}
+	
+	public static void loadAll(String queriesPath, String docLocationsPath) throws Exception {
+		
+		System.out.println("Loading support documents locations from: " + docLocationsPath);
+		loadDocsLocations(docLocationsPath);
+		System.out.println("Loading queries from: " + queriesPath);
+		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+		
 	}
 	
 	public static void loadClassifier(String filename) {

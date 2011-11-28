@@ -19,6 +19,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
+
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
 
 import com.google.common.base.Joiner;
@@ -59,21 +60,8 @@ public class ProcessQuery {
 		System.out.println("Queries NIL and not found (NIL): "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
 		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
 		System.out.println("Queries not NIL and found (Found)" + n_found);
-
-	}
-	
-	private static String cleanString(String sense) {
 		
-		/*
-		'Du Wei'
-		'Du Wei(footballer)']
-		[u'Du_wei'
-		*/
-		
-		String cleaned =  sense.replace("[u'","").replace("']", "").replace("u'", "").replace("[","").
-				replace("'","").replace("['", "").trim().replace("_", " ");
-		
-		return cleaned;
+		generateOutput("results.txt");
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
@@ -92,7 +80,7 @@ public class ProcessQuery {
 			
 			for (int i = 0; i < acronymsArray.length; i++) {
 				
-				String cleaned = cleanString(acronymsArray[i]);
+				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(acronymsArray[i]);
 				
 				if (cleaned.compareToIgnoreCase(query.name) != 0) {
 					query.alternative_names.add(cleaned);
@@ -107,7 +95,7 @@ public class ProcessQuery {
 			
 			for (int i = 0; i < sensesArray.length; i++) {
 				
-				String cleaned = cleanString(sensesArray[i]);
+				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(sensesArray[i]);
 				
 				if (cleaned.compareToIgnoreCase(query.name) != 0) {
 					query.alternative_names.add(cleaned);
@@ -140,11 +128,28 @@ public class ProcessQuery {
 
 		//load the recognized named-entities in the support document
 		q.loadNamedEntitiesXML();
+		
 		for (Candidate c : q.candidates) {
+			c.getTopicsDistribution();
+			/*
 			c.nameSimilarities(q.name);
 			c.getNamedEntities();
+			*/
 		}
 		
+		/*
+		float average_similarities = 0;
+		String answer = new String();
+		
+		for (Candidate c : q.candidates) {
+			float average = c.features.average_similarities();
+			if (average > average_similarities) {
+				average_similarities = average;
+				answer = c.entity.id;
+			}
+		}
+		q.answer_kb_id = answer;
+		*/
 	}
 
 	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {

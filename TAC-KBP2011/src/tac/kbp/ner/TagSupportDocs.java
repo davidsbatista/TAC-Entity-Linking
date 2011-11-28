@@ -16,7 +16,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 import tac.kbp.queries.KBPQuery;
-import tac.kbp.utils.BigFile;
+import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 

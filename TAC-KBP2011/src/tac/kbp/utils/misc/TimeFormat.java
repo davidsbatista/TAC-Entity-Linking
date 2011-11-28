@@ -1,7 +1,7 @@
 /**
  * 
  */
-package tac.kbp.utils;
+package tac.kbp.utils.misc;
 
 import java.text.DecimalFormat;
 

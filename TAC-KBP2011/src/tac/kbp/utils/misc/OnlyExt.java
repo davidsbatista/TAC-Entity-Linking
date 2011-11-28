@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.utils.misc;
 
 import java.io.File;
 import java.io.FilenameFilter;

@@ -1,11 +1,11 @@
-package tac.kbp.utils;
+package tac.kbp.utils.lda;
 
 import java.io.*;
 import java.util.*;
 
 public class RemoveRareWords {
 
-	public static int numWords = 2;
+	public static int numWords = 20000;
 	public static Map<String,Integer> words = new HashMap<String,Integer>();
 	public static String dummyToken = "DUMMYTOKEN";
 

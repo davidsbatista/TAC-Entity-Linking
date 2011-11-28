@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.utils.string;
 
 import java.util.ArrayList;
 import java.util.HashMap;

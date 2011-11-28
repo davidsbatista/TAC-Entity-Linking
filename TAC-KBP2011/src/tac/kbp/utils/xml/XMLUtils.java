@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.utils.xml;
 
 import java.io.StringReader;
 
