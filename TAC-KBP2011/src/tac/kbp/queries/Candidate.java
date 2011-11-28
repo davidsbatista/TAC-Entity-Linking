@@ -1,11 +1,7 @@
 package tac.kbp.queries;
 
-import java.lang.reflect.Array;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import tac.kbp.kb.index.xml.Entity;
 import edu.stanford.nlp.util.Triple;
@@ -76,8 +72,7 @@ public class Candidate {
 		features.candidateNameStartsQuery = query.toLowerCase().startsWith(entity.name);		
 		features.candidateNameEndsQuery = query.toLowerCase().endsWith(entity.name);
 		
-		/*
-		if (tac.kbp.utils.StringUtils.isUpper(query)) {
+		if (tac.kbp.utils.StringUtils.isUpper(query)) {			
 			if (isAcroynym(query, entity.name)) {
 				features.queryStringAcronymOfCandidate = true;
 			}
@@ -85,6 +80,46 @@ public class Candidate {
 				features.candidateAcronymOfqueryString = true;
 			}	
 		}
-		*/
+	}
+
+	private boolean isAcroynym(String query, String name) {		
+		String [] words = name.split(" ");
+		char [] accro = query.toLowerCase().toCharArray();
+		
+		if (words.length == accro.length) {
+			for (int i = 0; i < accro.length; i++) {		
+				if (accro[i] != (words[i]).toLowerCase().charAt(0)) {
+					return false;
+				}	
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public void semanticFeatures(KBPQuery q) {
+		
+		features.queryStringInWikiText = queryStringInWikiText(q);
+		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
+		
+	}
+	
+	public boolean queryStringInWikiText(KBPQuery q){
+		
+		boolean nameInWikiText = entity.wiki_text.toUpperCase().indexOf(q.name.toUpperCase()) != -1;
+		boolean alternativeWikiText = false;
+		
+		for (String sense : q.alternative_names) {
+			if (entity.wiki_text.toUpperCase().indexOf(sense.toUpperCase()) != -1) {
+				alternativeWikiText = true;
+				break;
+			}
+		}
+		
+		return (nameInWikiText || alternativeWikiText);
+	}
+	
+	public boolean candidateNameInSupportDocument(KBPQuery q) {
+		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
 	}
 }

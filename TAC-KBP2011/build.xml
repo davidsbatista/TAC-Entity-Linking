@@ -8,7 +8,7 @@
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
                 <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.ProcessQuery"/>
                 <attribute name="Class-Path" value="."/>
-                <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar commons-collections.jar servlet-api-2.5.jar commons-logging.jar commons-beanutils.jar commons-codec.jar commons-logging-api.jar commons-logging-adapters.jar commons-httpclient.jar jcaller.jar jtidy.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar junit.jar bliki-core-3.0.16.jar secondstring-20060615.jar stanford-ner.jar google-collect-1.0-rc2.jar mysql-connector-java-5.1.10.jar lucene-core-3.0.3.jar lucene-spellchecker-3.0.3.jar"/>
+                <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar commons-collections.jar servlet-api-2.5.jar commons-logging.jar commons-beanutils.jar commons-codec.jar commons-logging-api.jar commons-logging-adapters.jar commons-httpclient.jar jcaller.jar jtidy.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar junit.jar secondstring-20060615.jar stanford-ner.jar google-collect-1.0-rc2.jar lucene-core-3.0.3.jar lucene-spellchecker-3.0.3.jar"/>
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="/home/dsbatista/workspace/EntityLinking/bin"/>
@@ -26,11 +26,9 @@
             <zipfileset dir="/usr/share/java" includes="jedis-2.0.0.jar"/>
             <zipfileset dir="/usr/share/java" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
             <zipfileset dir="/usr/share/java" includes="junit.jar"/>
-            <zipfileset dir="/home/dsbatista/info.bliki.wiki/bliki-core/target" includes="bliki-core-3.0.16.jar"/>
-            <zipfileset dir="/home/dsbatista/SecondString" includes="secondstring-20060615.jar"/>
             <zipfileset dir="/home/dsbatista/stanford-ner-2011-09-14" includes="stanford-ner.jar"/>
             <zipfileset dir="/usr/share/java" includes="google-collect-1.0-rc2.jar"/>
-            <zipfileset dir="/usr/share/java" includes="mysql-connector-java-5.1.10.jar"/>
+	    <zipfileset dir="/usr/share/java" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
             <zipfileset dir="/home/dsbatista/lucene-3.0.3" includes="lucene-core-3.0.3.jar"/>
             <zipfileset dir="/home/dsbatista/lucene-3.0.3/contrib/spellchecker" includes="lucene-spellchecker-3.0.3.jar"/>
         </jar>

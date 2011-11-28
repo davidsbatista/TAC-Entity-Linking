@@ -50,7 +50,7 @@ public class Definitions {
 		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
-		//loadDocsLocations(docLocationsPath);
+		loadDocsLocations(docLocationsPath);
 		loadStopWords(stopWordsFile);
 		loadGoldStandard(goldStandardPath);
 		

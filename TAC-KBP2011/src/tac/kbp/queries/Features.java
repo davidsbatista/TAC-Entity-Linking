@@ -13,7 +13,9 @@ public class Features {
 	public NERType queryType; 
 	public NERType candidateType;
 	public float namedEntitiesIntersection;
-	
+	public boolean queryStringInWikiText;
+	public boolean candidateNameInSupportDocument;
+			
 	/* string similarities */
 	
 	public boolean exactMatch;
