@@ -59,7 +59,9 @@ public class Definitions {
 		
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
+		System.out.println("Loading stopwords from: " + stopWordsFile);
 		loadStopWords(stopWordsFile);
+		System.out.println("Loading queries answers from: " + goldStandardPath);
 		loadGoldStandard(goldStandardPath);
 		
 		System.out.println("Loading queries from: " + queriesPath);
@@ -68,10 +70,14 @@ public class Definitions {
 		loadClassifier(serializedClassifier);
 	}
 	
-	public static void loadAll(String queriesPath, String docLocationsPath) throws Exception {
+	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile) throws Exception {
+		
+		System.out.println("Loading stopwords from: " + stopWordsFile);
+		loadStopWords(stopWordsFile);
 		
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
+		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		

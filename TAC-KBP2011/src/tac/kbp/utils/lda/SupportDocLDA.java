@@ -4,50 +4,45 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
-import java.util.LinkedList;
-import java.util.List;
 
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.utils.Definitions;
 
 public class SupportDocLDA {
 	
-	public static List<KBPQuery> queries = new LinkedList<KBPQuery>();
 	public static EnglishPorterStemmer stemmer = new EnglishPorterStemmer();
 	public static int num_docs = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1]);
+		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 		System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
+		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
-		File aFile = new File(args[2]);					
+		File aFile = new File(args[3]);					
 		Writer output = new BufferedWriter(new FileWriter(aFile));
 		
-		for (KBPQuery query : queries) {
-			query.getSupportDocument(query, tac.kbp.utils.Definitions.docslocations);
+		System.out.println("parsing support documents...");
+		
+		for (KBPQuery query : tac.kbp.utils.Definitions.queries) {
+			query.getSupportDocument(query, tac.kbp.utils.Definitions.docslocations);			
 			String text_parsed = parse(query.supportDocument);
-			System.out.println(text_parsed);
 			output.write( text_parsed + "\n");
 			num_docs++;
 		}
-		
-		//command = "/home/dsbatista/GibbsLDA++-0.2/src/lda"
-		//args = " -inf -dir /collections/TAC-2011/lda_trained_model/ -model model-final -niters 20 -dfile " + query.id+"/"+query.doc_id+'_lda_format'
 		output.close();
-		
 		System.out.println(num_docs + " docs parsed");
 	}
 	
 	public static String parse(String text) {
 		
-		String text_no_new_line = text.replaceAll("\\n", " ");
+		String text_no_tags = tac.kbp.utils.string.StringUtils.removeTags(text);
+		String text_no_new_line = text_no_tags.replaceAll("\\n", " ");
 		String text_no_stopwords = removeStopWords(text_no_new_line);
-		String text_stemmed = stemm(text_no_stopwords);
-		
+		String text_stemmed = stemm(text_no_stopwords);		
 		return text_stemmed;
 	}
 

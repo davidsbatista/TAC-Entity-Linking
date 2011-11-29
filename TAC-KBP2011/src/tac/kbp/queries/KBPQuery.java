@@ -30,9 +30,10 @@ public class KBPQuery {
 	public HashSet<String> organizations;
 	
 	public HashSet<Candidate> candidates;
-	
-	public HashMap<String,String> query;
+		
 	public String supportDocument = new String();
+	
+	public Float[] topics_distribution = new Float[100];
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
@@ -46,8 +47,6 @@ public class KBPQuery {
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
-		
-		this.query = new HashMap<String,String>();
 	}
 	
 	public void loadNamedEntitiesXML() throws ParserConfigurationException, SAXException, IOException {
@@ -67,6 +66,10 @@ public class KBPQuery {
 		addEntitiesToQuery(persons, "PERSON");
 		addEntitiesToQuery(organizations, "ORGANIZATION");
 		addEntitiesToQuery(locations, "LOCATION");
+	}
+
+	public void getTopicsDistribution() {
+		//TODO:
 	}
 	
 	public void addEntitiesToQuery(NodeList nodeList, String tag) {
@@ -204,26 +207,4 @@ public class KBPQuery {
 		}		
 	}
 
-	
-	public void StringSimilarity() {
-		
-		for (Candidate c : candidates) {
-			
-			
-		}
-		
-		/*
-		exact match
-		substring of each other
-		query starts candidate name
-		query ends candidate name
-		candidate's name starts query
-		candidate's name ends query
-		common name words
-		named entity comparison
-		query string is acronym of candidate or vice-versa?
-		contains query
-		substring in query
-		*/		
-	}
 }

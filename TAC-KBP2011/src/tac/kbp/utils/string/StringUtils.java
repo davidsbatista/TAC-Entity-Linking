@@ -11,6 +11,11 @@ public class StringUtils {
 	   return true;
 	}
 	
+	public static String removeTags(String text) { 
+		return text.replaceAll("\\<.*?\\>", "");
+	}
+	
+	
 	public static String cleanString(String sense) {
 		
 		/*
