@@ -33,6 +33,7 @@ public class Definitions {
 	/* queries */
 	public static List<KBPQuery> queries = null;
 	public static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
+	public static String queries_set = new String();
 	
 	/* resources locations */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
@@ -40,6 +41,7 @@ public class Definitions {
 	public static HashMap<String, String> docslocations = new HashMap<String, String>();
 	public static Set<String> stop_words = new HashSet<String>();
 	public static String KB_lda_topics = "/collections/TAC-2011/LDA/model";
+	public static String queries_lda_topics = "/collections/TAC-2011/LDA/queries";
 	
 	/* lucene indexes */
 	public static IndexSearcher searcher = null;
@@ -68,6 +70,15 @@ public class Definitions {
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 
 		loadClassifier(serializedClassifier);
+		
+		if (queriesPath.contains("2009"))
+			queries_set = "2009";
+		
+		if (queriesPath.contains("2010"))
+			queries_set = "2010";
+		
+		if (queriesPath.contains("2011"))
+			queries_set = "2011";
 	}
 	
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile) throws Exception {
@@ -81,6 +92,14 @@ public class Definitions {
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		
+		if (queriesPath.contains("2009"))
+			queries_set = "2009";
+		
+		if (queriesPath.contains("2010"))
+			queries_set = "2010";
+		
+		if (queriesPath.contains("2011"))
+			queries_set = "2011";
 	}
 	
 	public static void loadClassifier(String filename) {
