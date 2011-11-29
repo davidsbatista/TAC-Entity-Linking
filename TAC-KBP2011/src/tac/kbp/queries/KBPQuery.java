@@ -17,6 +17,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import tac.kbp.utils.Definitions;
+import tac.kbp.utils.misc.JavaRunCommand;
+
 public class KBPQuery {
 	
 	public String query_id;
@@ -33,7 +36,7 @@ public class KBPQuery {
 		
 	public String supportDocument = new String();
 	
-	public Float[] topics_distribution = new Float[100];
+	public Double[] topics_distribution = new Double[100];
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
@@ -68,8 +71,18 @@ public class KBPQuery {
 		addEntitiesToQuery(locations, "LOCATION");
 	}
 
-	public void getTopicsDistribution() {
-		//TODO:
+	public void getTopicsDistribution(int index) {
+		String[] query = query_id.split("EL");
+		
+		String command = "head -n " + (Integer.parseInt(query[1])+1) + " " + Definitions.queries_lda_topics+"/"+Definitions.queries_set + "_evaluation.txt.theta | tail -n 1";		
+		String output = JavaRunCommand.run(command);
+		
+		String[] parsed_output = output.split("<==");		
+		String[] topics = parsed_output[1].split(" ");
+		
+		for (int i = 0; i < topics.length ; i++) {
+			topics_distribution[i] = Double.parseDouble(topics[i]);
+		}
 	}
 	
 	public void addEntitiesToQuery(NodeList nodeList, String tag) {

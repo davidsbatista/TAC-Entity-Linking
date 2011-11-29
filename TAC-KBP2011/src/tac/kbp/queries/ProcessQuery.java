@@ -21,6 +21,7 @@ import org.apache.lucene.search.TopDocs;
 import redis.clients.jedis.BinaryJedis;
 
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
+import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
 
@@ -129,6 +130,10 @@ public class ProcessQuery {
 		//load the recognized named-entities in the support document
 		q.loadNamedEntitiesXML();
 		
+		//load the LDA topics distribution for the query support document
+		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
+		
+		// get features from all candidates 
 		for (Candidate c : q.candidates) {
 			c.getTopicsDistribution();
 			/*

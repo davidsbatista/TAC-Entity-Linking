@@ -1,7 +1,10 @@
 package tac.kbp.queries;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+
+import org.apache.lucene.index.TermFreqVector;
 
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.utils.Definitions;
@@ -97,11 +100,21 @@ public class Candidate {
 		return false;
 	}
 
-	public void semanticFeatures(KBPQuery q) {
+	public void semanticFeatures(KBPQuery q) throws IOException {
 		
 		features.queryStringInWikiText = queryStringInWikiText(q);
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
-		features.candidateType = determineType();	
+		features.candidateType = determineType();
+		
+		/* how to get the vector of a document */
+		TermFreqVector test = Definitions.searcher.getIndexReader().getTermFreqVector(2, "wiki_text");
+		int[] termFreq = test.getTermFrequencies();
+		String[] terms = test.getTerms();
+		
+		/* get vectors for candidates wiki_text and for support document */
+		// normalize both vectors: common words only, same dimension
+		// calculate sin(v1,v2)
+		
 	}
 	
 	public boolean queryStringNamedEntity() {
@@ -148,31 +161,20 @@ public class Candidate {
 		
 		String[] entity_id = entity.id.split("E");
 		
-		String command = "head -n " + Integer.parseInt(entity_id[1]) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1";		
+		String command = "head -n " + (Integer.parseInt(entity_id[1])-1) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1";		
 		String output = JavaRunCommand.run(command);
 		
 		String[] parsed_output = output.split("<==");
 		
-		String[] topics = parsed_output[1].split("<==");
+		String[] topics = parsed_output[1].split(" ");
 		
 		for (int i = 0; i < topics.length ; i++) {
-			features.topics_distribution[i] =  Float.parseFloat(topics[i]);
+			features.topics_distribution[i] =  Double.parseDouble(topics[i]);
 		}
 	}
+	
+	public void divergence(double[] lda_query) {
+		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);		
+	}
+			
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

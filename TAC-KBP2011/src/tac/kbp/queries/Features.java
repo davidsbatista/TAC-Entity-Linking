@@ -15,8 +15,9 @@ public class Features {
 	public boolean queryStringInWikiText;
 	public boolean candidateNameInSupportDocument;
 	public boolean queryStringIsNamedEntity;
-	public Float[] topics_distribution = new Float[100];  
-			
+	public double[] topics_distribution = new double[100];  
+	public double kldivergence;
+	
 	/* string similarities */
 	
 	public boolean exactMatch;
@@ -33,7 +34,7 @@ public class Features {
 	/* other */
 	public float lucene_score;
 	
-	
+	/* calculates the average of the string similarities */
 	public float average_similarities() {
 		Set<String> keys = similarities.keySet();
 		float average = 0;
