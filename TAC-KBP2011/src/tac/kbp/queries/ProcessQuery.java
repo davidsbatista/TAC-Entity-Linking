@@ -35,7 +35,7 @@ public class ProcessQuery {
 	
 	public static void main(String[] args) throws Exception {
 		
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5]);
+		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 		System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
@@ -63,6 +63,9 @@ public class ProcessQuery {
 		System.out.println("Queries not NIL and found (Found)" + n_found);
 		
 		generateOutput("results.txt");
+		
+		Definitions.searcher.close();
+		Definitions.documents.close();
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
@@ -239,7 +242,7 @@ public class ProcessQuery {
 			else {
 				scoreDocs = docs.scoreDocs; 
 				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
-				Candidate c = new Candidate(doc);
+				Candidate c = new Candidate(doc,scoreDocs[0].doc);
 				c.features.lucene_score = scoreDocs[0].score; 
 				q.candidates.add(c);
 			}

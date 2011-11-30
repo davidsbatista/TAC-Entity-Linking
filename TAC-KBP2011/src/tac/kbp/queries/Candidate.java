@@ -16,6 +16,7 @@ import edu.stanford.nlp.util.Triple;
 public class Candidate {
 	
 	public Entity entity = null;
+	public int indexID;
 	
 	public HashSet<String> persons = null;
 	public HashSet<String> places = null;
@@ -23,7 +24,8 @@ public class Candidate {
 	
 	public Features features;
 	
-	public Candidate(org.apache.lucene.document.Document doc) {
+	public Candidate(org.apache.lucene.document.Document doc, int indexID) {
+		
 		entity = new Entity();
 		entity.id = doc.getField("id").stringValue();			
 		entity.type = doc.getField("type").stringValue();
@@ -34,6 +36,8 @@ public class Candidate {
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 		this.features = new Features();
+		
+		this.indexID = indexID;
 	}
 	
 	public void getNamedEntities() throws Exception {
@@ -107,7 +111,7 @@ public class Candidate {
 		features.candidateType = determineType();
 		
 		/* how to get the vector of a document */
-		TermFreqVector test = Definitions.searcher.getIndexReader().getTermFreqVector(2, "wiki_text");
+		TermFreqVector test = Definitions.searcher.getIndexReader().getTermFreqVector(indexID, "wiki_text");
 		int[] termFreq = test.getTermFrequencies();
 		String[] terms = test.getTerms();
 		

@@ -46,11 +46,12 @@ public class Definitions {
 	/* lucene indexes */
 	public static IndexSearcher searcher = null;
 	public static SpellChecker spellchecker = null;
+	public static IndexSearcher documents = null;
 
 	/* StanfordNER CRF classifier */
 	public static AbstractSequenceClassifier classifier = null;
 	
-	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex) throws Exception {
+	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
 		
 		/* Lucene Index */
 		searcher = new IndexSearcher(FSDirectory.open(new File(kbIndex)));
@@ -58,6 +59,9 @@ public class Definitions {
 		/* SpellChecker Index */
 		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
+		
+		/* Document Collection Index */
+		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
 		
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
