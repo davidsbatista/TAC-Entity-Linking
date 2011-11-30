@@ -3,7 +3,6 @@ package tac.kbp.utils.string;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import tac.kbp.queries.KBPQuery;
 import uk.ac.shef.wit.simmetrics.metrichandlers.MetricHandler;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.AbstractStringMetric;
 

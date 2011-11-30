@@ -4,7 +4,14 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermFreqVector;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopDocsCollector;
 
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.utils.Definitions;
@@ -110,16 +117,47 @@ public class Candidate {
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
 		features.candidateType = determineType();
 		
-		/* how to get the vector of a document */
-		TermFreqVector test = Definitions.searcher.getIndexReader().getTermFreqVector(indexID, "wiki_text");
-		int[] termFreq = test.getTermFrequencies();
-		String[] terms = test.getTerms();
+		/* get the vector of candidate in the KB */
+		TermFreqVector wiki_text_vector = Definitions.searcher.getIndexReader().getTermFreqVector(indexID, "wiki_text");
+				
+		/* get the vector of the query's support document */
+		Term t = new Term("docid", q.docid); 
+		Query query = new TermQuery(t); 		
+		TopDocs docs = Definitions.documents.search(query, 1);
+		ScoreDoc[] scoredocs = docs.scoreDocs;
+		TermFreqVector support_doc_vector = Definitions.documents.getIndexReader().getTermFreqVector(scoredocs[0].doc, "text");
 		
 		/* get vectors for candidates wiki_text and for support document */
 		// normalize both vectors: common words only, same dimension
 		// calculate sin(v1,v2)
+		this.normalizeVectors(support_doc_vector, wiki_text_vector);
+	}
+	
+	public void normalizeVectors(TermFreqVector support_doc_vector, TermFreqVector wiki_text_vector) {
+		
+		System.out.println(support_doc_vector);
+		System.out.println(wiki_text_vector);
+		
+		int[] support_doc_termFreq = support_doc_vector.getTermFrequencies();
+		String[] support_doc_terms = support_doc_vector.getTerms();
+		
+		int[] wiki_text_termFreq = wiki_text_vector.getTermFrequencies();
+		String[] wiki_text_terms = wiki_text_vector.getTerms();
+		
+		System.out.println("Wiki_text: ");
+		for (int i = 0; i < wiki_text_terms.length; i++) {
+			System.out.println(wiki_text_terms[i] + "\t" + wiki_text_termFreq[i]);
+		}
+		
+		System.out.println("Support Doc: ");
+		for (int i = 0; i < support_doc_terms.length; i++) {
+			System.out.println(support_doc_terms[i] + "\t" + support_doc_termFreq[i]);
+		}
+		
+		
 		
 	}
+	
 	
 	public boolean queryStringNamedEntity() {
 		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);

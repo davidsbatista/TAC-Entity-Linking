@@ -32,11 +32,10 @@ public class KBPQuery {
 	public HashSet<String> places;
 	public HashSet<String> organizations;
 	
-	public HashSet<Candidate> candidates;
-		
+	public HashSet<Candidate> candidates;		
 	public String supportDocument = new String();
-	
 	public Double[] topics_distribution = new Double[100];
+	
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();

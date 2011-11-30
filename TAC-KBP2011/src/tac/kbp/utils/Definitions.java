@@ -16,6 +16,7 @@ import java.util.Set;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
+import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.ivo_spellchecker.SpellChecker;
 import tac.kbp.queries.GoldStandardQuery;
 import tac.kbp.queries.KBPQuery;
@@ -51,6 +52,12 @@ public class Definitions {
 	/* StanfordNER CRF classifier */
 	public static AbstractSequenceClassifier classifier = null;
 	
+	/* REDIS server */
+	public static int redis_port = 6379;
+	public static String redis_host = "agatha";
+	public static BinaryJedis binaryjedis = null;
+	
+	
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
 		
 		/* Lucene Index */
@@ -63,17 +70,25 @@ public class Definitions {
 		/* Document Collection Index */
 		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
 		
+
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
+		
 		System.out.println("Loading stopwords from: " + stopWordsFile);
 		loadStopWords(stopWordsFile);
+		
 		System.out.println("Loading queries answers from: " + goldStandardPath);
 		loadGoldStandard(goldStandardPath);
 		
+		//loadClassifier(serializedClassifier);
+		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+		
+		System.out.println("Connecting to REDIS server.. ");
+		binaryjedis = new BinaryJedis(redis_host, redis_port);
 
-		loadClassifier(serializedClassifier);
+		
 		
 		if (queriesPath.contains("2009"))
 			queries_set = "2009";
@@ -83,6 +98,7 @@ public class Definitions {
 		
 		if (queriesPath.contains("2011"))
 			queries_set = "2011";
+		
 	}
 	
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile) throws Exception {

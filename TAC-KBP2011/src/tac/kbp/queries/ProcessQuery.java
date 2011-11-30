@@ -42,15 +42,11 @@ public class ProcessQuery {
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
 		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
 		
-		int port = 6379;
-		String host = "agatha";
-		BinaryJedis binaryjedis = new BinaryJedis(host, port);
-		
 		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery query = (KBPQuery) iterator.next();
 			
 			System.out.print(query.query_id + " \"" + query.name + '"');
-			getSenses(binaryjedis, query);
+			getSenses(Definitions.binaryjedis, query);
 			processQuery(query);		
 		}
 		
@@ -66,6 +62,7 @@ public class ProcessQuery {
 		
 		Definitions.searcher.close();
 		Definitions.documents.close();
+		Definitions.binaryjedis.disconnect();
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
@@ -83,9 +80,7 @@ public class ProcessQuery {
 			String[] acronymsArray = acr.split(",\\s");
 			
 			for (int i = 0; i < acronymsArray.length; i++) {
-				
 				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(acronymsArray[i]);
-				
 				if (cleaned.compareToIgnoreCase(query.name) != 0) {
 					query.alternative_names.add(cleaned);
 				}
@@ -96,17 +91,13 @@ public class ProcessQuery {
 		if (senses != null) {
 			String ses = new String(senses, "UTF8");
 			String[] sensesArray = ses.split(",\\s");
-			
 			for (int i = 0; i < sensesArray.length; i++) {
-				
-				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(sensesArray[i]);
-				
+				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(sensesArray[i]);			
 				if (cleaned.compareToIgnoreCase(query.name) != 0) {
 					query.alternative_names.add(cleaned);
 				}		
 			}
 		}
-		
 	}
 	
 	catch (Exception e) {
@@ -131,19 +122,20 @@ public class ProcessQuery {
 		System.out.println();
 
 		//load the recognized named-entities in the support document
-		q.loadNamedEntitiesXML();
+		//q.loadNamedEntitiesXML();
 		
 		//load the LDA topics distribution for the query support document
-		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
-		
+		//q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
+
+		/*
 		// get features from all candidates 
 		for (Candidate c : q.candidates) {
 			c.getTopicsDistribution();
-			/*
+			c.semanticFeatures(q);
 			c.nameSimilarities(q.name);
 			c.getNamedEntities();
-			*/
 		}
+		*/
 		
 		/*
 		float average_similarities = 0;
@@ -214,6 +206,7 @@ public class ProcessQuery {
 		
 		return result;
 	}
+	
 	
 	private static int queryKB(KBPQuery q) throws IOException, ParseException {
 		

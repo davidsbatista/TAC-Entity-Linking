@@ -46,13 +46,13 @@ public class Index {
 		doc.add(new Field("id", entity.getId(), Field.Store.YES, Field.Index.NOT_ANALYZED));
 		
 		//name
-		doc.add(new Field("name", entity.getName(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+		doc.add(new Field("name", entity.getName(), Field.Store.YES, Field.Index.NOT_ANALYZED, Field.TermVector.YES));
 		
 		//infobox_class
 		doc.add(new Field("infobox", entity.getInfobox_class(), Field.Store.YES, Field.Index.NOT_ANALYZED));
 		
 		//wiki_text
-		doc.add(new Field("wiki_text", entity.getWiki_text(), Field.Store.YES, Field.Index.ANALYZED));
+		doc.add(new Field("wiki_text", entity.getWiki_text(), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));
 		
 		//facts
 		StringBuilder facts = new StringBuilder();

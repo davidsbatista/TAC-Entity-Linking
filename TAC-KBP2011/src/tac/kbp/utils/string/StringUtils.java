@@ -14,18 +14,12 @@ public class StringUtils {
 	public static String removeTags(String text) { 
 		return text.replaceAll("\\<.*?\\>", "");
 	}
-	
-	
+		
 	public static String cleanString(String sense) {
-		
-		/*
-		'Du Wei'
-		'Du Wei(footballer)']
-		[u'Du_wei'
-		*/
-		
-		String cleaned =  sense.replace("[u'","").replace("']", "").replace("u'", "").replace("[","").
-				replace("'","").replace("['", "").trim().replace("_", " ");
+				
+		String cleaned =  sense.replaceAll("\\[u'","").replaceAll("'\\]", "").replaceAll("u'", "").replaceAll("\\[","").
+		replaceAll("'","").replaceAll("\\['", "").replaceAll("_", " ").replaceAll("\\(disambiguation\\)","").
+		replaceAll("\\(", "").replaceAll("\\)", "").replaceAll("\"", "").replaceAll("#", "").replaceAll("\\|", "").trim();
 		
 		return cleaned;
 	}
