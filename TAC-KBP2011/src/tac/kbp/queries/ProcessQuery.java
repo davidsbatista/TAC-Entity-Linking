@@ -4,9 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +41,7 @@ public class ProcessQuery {
 		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
+		//System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
 		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
 		
@@ -56,13 +59,13 @@ public class ProcessQuery {
 		System.out.println("Queries with 0 docs returned: " + Integer.toString(n_queries_zero_docs));
 		System.out.println("Queries NIL and not found (NIL): "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
 		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
-		System.out.println("Queries not NIL and found (Found)" + n_found);
-		
-		generateOutput("results.txt");
-		
+		System.out.println("Queries not NIL and found (Found): " + n_found);
+
 		Definitions.searcher.close();
 		Definitions.documents.close();
 		Definitions.binaryjedis.disconnect();
+		
+		GenerateTrainningSet.generateFeatures();
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
@@ -108,10 +111,10 @@ public class ProcessQuery {
 	}
 
 	private static void processQuery(KBPQuery q) throws Exception {
-		
+
 		int n_docs = queryKB(q);
 		System.out.print("  " + n_docs);
-		
+
 		total_n_docs += n_docs;
 		
 		if (n_docs == 0)
@@ -207,7 +210,6 @@ public class ProcessQuery {
 		return result;
 	}
 	
-	
 	private static int queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
@@ -222,8 +224,16 @@ public class ProcessQuery {
 		
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
 		ScoreDoc[] scoreDocs = null;
+				
+		List<SuggestWord> suggestedwordsList = new ArrayList<SuggestWord>(suggestedwords);
+		Collections.sort(suggestedwordsList);
 		
-		for (SuggestWord suggestWord : suggestedwords) {
+		int i=0;
+		
+		for (SuggestWord suggestWord : suggestedwordsList) {
+			
+			if (i > 70)
+				break;			
 			
 			String queryS = "id:" + suggestWord.eid;
 			TopDocs docs = tac.kbp.utils.Definitions.searcher.search(queryParser.parse(queryS), 1);
@@ -239,7 +249,7 @@ public class ProcessQuery {
 				c.features.lucene_score = scoreDocs[0].score; 
 				q.candidates.add(c);
 			}
-
+			i++;
 		}
 		
 		/*

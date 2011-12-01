@@ -15,10 +15,11 @@ public class SupportDocLDA {
 	
 	public static void main(String[] args) throws Exception {
 		
+		/*
 		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
+		//System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
@@ -35,6 +36,7 @@ public class SupportDocLDA {
 		}
 		output.close();
 		System.out.println(num_docs + " docs parsed");
+		*/
 	}
 	
 	public static String parse(String text) {

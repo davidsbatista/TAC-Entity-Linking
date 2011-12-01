@@ -31,6 +31,10 @@ public class Candidate {
 	
 	public Features features;
 	
+	public Candidate() {
+		super();
+	}
+	
 	public Candidate(org.apache.lucene.document.Document doc, int indexID) {
 		
 		entity = new Entity();
@@ -47,6 +51,15 @@ public class Candidate {
 		this.indexID = indexID;
 	}
 	
+	public void extractFeatures(KBPQuery q) throws Exception{
+		//getNamedEntities();
+		nameSimilarities(q.name);
+		semanticFeatures(q);
+		getTopicsDistribution();
+		divergence(q.topics_distribution);
+		
+	}
+	
 	public void getNamedEntities() throws Exception {
 		
 		List<Triple<String, Integer, Integer>> entities = tac.kbp.utils.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());
@@ -55,6 +68,38 @@ public class Candidate {
 			String ename = entity.getWiki_text().substring(triple.second,triple.third);
 			addEntitiesToCandidate(ename, triple.first);
 		}
+		
+		// calculates the candidateType based on the number and type of named-entities
+		int[] numbers = {persons.size(),places.size(),organizations.size()};
+		
+		int maxValue = numbers[0];
+		int maxPos = 0;
+		
+		for(int i=1;i < numbers.length;i++){
+			if(numbers[i] > maxValue){
+				maxValue = numbers[i];
+				maxPos = i;
+			}
+		}
+		
+		switch (maxPos) {
+		
+		case 0:
+			this.features.queryType = NERType.PERSON;
+			break;
+
+		case 1:
+			this.features.queryType = NERType.PLACE;
+			break;
+			
+		case 2:
+			this.features.queryType = NERType.ORGANIZATION;
+			break;
+		}
+		
+
+		
+
 	}
 	
 	public void addEntitiesToCandidate(String ename, String tag) {		   
@@ -115,22 +160,25 @@ public class Candidate {
 		
 		features.queryStringInWikiText = queryStringInWikiText(q);
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
+		features.queryStringIsNamedEntity = queryStringNamedEntity();
 		features.candidateType = determineType();
 		
-		/* get the vector of candidate in the KB */
+		/*
+		// get the vector of candidate in the KB
 		TermFreqVector wiki_text_vector = Definitions.searcher.getIndexReader().getTermFreqVector(indexID, "wiki_text");
 				
-		/* get the vector of the query's support document */
+		// get the vector of the query's support document
 		Term t = new Term("docid", q.docid); 
 		Query query = new TermQuery(t); 		
 		TopDocs docs = Definitions.documents.search(query, 1);
 		ScoreDoc[] scoredocs = docs.scoreDocs;
 		TermFreqVector support_doc_vector = Definitions.documents.getIndexReader().getTermFreqVector(scoredocs[0].doc, "text");
 		
-		/* get vectors for candidates wiki_text and for support document */
+		// get vectors for candidates wiki_text and for support document
 		// normalize both vectors: common words only, same dimension
 		// calculate sin(v1,v2)
 		this.normalizeVectors(support_doc_vector, wiki_text_vector);
+		*/
 	}
 	
 	public void normalizeVectors(TermFreqVector support_doc_vector, TermFreqVector wiki_text_vector) {
@@ -157,7 +205,6 @@ public class Candidate {
 		
 		
 	}
-	
 	
 	public boolean queryStringNamedEntity() {
 		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);

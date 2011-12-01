@@ -13,9 +13,17 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.aliasi.matrix.Vector;
 
 import tac.kbp.utils.Definitions;
 import tac.kbp.utils.misc.JavaRunCommand;
@@ -26,16 +34,17 @@ public class KBPQuery {
 	public String name;
 	public String docid;
 	public String answer_kb_id;
+	public String supportDocument = new String();
 	
 	public HashSet<String> alternative_names;	
 	public HashSet<String> persons;
 	public HashSet<String> places;
 	public HashSet<String> organizations;
+	public double[] topics_distribution = new double[100];
+	public Candidate correctEntity = new Candidate();
 	
 	public HashSet<Candidate> candidates;		
-	public String supportDocument = new String();
-	public Double[] topics_distribution = new Double[100];
-	
+
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
@@ -69,7 +78,7 @@ public class KBPQuery {
 		addEntitiesToQuery(organizations, "ORGANIZATION");
 		addEntitiesToQuery(locations, "LOCATION");
 	}
-
+	
 	public void getTopicsDistribution(int index) {
 		String[] query = query_id.split("EL");
 		
@@ -83,6 +92,16 @@ public class KBPQuery {
 			topics_distribution[i] = Double.parseDouble(topics[i]);
 		}
 	}
+	
+	public void getSupportDocument(KBPQuery q) throws IOException {
+        Term t = new Term("docid", q.docid); 
+        Query query = new TermQuery(t);                 
+        TopDocs docs = Definitions.documents.search(query, 1);
+        ScoreDoc[] scoredocs = docs.scoreDocs;
+        Document doc = tac.kbp.utils.Definitions.documents.doc(scoredocs[0].doc);        
+        q.supportDocument = doc.get("text");
+	}
+	
 	
 	public void addEntitiesToQuery(NodeList nodeList, String tag) {
 		

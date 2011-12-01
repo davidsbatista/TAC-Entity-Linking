@@ -39,7 +39,7 @@ public class Definitions {
 	/* resources locations */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
-	public static HashMap<String, String> docslocations = new HashMap<String, String>();
+	//public static HashMap<String, String> docslocations = new HashMap<String, String>();
 	public static Set<String> stop_words = new HashSet<String>();
 	public static String KB_lda_topics = "/collections/TAC-2011/LDA/model";
 	public static String queries_lda_topics = "/collections/TAC-2011/LDA/queries";
@@ -61,18 +61,22 @@ public class Definitions {
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
 		
 		/* Lucene Index */
+		System.out.println("Knowledge Base index: " + kbIndex);
 		searcher = new IndexSearcher(FSDirectory.open(new File(kbIndex)));
 		
 		/* SpellChecker Index */
+		System.out.println("SpellChecker index: " + spellCheckerIndex);
 		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
 		/* Document Collection Index */
+		System.out.println("Document Collection index: " + dcIndex);
 		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
 		
-
+		/*
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
+		*/
 		
 		System.out.println("Loading stopwords from: " + stopWordsFile);
 		loadStopWords(stopWordsFile);
@@ -80,7 +84,7 @@ public class Definitions {
 		System.out.println("Loading queries answers from: " + goldStandardPath);
 		loadGoldStandard(goldStandardPath);
 		
-		//loadClassifier(serializedClassifier);
+		loadClassifier(serializedClassifier);
 		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
@@ -88,8 +92,6 @@ public class Definitions {
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 
-		
-		
 		if (queriesPath.contains("2009"))
 			queries_set = "2009";
 		
@@ -106,8 +108,10 @@ public class Definitions {
 		System.out.println("Loading stopwords from: " + stopWordsFile);
 		loadStopWords(stopWordsFile);
 		
+		/*
 		System.out.println("Loading support documents locations from: " + docLocationsPath);
 		loadDocsLocations(docLocationsPath);
+		*/
 		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
@@ -125,7 +129,8 @@ public class Definitions {
 	public static void loadClassifier(String filename) {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
 	}
-	
+
+	/*
 	public static void loadDocsLocations(String filename) throws Exception {
 		
 		BigFile file = new BigFile(filename);
@@ -137,6 +142,7 @@ public class Definitions {
 		}
 		
 	}
+	*/
 	
 	public static void loadStopWords(String file) { 
 		

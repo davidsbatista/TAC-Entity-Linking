@@ -3,6 +3,8 @@ package tac.kbp.queries;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.aliasi.matrix.Vector;
+
 import tac.kbp.utils.Definitions.NERType;
 
 public class Features {
@@ -33,6 +35,85 @@ public class Features {
 	
 	/* other */
 	public float lucene_score;
+	public boolean correct_answer;
+	
+	public double[] inputVector(){
+		
+		double[] inputVector = new double[20];
+		
+		/*
+		if (this.queryType.equals(candidateType)) {
+			inputVector[0] = 1;
+		}
+		*/
+		
+		//inputVector[1] = namedEntitiesIntersection;
+		
+		if (this.queryStringInWikiText) {
+			inputVector[2] = 1;
+		}
+		
+		if (this.candidateNameInSupportDocument) {
+			inputVector[3] = 1;
+		}
+		
+		if (this.queryStringIsNamedEntity) {
+			inputVector[4] = 1;
+		}
+		
+		inputVector[5] = this.kldivergence;
+		
+		if (this.exactMatch) {
+			inputVector[6] = 1;
+		}
+		
+		if (this.querySubStringOfCandidate) {
+			inputVector[7] = 1;
+		}
+		
+		if (this.candidateSubStringOfQuery) {
+			inputVector[8] = 1;
+		}
+		
+		if (this.queryStartsCandidateName) {
+			inputVector[9] = 1;
+		}
+		
+		if (this.queryEndsCandidateName) {
+			inputVector[10] = 1;
+		}
+		
+		if (this.candidateNameStartsQuery) {
+			inputVector[11] = 1;
+		}
+		
+		if (this.candidateNameEndsQuery) {
+			inputVector[12] = 1;
+		}
+		
+		if (this.queryStringAcronymOfCandidate) {
+			inputVector[13] = 1;
+		}
+		
+		if (this.candidateAcronymOfqueryString) {
+			inputVector[14] = 1;
+		}
+		
+		inputVector[15] = (double) similarities.get("DiceSimilarity");
+		inputVector[16] = (double) similarities.get("JaccardSimilarity");
+		inputVector[17] = (double) similarities.get("Jaro");
+		inputVector[18] = (double) similarities.get("JaroWinkler");
+		inputVector[19] = (double) similarities.get("Levenshtein");
+		
+		return inputVector;
+	}
+
+	public int output() {
+		if (this.correct_answer) {
+			return 1;
+		}
+		else return 0;
+	}
 	
 	/* calculates the average of the string similarities */
 	public float average_similarities() {

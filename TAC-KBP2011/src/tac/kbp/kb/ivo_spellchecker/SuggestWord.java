@@ -38,11 +38,13 @@ public final class SuggestWord implements Comparable<SuggestWord> {
      */
     public String string;
 
+    
+    
     public final int compareTo(SuggestWord a) {
-        if (score > a.score) {
+        if (score < a.score) {
             return 1;
         }
-        if (score < a.score) {
+        if (score > a.score) {
             return -1;
         }
         
