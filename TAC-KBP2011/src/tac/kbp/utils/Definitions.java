@@ -58,7 +58,7 @@ public class Definitions {
 	public static BinaryJedis binaryjedis = null;
 	
 	
-	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
+	public static void loadAll(String queriesPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + kbIndex);

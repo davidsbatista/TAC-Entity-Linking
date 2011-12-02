@@ -1,5 +1,8 @@
 package tac.kbp.queries;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
@@ -8,12 +11,15 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
+import com.aliasi.matrix.DenseVector;
+import com.aliasi.matrix.Vector;
+
 import tac.kbp.utils.Definitions;
 
 public final class GenerateTrainningSet {
 	
-	static ArrayList<double[]> inputs = new ArrayList<double[]>();
-	static ArrayList<Integer> outputs = new ArrayList<Integer>();
+	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
+	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
 	public static void generateFeatures() throws Exception {
 
@@ -38,8 +44,6 @@ public final class GenerateTrainningSet {
 				
 			}
 			
-			/* falta abrir o indice aqui! */
-			
 			if (!foundAnswer) {
 				//get answer doc from KB				
 				QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
@@ -61,25 +65,24 @@ public final class GenerateTrainningSet {
 					}
 				}
 			System.out.println();
-			getVectors();
+			getVectors(query.query_id);
 			}
-	}	
-
-	public static void getVectors() {
-		
-		Integer[] outputInt;
-		outputInt = (Integer[]) outputs.toArray();
+	}
+	
+	public static void getVectors(String query_id) throws FileNotFoundException {	
 		int z=0;
-		
+		PrintStream out = new PrintStream( new FileOutputStream(query_id+".txt"));		
 		for (double[] vector : inputs) {
 			for (int i = 0; i < vector.length; i++) {
-				System.out.print(vector[i] + " ");
+				out.print(vector[i] + " ");
 			}
-			System.out.println(" " + outputInt[z]);
+			out.print(" " + outputs.get(z));
 			z++;
 		}
-	
+		out.close();
 	}
+
+	
 }
 
 

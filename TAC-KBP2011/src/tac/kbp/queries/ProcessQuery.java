@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -22,7 +21,6 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
-
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
 import tac.kbp.utils.Definitions;
 
@@ -38,7 +36,7 @@ public class ProcessQuery {
 	
 	public static void main(String[] args) throws Exception {
 		
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 		//System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
@@ -61,11 +59,16 @@ public class ProcessQuery {
 		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
 		System.out.println("Queries not NIL and found (Found): " + n_found);
 
+		GenerateTrainningSet.generateFeatures();
+		Regression.generateVectors(GenerateTrainningSet.inputs, GenerateTrainningSet.outputs);
+		Regression.calculate();
+		
+		
 		Definitions.searcher.close();
 		Definitions.documents.close();
 		Definitions.binaryjedis.disconnect();
 		
-		GenerateTrainningSet.generateFeatures();
+		
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {

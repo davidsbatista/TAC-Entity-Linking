@@ -3,8 +3,6 @@ package tac.kbp.queries;
 import java.util.HashMap;
 import java.util.Set;
 
-import com.aliasi.matrix.Vector;
-
 import tac.kbp.utils.Definitions.NERType;
 
 public class Features {
@@ -155,5 +153,4 @@ public class Features {
 		return string;
 		
 	}
-
 }

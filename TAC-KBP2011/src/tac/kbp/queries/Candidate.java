@@ -52,7 +52,7 @@ public class Candidate {
 	}
 	
 	public void extractFeatures(KBPQuery q) throws Exception{
-		//getNamedEntities();
+		getNamedEntities();
 		nameSimilarities(q.name);
 		semanticFeatures(q);
 		getTopicsDistribution();

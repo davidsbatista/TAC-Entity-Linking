@@ -31,7 +31,7 @@
 	    <zipfileset dir="/usr/share/java" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
             <zipfileset dir="/home/dsbatista/lucene-3.0.3" includes="lucene-core-3.0.3.jar"/>
             <zipfileset dir="/home/dsbatista/lucene-3.0.3/contrib/spellchecker" includes="lucene-spellchecker-3.0.3.jar"/>
-	    <zipfileset dir="/home/dsbatista/" includes="lingpipe-4.1.0.jar"/>
+	    <zipfileset dir="/home/dsbatista/lingpipe-4.1.0/" includes="lingpipe-4.1.0.jar"/>
         </jar>
     </target>
     <target name="send" depends="create_run_jar">
