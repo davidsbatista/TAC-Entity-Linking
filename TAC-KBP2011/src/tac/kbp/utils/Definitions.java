@@ -39,10 +39,12 @@ public class Definitions {
 	/* resources locations */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
-	//public static HashMap<String, String> docslocations = new HashMap<String, String>();
 	public static Set<String> stop_words = new HashSet<String>();
 	public static String KB_lda_topics = "/collections/TAC-2011/LDA/model";
 	public static String queries_lda_topics = "/collections/TAC-2011/LDA/queries";
+	
+	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
+	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
 	
 	/* lucene indexes */
 	public static IndexSearcher searcher = null;
@@ -58,7 +60,7 @@ public class Definitions {
 	public static BinaryJedis binaryjedis = null;
 	
 	
-	public static void loadAll(String queriesPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex) throws Exception {
+	public static void loadAll(String queriesPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex, String queries_lda_topics, String kb_lda_topics) throws Exception {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + kbIndex);
@@ -73,11 +75,6 @@ public class Definitions {
 		System.out.println("Document Collection index: " + dcIndex);
 		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
 		
-		/*
-		System.out.println("Loading support documents locations from: " + docLocationsPath);
-		loadDocsLocations(docLocationsPath);
-		*/
-		
 		System.out.println("Loading stopwords from: " + stopWordsFile);
 		loadStopWords(stopWordsFile);
 		
@@ -88,6 +85,14 @@ public class Definitions {
 		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+		
+		System.out.println("Loading queries LDA topics from: " + queries_lda_topics);
+		loadLDATopics(queries_lda_topics,queries_topics);
+		
+		System.out.println("Loading KB LDA topics from: " + kb_lda_topics);
+		loadLDATopics(kb_lda_topics,kb_topics);
+		
+		System.out.println("Number of lda topics loaded: " + Definitions.queries_topics.size());
 		
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
@@ -130,20 +135,20 @@ public class Definitions {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
 	}
 
-	/*
-	public static void loadDocsLocations(String filename) throws Exception {
+	public static void loadLDATopics(String filename, HashMap<Integer, String> hashtable) throws Exception {
 		
 		BigFile file = new BigFile(filename);
-		String[] parts;
+		int i=0;
 		
-		for (String line : file) {		
-			parts = line.split(".sgm");			
-			docslocations.put(parts[0], parts[1]);
+		for (String line : file) {
+			hashtable.put(i, line);
+			i++;
 		}
 		
+		System.out.println("lines red: " + i);
+		
 	}
-	*/
-	
+
 	public static void loadStopWords(String file) { 
 		
 		try{

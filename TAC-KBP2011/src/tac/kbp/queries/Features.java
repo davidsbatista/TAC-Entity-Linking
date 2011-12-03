@@ -8,18 +8,16 @@ import tac.kbp.utils.Definitions.NERType;
 public class Features {
 	
 	/* semantic */
-	
 	public NERType queryType; 
 	public NERType candidateType;
+	public boolean typeMtach;
 	public float namedEntitiesIntersection;
 	public boolean queryStringInWikiText;
 	public boolean candidateNameInSupportDocument;
-	public boolean queryStringIsNamedEntity;
 	public double[] topics_distribution = new double[100];  
 	public double kldivergence;
 	
 	/* string similarities */
-	
 	public boolean exactMatch;
 	public boolean querySubStringOfCandidate;
 	public boolean candidateSubStringOfQuery;
@@ -37,15 +35,13 @@ public class Features {
 	
 	public double[] inputVector(){
 		
-		double[] inputVector = new double[20];
+		double[] inputVector = new double[19];
 		
-		/*
-		if (this.queryType.equals(candidateType)) {
+		if (this.queryType == candidateType) {
 			inputVector[0] = 1;
 		}
-		*/
-		
-		//inputVector[1] = namedEntitiesIntersection;
+
+		inputVector[1] = namedEntitiesIntersection;
 		
 		if (this.queryStringInWikiText) {
 			inputVector[2] = 1;
@@ -54,54 +50,50 @@ public class Features {
 		if (this.candidateNameInSupportDocument) {
 			inputVector[3] = 1;
 		}
-		
-		if (this.queryStringIsNamedEntity) {
-			inputVector[4] = 1;
-		}
-		
-		inputVector[5] = this.kldivergence;
+				
+		inputVector[4] = this.kldivergence;
 		
 		if (this.exactMatch) {
-			inputVector[6] = 1;
+			inputVector[5] = 1;
 		}
 		
 		if (this.querySubStringOfCandidate) {
-			inputVector[7] = 1;
+			inputVector[6] = 1;
 		}
 		
 		if (this.candidateSubStringOfQuery) {
-			inputVector[8] = 1;
+			inputVector[7] = 1;
 		}
 		
 		if (this.queryStartsCandidateName) {
-			inputVector[9] = 1;
+			inputVector[8] = 1;
 		}
 		
 		if (this.queryEndsCandidateName) {
-			inputVector[10] = 1;
+			inputVector[9] = 1;
 		}
 		
 		if (this.candidateNameStartsQuery) {
-			inputVector[11] = 1;
+			inputVector[10] = 1;
 		}
 		
 		if (this.candidateNameEndsQuery) {
-			inputVector[12] = 1;
+			inputVector[11] = 1;
 		}
 		
 		if (this.queryStringAcronymOfCandidate) {
-			inputVector[13] = 1;
+			inputVector[12] = 1;
 		}
 		
 		if (this.candidateAcronymOfqueryString) {
-			inputVector[14] = 1;
+			inputVector[13] = 1;
 		}
 		
-		inputVector[15] = (double) similarities.get("DiceSimilarity");
-		inputVector[16] = (double) similarities.get("JaccardSimilarity");
-		inputVector[17] = (double) similarities.get("Jaro");
-		inputVector[18] = (double) similarities.get("JaroWinkler");
-		inputVector[19] = (double) similarities.get("Levenshtein");
+		inputVector[14] = (double) similarities.get("DiceSimilarity");
+		inputVector[15] = (double) similarities.get("JaccardSimilarity");
+		inputVector[16] = (double) similarities.get("Jaro");
+		inputVector[17] = (double) similarities.get("JaroWinkler");
+		inputVector[18] = (double) similarities.get("Levenshtein");
 		
 		return inputVector;
 	}

@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,8 +21,6 @@ import org.apache.lucene.search.TopDocs;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import com.aliasi.matrix.Vector;
 
 import tac.kbp.utils.Definitions;
 import tac.kbp.utils.misc.JavaRunCommand;
@@ -80,28 +77,30 @@ public class KBPQuery {
 	}
 	
 	public void getTopicsDistribution(int index) {
-		String[] query = query_id.split("EL");
 		
-		String command = "head -n " + (Integer.parseInt(query[1])+1) + " " + Definitions.queries_lda_topics+"/"+Definitions.queries_set + "_evaluation.txt.theta | tail -n 1";		
-		String output = JavaRunCommand.run(command);
+		Integer pos = index+1;
 		
+		String command = "head -n " + pos.toString() + " " + Definitions.queries_lda_topics+"/"+Definitions.queries_set + "_evaluation.txt.theta | tail -n 1";
+				
+		JavaRunCommand r = new JavaRunCommand();
+		String output = r.run(command);
+				
 		String[] parsed_output = output.split("<==");		
 		String[] topics = parsed_output[1].split(" ");
 		
 		for (int i = 0; i < topics.length ; i++) {
-			topics_distribution[i] = Double.parseDouble(topics[i]);
+			topics_distribution[i] = Double.parseDouble(topics[i]);	
 		}
 	}
 	
-	public void getSupportDocument(KBPQuery q) throws IOException {
-        Term t = new Term("docid", q.docid); 
+	public void getSupportDocument() throws IOException {
+        Term t = new Term("docid", this.docid); 
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
         Document doc = tac.kbp.utils.Definitions.documents.doc(scoredocs[0].doc);        
-        q.supportDocument = doc.get("text");
+        this.supportDocument = doc.get("text");
 	}
-	
 	
 	public void addEntitiesToQuery(NodeList nodeList, String tag) {
 		
@@ -215,27 +214,4 @@ public class KBPQuery {
 	    
 	    this.supportDocument = contents.toString();		
 	}
-
-	public void namedEntitiesIntersection(){
-		
-		Set<String> all = new HashSet<String>();
-		
-		all.addAll(places);
-		all.addAll(organizations);
-		all.addAll(persons);
-		
-		for (Candidate c : candidates) {
-			
-			Set<String> candidatesAll = new HashSet<String>();
-			candidatesAll.addAll(c.places);
-			candidatesAll.addAll(c.organizations);
-			candidatesAll.addAll(c.persons);
-			
-			Set<String> intersection = new HashSet<String>(candidatesAll);
-			intersection.retainAll(all);
-			
-			c.features.namedEntitiesIntersection = intersection.size();
-		}		
-	}
-
 }

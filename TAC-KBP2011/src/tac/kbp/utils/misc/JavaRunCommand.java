@@ -4,13 +4,13 @@ import java.io.*;
 
 public final class JavaRunCommand {
 
-	public static String run(String command) {
+	public String run(String command) {
 
 		String s = null;
 		String output = new String();
 		String errors = new String();
 
-		try {
+		try {			
 			Process p = Runtime.getRuntime().exec(command);
 
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));

@@ -22,6 +22,8 @@ import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
+import tac.kbp.ranking.GenerateTrainningSet;
+import tac.kbp.ranking.Regression;
 import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
@@ -29,17 +31,16 @@ import com.google.common.base.Joiner;
 public class ProcessQuery {
 	
 	static int total_n_docs = 0;
-	static int n_found = 0;
+	static int FOUND_queries = 0;
 	static int n_queries_zero_docs = 0;
-	static int n_docs_not_found_and_answer_is_NIL = 0;
-	static int n_docs_not_found = 0;
+	static int NIL_queries = 0;
+	static int MISS_queries = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5]);
+		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		//System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
 		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
 		
@@ -51,24 +52,27 @@ public class ProcessQuery {
 			processQuery(query);		
 		}
 		
+		float miss_rate = (float) MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size()-NIL_queries);
+		float found_rate = (float) FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size()-NIL_queries);
+		
 		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
 		System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
 		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) tac.kbp.utils.Definitions.queries.size()));
-		System.out.println("Queries with 0 docs returned: " + Integer.toString(n_queries_zero_docs));
-		System.out.println("Queries NIL and not found (NIL): "+ Integer.toString(n_docs_not_found_and_answer_is_NIL));
-		System.out.println("Queries not NIL and not found (Misses): "+ Integer.toString(n_docs_not_found));
-		System.out.println("Queries not NIL and found (Found): " + n_found);
-
+		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(n_queries_zero_docs));
+		System.out.println("Queries NIL: " + NIL_queries);
+		System.out.println("Queries Misses: " + MISS_queries + " (" + miss_rate + "%)" );
+		System.out.println("Queries Found: " + FOUND_queries + " (" + found_rate + "%)" );
+		
+		//String.format("%.2g%n", 0.912300);
+		
 		GenerateTrainningSet.generateFeatures();
 		Regression.generateVectors(GenerateTrainningSet.inputs, GenerateTrainningSet.outputs);
 		Regression.calculate();
-		
-		
+				
 		Definitions.searcher.close();
 		Definitions.documents.close();
 		Definitions.binaryjedis.disconnect();
-		
-		
+
 	}
 
 	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
@@ -115,6 +119,8 @@ public class ProcessQuery {
 
 	private static void processQuery(KBPQuery q) throws Exception {
 
+		q.getSupportDocument();
+		
 		int n_docs = queryKB(q);
 		System.out.print("  " + n_docs);
 
@@ -128,34 +134,10 @@ public class ProcessQuery {
 		System.out.println();
 
 		//load the recognized named-entities in the support document
-		//q.loadNamedEntitiesXML();
+		q.loadNamedEntitiesXML();
 		
 		//load the LDA topics distribution for the query support document
 		//q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
-
-		/*
-		// get features from all candidates 
-		for (Candidate c : q.candidates) {
-			c.getTopicsDistribution();
-			c.semanticFeatures(q);
-			c.nameSimilarities(q.name);
-			c.getNamedEntities();
-		}
-		*/
-		
-		/*
-		float average_similarities = 0;
-		String answer = new String();
-		
-		for (Candidate c : q.candidates) {
-			float average = c.features.average_similarities();
-			if (average > average_similarities) {
-				average_similarities = average;
-				answer = c.entity.id;
-			}
-		}
-		q.answer_kb_id = answer;
-		*/
 	}
 
 	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
@@ -168,17 +150,17 @@ public class ProcessQuery {
 			String eid = c.entity.id;
 			if (eid.equalsIgnoreCase(q_gold.answer)) {
 				System.out.print('\t' + " found");
-				n_found++;
+				FOUND_queries++;
 				found = true;
 				break;
 			}
 		}
 		
 		if (!found && q_gold.answer.startsWith("NIL"))
-			n_docs_not_found_and_answer_is_NIL++;
+			NIL_queries++;
 		
 		if (!found && !q_gold.answer.startsWith("NIL"))
-			n_docs_not_found++;
+			MISS_queries++;
 		}
 	
 	private static void generateOutput(String output) throws FileNotFoundException {

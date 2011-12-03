@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.ranking;
 
 import java.util.ArrayList;
 

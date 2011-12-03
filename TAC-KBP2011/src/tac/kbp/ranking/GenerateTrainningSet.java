@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.ranking;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -11,9 +11,8 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
-import com.aliasi.matrix.DenseVector;
-import com.aliasi.matrix.Vector;
-
+import tac.kbp.queries.Candidate;
+import tac.kbp.queries.KBPQuery;
 import tac.kbp.utils.Definitions;
 
 public final class GenerateTrainningSet {
@@ -28,7 +27,7 @@ public final class GenerateTrainningSet {
 			String correctAnswer =  Definitions.queriesGold.get(query.query_id).answer;
 			boolean foundAnswer = false;
 			
-			System.out.println("Extracting features from candidates");
+			System.out.print("Extracting features from candidates for query " + query.query_id);
 			
 			for (Candidate c : query.candidates) {
 				System.out.print(".");
@@ -74,9 +73,9 @@ public final class GenerateTrainningSet {
 		PrintStream out = new PrintStream( new FileOutputStream(query_id+".txt"));		
 		for (double[] vector : inputs) {
 			for (int i = 0; i < vector.length; i++) {
-				out.print(vector[i] + " ");
+				out.print(vector[i] + ",");
 			}
-			out.print(" " + outputs.get(z));
+			out.println(outputs.get(z));
 			z++;
 		}
 		out.close();

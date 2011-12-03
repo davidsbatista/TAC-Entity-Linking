@@ -3,21 +3,14 @@ package tac.kbp.queries;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermFreqVector;
-import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.TopDocsCollector;
 
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.utils.Definitions;
 import tac.kbp.utils.Definitions.NERType;
 import tac.kbp.utils.misc.JavaRunCommand;
-
 import edu.stanford.nlp.util.Triple;
 
 public class Candidate {
@@ -53,6 +46,7 @@ public class Candidate {
 	
 	public void extractFeatures(KBPQuery q) throws Exception{
 		getNamedEntities();
+		namedEntitiesIntersection(q);
 		nameSimilarities(q.name);
 		semanticFeatures(q);
 		getTopicsDistribution();
@@ -96,10 +90,6 @@ public class Candidate {
 			this.features.queryType = NERType.ORGANIZATION;
 			break;
 		}
-		
-
-		
-
 	}
 	
 	public void addEntitiesToCandidate(String ename, String tag) {		   
@@ -117,6 +107,25 @@ public class Candidate {
 			   if (tag.equalsIgnoreCase("LOCATION"))
 				   this.places.add('"' + entity.trim() + '"');
 		   }
+	}
+	
+	public void namedEntitiesIntersection(KBPQuery q){
+		
+		Set<String> all = new HashSet<String>();
+		all.addAll(places);
+		all.addAll(organizations);
+		all.addAll(persons);
+		
+		Set<String> queryAll = new HashSet<String>();
+		queryAll.addAll(q.places);
+		queryAll.addAll(q.organizations);
+		queryAll.addAll(q.persons);
+			
+		Set<String> intersection = new HashSet<String>(queryAll);
+		intersection.retainAll(all);
+			
+		this.features.namedEntitiesIntersection = intersection.size();
+		
 	}
 	
 	public void nameSimilarities(String query) {
@@ -160,7 +169,6 @@ public class Candidate {
 		
 		features.queryStringInWikiText = queryStringInWikiText(q);
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
-		features.queryStringIsNamedEntity = queryStringNamedEntity();
 		features.candidateType = determineType();
 		
 		/*
@@ -207,6 +215,28 @@ public class Candidate {
 	}
 	
 	public boolean queryStringNamedEntity() {
+		System.out.println("entity: " + entity.name);
+		
+		for (String p : persons) {
+			System.out.print(p + " ");
+		}
+		
+		System.out.println();
+		
+		System.out.print("PLACES: ");
+		for (String p : places) {
+			System.out.print(p + " ");
+		}
+		
+		System.out.println();
+		
+		System.out.print("ORG: ");
+		for (String p : organizations) {
+			System.out.print(p + " ");
+		}
+		
+		
+		
 		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);
 	}
 	
@@ -243,18 +273,23 @@ public class Candidate {
 	}
 	
 	public boolean candidateNameInSupportDocument(KBPQuery q) {
+		//TODO: entity.name can have several tokens, suggestion:
+		//TODO: try to match each token, instead of the whole string		
 		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
+		
 	}
 
 	public void getTopicsDistribution() {
 		
 		String[] entity_id = entity.id.split("E");
+		String command = "`head -n " + (Integer.parseInt(entity_id[1])-1) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1`";		
 		
-		String command = "head -n " + (Integer.parseInt(entity_id[1])-1) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1";		
-		String output = JavaRunCommand.run(command);
+		System.out.println(command);
+		
+		JavaRunCommand r = new JavaRunCommand();
+		String output = r.run(command);
 		
 		String[] parsed_output = output.split("<==");
-		
 		String[] topics = parsed_output[1].split(" ");
 		
 		for (int i = 0; i < topics.length ; i++) {
@@ -263,7 +298,25 @@ public class Candidate {
 	}
 	
 	public void divergence(double[] lda_query) {
-		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);		
+		
+		System.out.println("query support doc LDA topics: ");
+		
+		for (int i = 0; i < lda_query.length; i++) {
+			System.out.print(lda_query[i]);
+		}
+		
+		System.out.println();
+		
+		System.out.println("candidate's wiki_text LDA topics: ");
+		
+		for (int i = 0; i < features.topics_distribution.length; i++) {
+			System.out.print(features.topics_distribution[i]);			
+		}
+		
+		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
+		System.out.println("divergence: " + this.features.kldivergence);
 	}
 			
 }
+
+
