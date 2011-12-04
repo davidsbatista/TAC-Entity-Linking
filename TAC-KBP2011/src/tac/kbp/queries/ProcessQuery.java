@@ -52,8 +52,8 @@ public class ProcessQuery {
 			processQuery(query);		
 		}
 		
-		float miss_rate = (float) MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size()-NIL_queries);
-		float found_rate = (float) FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size()-NIL_queries);
+		float miss_rate = (float) MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size());
+		float found_rate = (float) FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size());
 		
 		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
 		System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
@@ -123,7 +123,7 @@ public class ProcessQuery {
 		
 		int n_docs = queryKB(q);
 		System.out.print("  " + n_docs);
-
+		
 		total_n_docs += n_docs;
 		
 		if (n_docs == 0)
