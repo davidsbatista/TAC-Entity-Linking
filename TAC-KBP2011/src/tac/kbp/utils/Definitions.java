@@ -40,8 +40,6 @@ public class Definitions {
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
 	public static Set<String> stop_words = new HashSet<String>();
-	public static String KB_lda_topics = "/collections/TAC-2011/LDA/model";
-	public static String queries_lda_topics = "/collections/TAC-2011/LDA/queries";
 	
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();

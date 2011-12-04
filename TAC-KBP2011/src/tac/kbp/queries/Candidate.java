@@ -10,7 +10,6 @@ import org.apache.lucene.index.TermFreqVector;
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.utils.Definitions;
 import tac.kbp.utils.Definitions.NERType;
-import tac.kbp.utils.misc.JavaRunCommand;
 import edu.stanford.nlp.util.Triple;
 
 public class Candidate {
@@ -233,10 +232,7 @@ public class Candidate {
 		System.out.print("ORG: ");
 		for (String p : organizations) {
 			System.out.print(p + " ");
-		}
-		
-		
-		
+		}	
 		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);
 	}
 	
@@ -279,42 +275,16 @@ public class Candidate {
 		
 	}
 
-	public void getTopicsDistribution() {
-		
-		String[] entity_id = entity.id.split("E");
-		String command = "`head -n " + (Integer.parseInt(entity_id[1])-1) + " " + Definitions.KB_lda_topics+"/model-final.theta | tail -n 1`";		
-		
-		System.out.println(command);
-		
-		JavaRunCommand r = new JavaRunCommand();
-		String output = r.run(command);
-		
-		String[] parsed_output = output.split("<==");
-		String[] topics = parsed_output[1].split(" ");
-		
+	public void getTopicsDistribution() {		
+		String line = Definitions.kb_topics.get(this.indexID+1);
+		String[] topics = line.split(" ");
 		for (int i = 0; i < topics.length ; i++) {
 			features.topics_distribution[i] =  Double.parseDouble(topics[i]);
 		}
 	}
 	
 	public void divergence(double[] lda_query) {
-		
-		System.out.println("query support doc LDA topics: ");
-		
-		for (int i = 0; i < lda_query.length; i++) {
-			System.out.print(lda_query[i]);
-		}
-		
-		System.out.println();
-		
-		System.out.println("candidate's wiki_text LDA topics: ");
-		
-		for (int i = 0; i < features.topics_distribution.length; i++) {
-			System.out.print(features.topics_distribution[i]);			
-		}
-		
 		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
-		System.out.println("divergence: " + this.features.kldivergence);
 	}
 			
 }

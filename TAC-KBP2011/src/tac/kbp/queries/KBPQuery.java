@@ -23,7 +23,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import tac.kbp.utils.Definitions;
-import tac.kbp.utils.misc.JavaRunCommand;
 
 public class KBPQuery {
 	
@@ -41,7 +40,6 @@ public class KBPQuery {
 	public Candidate correctEntity = new Candidate();
 	
 	public HashSet<Candidate> candidates;		
-
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
@@ -79,14 +77,8 @@ public class KBPQuery {
 	public void getTopicsDistribution(int index) {
 		
 		Integer pos = index+1;
-		
-		String command = "head -n " + pos.toString() + " " + Definitions.queries_lda_topics+"/"+Definitions.queries_set + "_evaluation.txt.theta | tail -n 1";
-				
-		JavaRunCommand r = new JavaRunCommand();
-		String output = r.run(command);
-				
-		String[] parsed_output = output.split("<==");		
-		String[] topics = parsed_output[1].split(" ");
+		String line = Definitions.queries_topics.get(pos);
+		String[] topics = line.split(" ");
 		
 		for (int i = 0; i < topics.length ; i++) {
 			topics_distribution[i] = Double.parseDouble(topics[i]);	

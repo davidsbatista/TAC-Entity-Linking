@@ -137,7 +137,7 @@ public class ProcessQuery {
 		q.loadNamedEntitiesXML();
 		
 		//load the LDA topics distribution for the query support document
-		//q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
+		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
 	}
 
 	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
