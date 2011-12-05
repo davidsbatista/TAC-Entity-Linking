@@ -51,6 +51,12 @@ public class Candidate {
 		getTopicsDistribution();
 		divergence(q.topics_distribution);
 		
+		String correctAnswer =  Definitions.queriesGold.get(q.query_id).answer;
+		
+		if (this.entity.id.equalsIgnoreCase(correctAnswer)) {
+			this.features.correct_answer = true;
+		}
+		else this.features.correct_answer = false;
 	}
 	
 	public void getNamedEntities() throws Exception {
@@ -276,7 +282,7 @@ public class Candidate {
 	}
 
 	public void getTopicsDistribution() {		
-		String line = Definitions.kb_topics.get(this.indexID+1);
+		String line = Definitions.kb_topics.get(this.indexID);
 		String[] topics = line.split(" ");
 		for (int i = 0; i < topics.length ; i++) {
 			features.topics_distribution[i] =  Double.parseDouble(topics[i]);

@@ -10,7 +10,7 @@ public class Features {
 	/* semantic */
 	public NERType queryType; 
 	public NERType candidateType;
-	public boolean typeMtach;
+	public boolean typeMatch;
 	public float namedEntitiesIntersection;
 	public boolean queryStringInWikiText;
 	public boolean candidateNameInSupportDocument;
@@ -145,4 +145,39 @@ public class Features {
 		return string;
 		
 	}
+
+	/* creates a feature object from a String[] red from file */
+	public Features(String[] features) {
+		this.typeMatch = Boolean.parseBoolean((features[0]));
+		this.namedEntitiesIntersection = Float.parseFloat((features[1]));
+		this.queryStringInWikiText = Boolean.parseBoolean((features[2]));
+		this.candidateNameInSupportDocument = Boolean.parseBoolean((features[3]));
+		this.kldivergence = Double.parseDouble((features[4]));
+		this.exactMatch = Boolean.parseBoolean((features[5]));
+		this.querySubStringOfCandidate = Boolean.parseBoolean((features[6]));
+		this.candidateSubStringOfQuery = Boolean.parseBoolean((features[7]));
+		this.queryStartsCandidateName = Boolean.parseBoolean((features[8]));
+		this.queryEndsCandidateName = Boolean.parseBoolean((features[9]));
+		this.candidateNameStartsQuery = Boolean.parseBoolean((features[10]));
+		this.candidateNameEndsQuery = Boolean.parseBoolean((features[11]));
+		this.queryStringAcronymOfCandidate = Boolean.parseBoolean((features[12]));
+		this.candidateAcronymOfqueryString = Boolean.parseBoolean((features[13]));
+		this.similarities.put("DiceSimilarity", Float.parseFloat((features[14])));
+		this.similarities.put("JaccardSimilarity", Float.parseFloat((features[15])));
+		this.similarities.put("Jaro", Float.parseFloat((features[16])));
+		this.similarities.put("JaroWinkler", Float.parseFloat((features[17])));
+		this.similarities.put("Levenshtein", Float.parseFloat((features[18])));
+	}
+	
+	public Features() {
+		super();
+	}
 }
+
+
+
+
+
+
+
+

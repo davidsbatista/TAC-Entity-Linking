@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -22,13 +23,10 @@ import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
-import tac.kbp.ranking.GenerateTrainningSet;
-import tac.kbp.ranking.Regression;
-import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
 
-public class ProcessQuery {
+public class Train {
 	
 	static int total_n_docs = 0;
 	static int FOUND_queries = 0;
@@ -36,46 +34,7 @@ public class ProcessQuery {
 	static int NIL_queries = 0;
 	static int MISS_queries = 0;
 	
-	public static void main(String[] args) throws Exception {
-		
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
-
-		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
-		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
-		
-		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
-			KBPQuery query = (KBPQuery) iterator.next();
-			
-			System.out.print(query.query_id + " \"" + query.name + '"');
-			getSenses(Definitions.binaryjedis, query);
-			processQuery(query);		
-		}
-		
-		float miss_rate = (float) MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size());
-		float found_rate = (float) FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size());
-		
-		System.out.println("Documents Retrieved: " + Integer.toString(total_n_docs));
-		System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
-		System.out.println("Docs p/ query: " + ( (float) total_n_docs / (float) tac.kbp.utils.Definitions.queries.size()));
-		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(n_queries_zero_docs));
-		System.out.println("Queries NIL: " + NIL_queries);
-		System.out.println("Queries Misses: " + MISS_queries + " (" + miss_rate + "%)" );
-		System.out.println("Queries Found: " + FOUND_queries + " (" + found_rate + "%)" );
-		
-		//String.format("%.2g%n", 0.912300);
-		
-		GenerateTrainningSet.generateFeatures();
-		Regression.generateVectors(GenerateTrainningSet.inputs, GenerateTrainningSet.outputs);
-		Regression.calculate();
-				
-		Definitions.searcher.close();
-		Definitions.documents.close();
-		Definitions.binaryjedis.disconnect();
-
-	}
-
-	private static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
+	static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
 	
 	try {
 
@@ -117,7 +76,7 @@ public class ProcessQuery {
 		}
 	}
 
-	private static void processQuery(KBPQuery q) throws Exception {
+	static void processQuery(KBPQuery q) throws Exception {
 
 		q.getSupportDocument();
 		
@@ -140,7 +99,7 @@ public class ProcessQuery {
 		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
 	}
 
-	private static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
+	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 				
 		GoldStandardQuery q_gold = tac.kbp.utils.Definitions.queriesGold.get(q.query_id);
 		
@@ -163,7 +122,7 @@ public class ProcessQuery {
 			MISS_queries++;
 		}
 	
-	private static void generateOutput(String output) throws FileNotFoundException {
+	static void generateOutput(String output) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
@@ -174,7 +133,7 @@ public class ProcessQuery {
 		out.close();		
 	}
 	
-	private static String concatenateEntities(String str1, String str2) {
+	static String concatenateEntities(String str1, String str2) {
 		
 		String result = new String();
 		
@@ -195,7 +154,7 @@ public class ProcessQuery {
 		return result;
 	}
 	
-	private static int queryKB(KBPQuery q) throws IOException, ParseException {
+	static int queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		HashMap<String, HashSet<String>> query = generateQuery(q);
@@ -213,11 +172,12 @@ public class ProcessQuery {
 		List<SuggestWord> suggestedwordsList = new ArrayList<SuggestWord>(suggestedwords);
 		Collections.sort(suggestedwordsList);
 		
-		int i=0;
+		int i=0; // to limit the number of docs
+		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
 		for (SuggestWord suggestWord : suggestedwordsList) {
 			
-			if (i > 70)
+			if (i >= 70)
 				break;			
 			
 			String queryS = "id:" + suggestWord.eid;
@@ -230,9 +190,14 @@ public class ProcessQuery {
 			else {
 				scoreDocs = docs.scoreDocs; 
 				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
-				Candidate c = new Candidate(doc,scoreDocs[0].doc);
-				c.features.lucene_score = scoreDocs[0].score; 
-				q.candidates.add(c);
+				if (repeated.contains(scoreDocs[0].doc))
+					continue;
+				else {
+					Candidate c = new Candidate(doc,scoreDocs[0].doc);
+					c.features.lucene_score = scoreDocs[0].score; 
+					q.candidates.add(c);
+					repeated.add(scoreDocs[0].doc);
+				}
 			}
 			i++;
 		}
@@ -289,7 +254,7 @@ public class ProcessQuery {
 		return q.candidates.size();
 	}
 
-	private static HashMap<String, HashSet<String>> generateQuery(KBPQuery q) {
+	static HashMap<String, HashSet<String>> generateQuery(KBPQuery q) {
 		
 		HashSet<String> queryStrings = new HashSet<String>(); 		
 		HashSet<String> queryTokens = new HashSet<String>();

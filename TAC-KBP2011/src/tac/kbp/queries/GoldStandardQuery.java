@@ -2,8 +2,8 @@ package tac.kbp.queries;
 
 public class GoldStandardQuery {
 	
-	public String 	query_id;
-	public String	answer;
+	public String  query_id;
+	public String  answer;
 	public String  type;
 	public String  web_search; //indicates if the annotator made use of web searches to make the linking judgment
 	public String  genre; 		//source genre of the document for the query (WL for web data, or NW for newswire data)

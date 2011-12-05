@@ -84,26 +84,14 @@ public class Definitions {
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		
-		System.out.println("Loading queries LDA topics from: " + queries_lda_topics);
+		System.out.print("Loading queries LDA topics from: " + queries_lda_topics + "..." );
 		loadLDATopics(queries_lda_topics,queries_topics);
 		
-		System.out.println("Loading KB LDA topics from: " + kb_lda_topics);
+		System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
 		loadLDATopics(kb_lda_topics,kb_topics);
-		
-		System.out.println("Number of lda topics loaded: " + Definitions.queries_topics.size());
 		
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
-
-		if (queriesPath.contains("2009"))
-			queries_set = "2009";
-		
-		if (queriesPath.contains("2010"))
-			queries_set = "2010";
-		
-		if (queriesPath.contains("2011"))
-			queries_set = "2011";
-		
 	}
 	
 	public static void loadAll(String queriesPath, String docLocationsPath, String stopWordsFile) throws Exception {
@@ -118,15 +106,6 @@ public class Definitions {
 		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
-		
-		if (queriesPath.contains("2009"))
-			queries_set = "2009";
-		
-		if (queriesPath.contains("2010"))
-			queries_set = "2010";
-		
-		if (queriesPath.contains("2011"))
-			queries_set = "2011";
 	}
 	
 	public static void loadClassifier(String filename) {
@@ -144,7 +123,7 @@ public class Definitions {
 		}
 		
 		System.out.println("lines red: " + i);
-		
+
 	}
 
 	public static void loadStopWords(String file) { 

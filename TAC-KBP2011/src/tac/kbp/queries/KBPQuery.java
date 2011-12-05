@@ -76,8 +76,7 @@ public class KBPQuery {
 	
 	public void getTopicsDistribution(int index) {
 		
-		Integer pos = index+1;
-		String line = Definitions.queries_topics.get(pos);
+		String line = Definitions.queries_topics.get(index);
 		String[] topics = line.split(" ");
 		
 		for (int i = 0; i < topics.length ; i++) {
