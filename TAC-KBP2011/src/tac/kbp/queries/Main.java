@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.utils.Definitions;
+import tac.kbp.utils.lda.SupportDocLDA;
 
 public class Main {
 	
@@ -65,6 +66,9 @@ public class Main {
 			trainning.applyTrainedModel();
 		}
 		
+		else if (args[0].equalsIgnoreCase("ldatopics"))
+			SupportDocLDA.process(args[1],args[2],args[3],args[4]);
+		
 		else usage();
 	}
 	
@@ -72,6 +76,7 @@ public class Main {
 		System.out.println("Usage:");
 		System.out.println("  train queriesPath stopWordsFile goldStandardPath kbIndex spellCheckerIndex dcIndex queries_lda_topics kb_lda_topics");
 		System.out.println("  test vectorsPath");
+		System.out.println("  ldatopics queriesPath stopwords dcIndex outputfile");
 		System.out.println();
 	}
 }

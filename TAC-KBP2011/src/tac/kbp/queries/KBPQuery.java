@@ -84,7 +84,11 @@ public class KBPQuery {
 		}
 	}
 	
-	public void getSupportDocument() throws IOException {
+	public void getSupportDocument() throws IOException {        
+        getSupportDocument(this);
+	}
+	
+	public void getSupportDocument(KBPQuery q) throws IOException {
         Term t = new Term("docid", this.docid); 
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
@@ -169,6 +173,7 @@ public class KBPQuery {
 		}
 	}
 
+	/*
 	public void getSupportDocument(KBPQuery q,HashMap<String, String> docslocations) {
 		
 		StringBuilder contents = new StringBuilder();
@@ -189,7 +194,7 @@ public class KBPQuery {
 		        * it returns the content of a line MINUS the newline.
 		        * it returns null only for the END of the stream.
 		        * it returns an empty String if two newlines appear in a row.
-		        */
+		
 		        while (( line = input.readLine()) != null){
 		          contents.append(line);
 		          contents.append(System.getProperty("line.separator"));
@@ -205,4 +210,5 @@ public class KBPQuery {
 	    
 	    this.supportDocument = contents.toString();		
 	}
+	*/
 }

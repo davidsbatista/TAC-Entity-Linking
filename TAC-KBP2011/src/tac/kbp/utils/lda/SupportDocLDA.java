@@ -3,7 +3,15 @@ package tac.kbp.utils.lda;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.utils.Definitions;
@@ -13,30 +21,37 @@ public class SupportDocLDA {
 	public static EnglishPorterStemmer stemmer = new EnglishPorterStemmer();
 	public static int num_docs = 0;
 	
-	public static void main(String[] args) throws Exception {
-		
-		/*
-		tac.kbp.utils.Definitions.loadAll(args[0], args[1], args[2]);
+	public static void process(String queries, String stopwords, String dcIndex, String outputFile) throws Exception {
+				
+		tac.kbp.utils.Definitions.loadAll(queries, stopwords, dcIndex);
 
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		//System.out.println(tac.kbp.utils.Definitions.docslocations.size() + " documents locations loaded");
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
-		File aFile = new File(args[3]);					
+		File aFile = new File(outputFile);					
 		Writer output = new BufferedWriter(new FileWriter(aFile));
 		
 		System.out.println("parsing support documents...");
 		
 		for (KBPQuery query : tac.kbp.utils.Definitions.queries) {
-			query.getSupportDocument(query, tac.kbp.utils.Definitions.docslocations);			
+			query.getSupportDocument(query);			
 			String text_parsed = parse(query.supportDocument);
 			output.write( text_parsed + "\n");
 			num_docs++;
 		}
 		output.close();
 		System.out.println(num_docs + " docs parsed");
-		*/
+		
+	}
+	
+	public void getSupportDocument(KBPQuery q) throws IOException {
+        Term t = new Term("docid", q.docid); 
+        Query query = new TermQuery(t);                 
+        TopDocs docs = Definitions.documents.search(query, 1);
+        ScoreDoc[] scoredocs = docs.scoreDocs;
+        Document doc = tac.kbp.utils.Definitions.documents.doc(scoredocs[0].doc);        
+        q.supportDocument = doc.get("text");
 	}
 	
 	public static String parse(String text) {
