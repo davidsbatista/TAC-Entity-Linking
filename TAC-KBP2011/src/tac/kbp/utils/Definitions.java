@@ -39,7 +39,13 @@ public class Definitions {
 	/* resources locations */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
+	public static String stop_words_location = "/collections/TAC-2011/resources/stopwords.txt";
+	public static String KB_location = "/collections/TAC-2011/index";
+	public static String SpellChecker_location = "/collections/TAC-2011/spellchecker_index";
+	public static String DocumentCollection_location = "/collections/TAC-2011/document_collection_index";
 	public static Set<String> stop_words = new HashSet<String>();
+	
+	public static String kb_lda_topics = "/collections/TAC-2011/LDA/model/model-final.theta";
 	
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
@@ -58,23 +64,23 @@ public class Definitions {
 	public static BinaryJedis binaryjedis = null;
 	
 	
-	public static void loadAll(String queriesPath, String stopWordsFile, String goldStandardPath, String kbIndex, String spellCheckerIndex, String dcIndex, String queries_lda_topics, String kb_lda_topics) throws Exception {
+	public static void loadAll(String queriesPath, String goldStandardPath, String queries_lda_topics) throws Exception {
 		
 		/* Lucene Index */
-		System.out.println("Knowledge Base index: " + kbIndex);
-		searcher = new IndexSearcher(FSDirectory.open(new File(kbIndex)));
+		System.out.println("Knowledge Base index: " + KB_location);
+		searcher = new IndexSearcher(FSDirectory.open(new File(KB_location)));
 		
 		/* SpellChecker Index */
-		System.out.println("SpellChecker index: " + spellCheckerIndex);
-		FSDirectory spellDirectory = FSDirectory.open(new File(spellCheckerIndex));
+		System.out.println("SpellChecker index: " + SpellChecker_location);
+		FSDirectory spellDirectory = FSDirectory.open(new File(SpellChecker_location));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
 		/* Document Collection Index */
-		System.out.println("Document Collection index: " + dcIndex);
-		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
+		System.out.println("Document Collection index: " + DocumentCollection_location);
+		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
 		
-		System.out.println("Loading stopwords from: " + stopWordsFile);
-		loadStopWords(stopWordsFile);
+		System.out.println("Loading stopwords from: " + stop_words_location);
+		loadStopWords(stop_words_location);
 		
 		System.out.println("Loading queries answers from: " + goldStandardPath);
 		loadGoldStandard(goldStandardPath);
@@ -94,17 +100,17 @@ public class Definitions {
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 	}
 	
-	public static void loadAll(String queriesPath, String stopWordsFile, String dcIndex) throws Exception {
+	public static void loadAll(String queriesPath) throws Exception {
 		
-		System.out.println("Loading stopwords from: " + stopWordsFile);
-		loadStopWords(stopWordsFile);
+		System.out.println("Loading stopwords from: " + stop_words_location);
+		loadStopWords(stop_words_location);
 		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		
 		/* Document Collection Index */
-		System.out.println("Document Collection index: " + dcIndex);
-		documents = new IndexSearcher(FSDirectory.open(new File(dcIndex)));
+		System.out.println("Document Collection index: " + DocumentCollection_location);
+		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
 	}
 	
 	public static void loadClassifier(String filename) {

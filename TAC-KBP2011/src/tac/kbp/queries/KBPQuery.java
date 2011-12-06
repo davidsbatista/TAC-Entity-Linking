@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -23,6 +23,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import tac.kbp.utils.Definitions;
+import edu.stanford.nlp.util.Triple;
 
 public class KBPQuery {
 	
@@ -53,6 +54,34 @@ public class KBPQuery {
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
+	}
+	
+	public void getNamedEntities() throws Exception {
+		getSupportDocument();
+		
+		List<Triple<String, Integer, Integer>> entities = tac.kbp.utils.Definitions.classifier.classifyToCharacterOffsets(supportDocument);
+		
+		for (Triple<String, Integer, Integer> triple : entities) {			
+			String ename = this.supportDocument.substring(triple.second,triple.third);
+			addEntitiesToCandidate(ename, triple.first);
+		}
+	}
+		
+	public void addEntitiesToCandidate(String ename, String tag) {		   
+			
+			String entity = ename.replaceAll("\\*", "").replaceAll("\\n", " ").replaceAll("\\!", "");
+			
+			if (entity.length()>1) {
+				
+				   if (tag.equalsIgnoreCase("PERSON"))
+					   this.persons.add('"' + entity.trim() + '"');
+				      
+				   if (tag.equalsIgnoreCase("ORGANIZATION"))
+					   this.organizations.add('"' + entity.trim() + '"');
+				      
+				   if (tag.equalsIgnoreCase("LOCATION"))
+					   this.places.add('"' + entity.trim() + '"');
+			   }
 	}
 	
 	public void loadNamedEntitiesXML() throws ParserConfigurationException, SAXException, IOException {
@@ -173,42 +202,4 @@ public class KBPQuery {
 		}
 	}
 
-	/*
-	public void getSupportDocument(KBPQuery q,HashMap<String, String> docslocations) {
-		
-		StringBuilder contents = new StringBuilder();
-	    
-	    try {
-	    	
-	    	//use buffering, reading one line at a time
-	    	//FileReader always assumes default encoding is OK!
-	    	
-	    	String file = docslocations.get(q.docid).trim()+"/"+q.docid+".sgm";
-	    	
-	    	BufferedReader input =  new BufferedReader(new FileReader(file));
-	    	
-	    	try {
-	    		String line = null; //not declared within while loop
-		        /*
-		        * readLine is a bit quirky :
-		        * it returns the content of a line MINUS the newline.
-		        * it returns null only for the END of the stream.
-		        * it returns an empty String if two newlines appear in a row.
-		
-		        while (( line = input.readLine()) != null){
-		          contents.append(line);
-		          contents.append(System.getProperty("line.separator"));
-		        }
-	      }
-	      finally {
-	        input.close();
-	      }
-	    }
-	    catch (IOException ex){
-	      ex.printStackTrace();
-	    }
-	    
-	    this.supportDocument = contents.toString();		
-	}
-	*/
 }

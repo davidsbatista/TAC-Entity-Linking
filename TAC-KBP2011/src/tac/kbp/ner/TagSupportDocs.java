@@ -34,7 +34,6 @@ public class TagSupportDocs {
 			parts = line.split(".sgm");
 			docslocations.put(parts[0], parts[1]);
 		}
-
 	}
 
 	private static String getSupportDocument(KBPQuery q) {

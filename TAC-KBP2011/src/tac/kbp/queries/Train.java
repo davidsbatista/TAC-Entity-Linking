@@ -23,6 +23,7 @@ import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.ivo_spellchecker.SuggestWord;
+import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
 
@@ -33,6 +34,9 @@ public class Train {
 	static int n_queries_zero_docs = 0;
 	static int NIL_queries = 0;
 	static int MISS_queries = 0;
+	
+	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
+	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
 	static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
 	
@@ -93,10 +97,77 @@ public class Train {
 		System.out.println();
 
 		//load the recognized named-entities in the support document
-		q.loadNamedEntitiesXML();
+		q.getNamedEntities();
 		
 		//load the LDA topics distribution for the query support document
 		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
+		
+		//extract features from all candidates
+		extractFeatures(q);
+	}
+	
+	static void extractFeatures(KBPQuery q) throws Exception {
+		
+		System.out.print("Extracting features from candidates for query " + q.query_id);
+		
+		//file to where feature vectors are going to be written
+		PrintStream out = new PrintStream( new FileOutputStream(q.query_id+".txt"));
+		boolean foundCorrecEntity = false;
+		
+		for (Candidate c : q.candidates) {
+			System.out.print(".");
+			c.extractFeatures(q);
+			if (c.features.correct_answer) {
+				foundCorrecEntity = true;
+			}
+			writeFeaturesVectortoFile(out, c);
+			out.println();
+		}
+
+		
+		//if correct entity is not part of the retrieved entities and correct answer is not NIL, 
+		//retrieve entity from KB and calculate features 
+		if (!foundCorrecEntity && !(Definitions.queriesGold.get(q.query_id).answer.startsWith("NIL")) ) {
+
+			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
+			ScoreDoc[] scoreDocs = null;
+			String queryS = "id:" + Definitions.queriesGold.get(q.query_id).answer;
+			
+			TopDocs docs = tac.kbp.utils.Definitions.searcher.search(queryParser.parse(queryS), 1);				
+			scoreDocs = docs.scoreDocs;
+			
+			if (docs.totalHits != 0) {
+				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
+				
+				//extract features
+				Candidate c = new Candidate(doc,scoreDocs[0].doc);
+				c.features.lucene_score = scoreDocs[0].score; 
+				c.extractFeatures(q);
+				writeFeaturesVectortoFile(out, c);
+				out.println();
+			}
+		}
+		System.out.println();
+		out.close();
+	}
+
+	static void writeFeaturesVectortoFile(PrintStream out, Candidate c) {
+		
+		//write feature vector to file
+		double[] vector = c.features.inputVector();
+		int output = c.features.output();
+
+		//first field of line is candidate identifier;
+		out.print(c.entity.id+":");
+		
+		for (int i = 0; i < vector.length; i++) {
+			out.print(vector[i] + ",");
+		}
+		out.print(output);
+
+		//structures holding all the generated features vectors + outputs: to be passed to LogisticRegression
+		inputs.add(c.features.inputVector());
+		outputs.add(c.features.output());
 	}
 
 	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {

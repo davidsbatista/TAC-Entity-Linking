@@ -23,8 +23,8 @@ public class SupportDocLDA {
 	
 	public static void process(String queries, String stopwords, String dcIndex, String outputFile) throws Exception {
 				
-		tac.kbp.utils.Definitions.loadAll(queries, stopwords, dcIndex);
-
+		tac.kbp.utils.Definitions.loadAll(queries);
+		
 		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords");
 
