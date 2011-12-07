@@ -4,25 +4,15 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.apache.lucene.analysis.WhitespaceAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
-
 import tac.kbp.queries.Candidate;
 import tac.kbp.queries.Features;
-import tac.kbp.queries.KBPQuery;
-import tac.kbp.utils.Definitions;
 
 import com.aliasi.matrix.DenseVector;
 import com.aliasi.matrix.Vector;
@@ -33,8 +23,9 @@ import com.aliasi.util.AbstractExternalizable;
 
 public class LogisticRegressionLingPipe {
 	
-	public ArrayList<double[]> inputs = null;
-	public ArrayList<Integer> outputs = null;
+	public ArrayList<double[]> inputs = new ArrayList<double[]>();
+	public ArrayList<Integer> outputs = new ArrayList<Integer>();	
+	public ArrayList<String> eid = new ArrayList<String>();
 	public LogisticRegression regression = null;
 	
 	public LogisticRegressionLingPipe(ArrayList<double[]> inputs, ArrayList<Integer> outputs) {
@@ -47,7 +38,7 @@ public class LogisticRegressionLingPipe {
 		super();
 	}
 	
-	public void loadVectors(String pathName) {
+	public void loadVectors(String pathName) throws NumberFormatException, IOException {
 		
 		File dir = new File(pathName); 
 		String fileList[] = dir.list();
@@ -63,41 +54,40 @@ public class LogisticRegressionLingPipe {
 			
 			//starts parsing vector files			
 			for (int i=0; i < fileList.length; i++) {
+				if (fileList[i].equalsIgnoreCase("linear-regression"))
+					continue;
 				parseFile(pathName+"/"+fileList[i]);
 			}
 		}
 	}
 
 	//construct feature vectors 
-	public void parseFile(String file){
+	public void parseFile(String file) throws NumberFormatException, IOException{
 		
 		try{
-			System.out.println("Abri");
 			FileInputStream fstream = new FileInputStream(file);
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
 			  
-			while ((strLine = br.readLine()) != null)   {
-				String[] candidate_features = strLine.split(",");
-				Features features = new Features(candidate_features);
-				System.out.println(strLine);
+			while ((strLine = br.readLine()) != null)   {			
+				String data[] = strLine.split(":");		
+								
+				String[] featuresArray = data[1].split(",");
+				Features features = new Features(data[0], featuresArray);
+				eid.add(features.eid);
 				inputs.add(features.inputVector());
-				outputs.add(Integer.parseInt(candidate_features[candidate_features.length-1]));
+				outputs.add(Integer.parseInt(featuresArray[featuresArray.length-1]));
 			}
-			
 			br.close();
 			in.close();
 			fstream.close();
-			
-			System.out.println("Fechei!");
 		}
-		
-			catch (Exception e) {
-				System.out.println(e);
-			}
+		catch (Exception e) {
+			System.out.println(e);
+		}
 	}
-		
+	
     public void trainModel() {
     	
     	int[] OUTPUTS = new int[this.outputs.size()];
@@ -146,8 +136,9 @@ public class LogisticRegressionLingPipe {
 		return INPUTS;
     }
     
+    //use model to classify
     public void applyTrainedModel() {
-		//use model to classify
+		
     	Vector[] input = toLingpipe(inputs);
     	
     	for (Vector candidade : input) {
@@ -162,7 +153,23 @@ public class LogisticRegressionLingPipe {
     		
     		System.out.println();
          }
+    }
+    
+    public void applyTrainedModelCandidate(Candidate c) {
+   
+    	double[] featuresVector = c.features.inputVector();
+    	DenseVector dV = new DenseVector(featuresVector); 
+    	double[] conditionalProbs = regression.classify(dV);
     	
+    	/*
+    	for (int i = 0; i < dV.numDimensions(); ++i)
+            System.out.printf("%3.1f ",dV.value(i));
+        
+		for (int k = 0; k < conditionalProbs.length; ++k)
+            System.out.printf(" p(%d|input)=%4.2f ",k,conditionalProbs[k]);
+        */
+		
+		c.conditionalProbabilities = conditionalProbs;
     }
 
     public void writeModel(String file) throws IOException{

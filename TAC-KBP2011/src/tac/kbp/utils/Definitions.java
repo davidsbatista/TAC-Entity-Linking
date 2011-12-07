@@ -85,8 +85,6 @@ public class Definitions {
 		System.out.println("Loading queries answers from: " + goldStandardPath);
 		loadGoldStandard(goldStandardPath);
 		
-		loadClassifier(serializedClassifier);
-		
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		
@@ -95,6 +93,8 @@ public class Definitions {
 		
 		System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
 		loadLDATopics(kb_lda_topics,kb_topics);
+		
+		loadClassifier(serializedClassifier);
 		
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);

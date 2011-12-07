@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -33,14 +36,22 @@ public class KBPQuery {
 	public String answer_kb_id;
 	public String supportDocument = new String();
 	
+	// alternative senses for the string name
 	public HashSet<String> alternative_names;	
+	
+	// named-entities in the support document
 	public HashSet<String> persons;
 	public HashSet<String> places;
 	public HashSet<String> organizations;
-	public double[] topics_distribution = new double[100];
-	public Candidate correctEntity = new Candidate();
 	
-	public HashSet<Candidate> candidates;		
+	// topic-distribution associated with the support document
+	public double[] topics_distribution = new double[100];
+	
+	// list of candidates retrieved from the Knowledge-Base
+	public HashSet<Candidate> candidates;
+	
+	// ranked-list of candidates
+	public ArrayList<Candidate> candidatesRanked;
 	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
@@ -201,5 +212,4 @@ public class KBPQuery {
 			e1.printStackTrace();    	
 		}
 	}
-
 }

@@ -30,6 +30,7 @@ public class Features {
 	public HashMap<String, Float> similarities = new HashMap<String, Float>();	
 	
 	/* other */
+	public String eid; 
 	public float lucene_score;
 	public boolean correct_answer;
 	
@@ -40,17 +41,17 @@ public class Features {
 		if (this.queryType == candidateType) {
 			inputVector[0] = 1;
 		}
-
+		
 		inputVector[1] = namedEntitiesIntersection;
 		
 		if (this.queryStringInWikiText) {
 			inputVector[2] = 1;
 		}
-		
+			
 		if (this.candidateNameInSupportDocument) {
 			inputVector[3] = 1;
 		}
-				
+
 		inputVector[4] = this.kldivergence;
 		
 		if (this.exactMatch) {
@@ -94,7 +95,7 @@ public class Features {
 		inputVector[16] = (double) similarities.get("Jaro");
 		inputVector[17] = (double) similarities.get("JaroWinkler");
 		inputVector[18] = (double) similarities.get("Levenshtein");
-		
+				
 		return inputVector;
 	}
 
@@ -146,8 +147,10 @@ public class Features {
 		
 	}
 
-	/* creates a feature object from a String[] red from file */
-	public Features(String[] features) {
+	/* creates a feature object from a String red from file */
+	public Features(String eid, String[] features) {		
+		
+		this.eid = eid;
 		this.typeMatch = Boolean.parseBoolean((features[0]));
 		this.namedEntitiesIntersection = Float.parseFloat((features[1]));
 		this.queryStringInWikiText = Boolean.parseBoolean((features[2]));

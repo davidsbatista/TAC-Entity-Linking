@@ -21,6 +21,9 @@ public class Candidate {
 	public HashSet<String> places = null;
 	public HashSet<String> organizations = null;
 	
+	//logistic regression
+	public double[] conditionalProbabilities; 
+	
 	public Features features;
 	
 	public Candidate() {
@@ -292,7 +295,12 @@ public class Candidate {
 	public void divergence(double[] lda_query) {
 		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
 	}
-			
+
+	
+	public double[] getConditionalProbabilities() {
+		return conditionalProbabilities;
+	}
+		
 }
 
 
