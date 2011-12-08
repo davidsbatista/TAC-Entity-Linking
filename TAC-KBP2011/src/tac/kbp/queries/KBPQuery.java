@@ -53,6 +53,12 @@ public class KBPQuery {
 	// ranked-list of candidates
 	public ArrayList<Candidate> candidatesRanked;
 	
+	public KBPQuery(String query_id) {
+		super();
+		this.query_id = query_id;
+		this.candidates = new HashSet<Candidate>();
+	}
+	
 	public KBPQuery(String query_id, String name, String docid) {
 		super();
 		this.query_id = query_id;

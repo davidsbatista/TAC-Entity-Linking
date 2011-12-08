@@ -26,6 +26,13 @@ public class Candidate {
 	
 	public Features features;
 	
+	public Candidate(String eid, Features features) {
+		super();
+		entity = new Entity();
+		this.entity.id = eid;
+		this.features = features;
+	}
+	
 	public Candidate() {
 		super();
 	}

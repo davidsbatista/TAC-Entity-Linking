@@ -13,6 +13,8 @@ import java.util.Arrays;
 
 import tac.kbp.queries.Candidate;
 import tac.kbp.queries.Features;
+import tac.kbp.queries.KBPQuery;
+import tac.kbp.utils.Definitions;
 
 import com.aliasi.matrix.DenseVector;
 import com.aliasi.matrix.Vector;
@@ -64,6 +66,10 @@ public class LogisticRegressionLingPipe {
 	//construct feature vectors 
 	public void parseFile(String file) throws NumberFormatException, IOException{
 		
+		String[] splitted = file.split("\\/");		
+		KBPQuery query = new KBPQuery(splitted[2].split("\\.")[0]);
+		
+		
 		try{
 			FileInputStream fstream = new FileInputStream(file);
 			DataInputStream in = new DataInputStream(fstream);
@@ -75,6 +81,7 @@ public class LogisticRegressionLingPipe {
 								
 				String[] featuresArray = data[1].split(",");
 				Features features = new Features(data[0], featuresArray);
+				query.candidates.add(new Candidate(data[0], features));
 				eid.add(features.eid);
 				inputs.add(features.inputVector());
 				outputs.add(Integer.parseInt(featuresArray[featuresArray.length-1]));
@@ -82,6 +89,7 @@ public class LogisticRegressionLingPipe {
 			br.close();
 			in.close();
 			fstream.close();
+			Definitions.queries.add(query);
 		}
 		catch (Exception e) {
 			System.out.println(e);

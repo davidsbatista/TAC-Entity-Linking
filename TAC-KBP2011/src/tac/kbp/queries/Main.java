@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import tac.kbp.queries.CandidateComparator; 
 import tac.kbp.ranking.LogisticRegressionLingPipe;
@@ -66,21 +67,45 @@ public class Main {
 		
 		else if (args[0].equalsIgnoreCase("testVectors")) {
 			
-			//load queries
-			//get candidates
-			//extract features
-						
+			//load queries gold standard
+			Definitions.loadGoldStandard(args[3]);
+			System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " gold standard queries loaded");
+
 			LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe();
 			
 			//read model from disk
 			regression.readModel(args[1]);
 			
-			//load test features vectors
+			//load features vectors with features already extracted, filename is query name;
+			//construct a KBPQuery with candidates and features for each candidate;
+			//add it to queries collection
+			Definitions.queries = new LinkedList<KBPQuery>();
 			regression.loadVectors(args[2]);
 			
-			//apply the model to loaded feature vectors
-			regression.applyTrainedModel();
+			System.out.println(Definitions.queries.size() + " queries loaded from feature vectors");
 			
+			//file to write output results
+			FileWriter fstream = new FileWriter("results.txt");
+			BufferedWriter out = new BufferedWriter(fstream);
+			
+			//apply the model to feature vectors
+			for (KBPQuery query : Definitions.queries) {
+				for (Candidate c: query.candidates) {
+					regression.applyTrainedModelCandidate(c);
+				}
+				
+				//rank candidates according to conditional_probabilities
+				query.candidatesRanked = new ArrayList<Candidate>(query.candidates);
+				Collections.sort(query.candidatesRanked, new CandidateComparator());
+				
+				System.out.println(query.query_id);
+				System.out.println("candidates: " + query.candidates.size());
+				System.out.println("candidates ranked: " + query.candidatesRanked.size());
+				
+				//write results to file			
+				out.write(query.query_id+"\t"+query.candidatesRanked.get(0).entity.id +"\n");
+			}
+			out.close();
 		}
 		
 		
@@ -116,8 +141,7 @@ public class Main {
 			//read model from disk
 			LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
 			regression.readModel(args[1]);
-			
-			
+						
 			//file to write output results
 			FileWriter fstream = new FileWriter("results.txt");
 			BufferedWriter out = new BufferedWriter(fstream);
@@ -146,10 +170,10 @@ public class Main {
 	
 	public static void usage(){
 		System.out.println("Usage:");
-		System.out.println("  train queriesPath goldStandardPath queries_lda_topics");
-		System.out.println("  test model queriesPath goldStandardPath queries_lda_topics outputFile"); 
-		System.out.println("  testVectors model vectorsPath");
-		System.out.println("  ldatopics queriesPath stopwords dcIndex outputfile");
+		System.out.println("\t train queriesPath goldStandardPath queries_lda_topics");
+		System.out.println("\t test model queriesPath goldStandardPath queries_lda_topics outputFile"); 
+		System.out.println("\t testVectors model vectorsPath goldStandardPath");
+		System.out.println("\t ldatopics queriesPath stopwords dcIndex outputfile");
 		System.out.println();
 	}
 }
