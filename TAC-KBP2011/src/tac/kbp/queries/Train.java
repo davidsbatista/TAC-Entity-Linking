@@ -22,7 +22,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
-import tac.kbp.kb.ivo_spellchecker.SuggestWord;
+import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;

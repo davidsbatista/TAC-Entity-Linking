@@ -1,17 +1,12 @@
 package tac.kbp.queries;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import tac.kbp.queries.CandidateComparator; 
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.utils.Definitions;
 import tac.kbp.utils.lda.SupportDocLDA;
@@ -27,7 +22,7 @@ public class Main {
 		
 		if (args[0].equalsIgnoreCase("train")) {
 			
-			tac.kbp.utils.Definitions.loadAll(args[1], args[2], args[3]);
+			tac.kbp.utils.Definitions.loadAll(args[1]);
 			
 			System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 			System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
@@ -40,9 +35,9 @@ public class Main {
 				Train.getSenses(Definitions.binaryjedis, query);
 				Train.processQuery(query);		
 			}
-			
-			float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size());
-			float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size());
+						
+			float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size()-Train.NIL_queries);
+			float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size()-Train.NIL_queries);
 			
 			System.out.println("Documents Retrieved: " + Integer.toString(Train.total_n_docs));
 			System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
@@ -102,8 +97,12 @@ public class Main {
 				System.out.println("candidates: " + query.candidates.size());
 				System.out.println("candidates ranked: " + query.candidatesRanked.size());
 				
-				//write results to file			
-				out.write(query.query_id+"\t"+query.candidatesRanked.get(0).entity.id +"\n");
+				//write results to file
+				if (query.candidatesRanked.size() != 0) {			
+					out.write(query.query_id+'\t'+query.candidatesRanked.get(0).entity.id +"\n");
+				}
+				else
+					out.write(query.query_id+"\tNIL\n");
 			}
 			out.close();
 		}
@@ -112,7 +111,7 @@ public class Main {
 		else if (args[0].equalsIgnoreCase("test")) {
 			
 			//load queries
-			tac.kbp.utils.Definitions.loadAll(args[2], args[3], args[4]);
+			tac.kbp.utils.Definitions.loadAll(args[2]);
 			
 			System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
 			System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " gold standard queries loaded");
@@ -156,8 +155,12 @@ public class Main {
 				query.candidatesRanked = new ArrayList<Candidate>(query.candidates);
 				Collections.sort(query.candidatesRanked, new CandidateComparator());
 				
-				//write results to file			
-				out.write(query.query_id+'\t'+query.candidatesRanked.get(0).entity.id +"\n");
+				if (query.candidatesRanked.size() != 0) {
+					//write results to file			
+					out.write(query.query_id+'\t'+query.candidatesRanked.get(0).entity.id +"\n");
+				}
+				else
+					out.write(query.query_id+"\tNIL\n");
 			}
 			out.close();
 		}
@@ -170,9 +173,9 @@ public class Main {
 	
 	public static void usage(){
 		System.out.println("Usage:");
-		System.out.println("\t train queriesPath goldStandardPath queries_lda_topics");
-		System.out.println("\t test model queriesPath goldStandardPath queries_lda_topics outputFile"); 
-		System.out.println("\t testVectors model vectorsPath goldStandardPath");
+		System.out.println("\t -train [logistic|svmrank] -queries <file>");
+		System.out.println("\t -test [logistic|svmrank] -model <file> -queries <dir> -results <file>"); 
+		System.out.println("\t -test model vectorsPath goldStandardPath");
 		System.out.println("\t ldatopics queriesPath stopwords dcIndex outputfile");
 		System.out.println();
 	}

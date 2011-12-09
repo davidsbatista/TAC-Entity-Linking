@@ -105,7 +105,7 @@ public class Features {
 		}
 		else return 0;
 	}
-	
+
 	/* calculates the average of the string similarities */
 	public float average_similarities() {
 		Set<String> keys = similarities.keySet();
