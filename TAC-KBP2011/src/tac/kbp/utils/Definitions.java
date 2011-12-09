@@ -17,7 +17,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.BinaryJedis;
-import tac.kbp.kb.ivo_spellchecker.SpellChecker;
+import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.queries.GoldStandardQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.utils.misc.BigFile;
@@ -44,8 +44,11 @@ public class Definitions {
 	public static String SpellChecker_location = "/collections/TAC-2011/spellchecker_index";
 	public static String DocumentCollection_location = "/collections/TAC-2011/document_collection_index";
 	public static Set<String> stop_words = new HashSet<String>();
-	
 	public static String kb_lda_topics = "/collections/TAC-2011/LDA/model/model-final.theta";
+	public static String queries_lda_path = "/collections/TAC-2011/LDA/queries/";
+	public static String gold_standard_path = "/collections/TAC-2011/queries/ivo/";
+	
+	//goldStandardFile
 	
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
@@ -63,8 +66,7 @@ public class Definitions {
 	public static String redis_host = "agatha";
 	public static BinaryJedis binaryjedis = null;
 	
-	
-	public static void loadAll(String queriesPath, String goldStandardPath, String queries_lda_topics) throws Exception {
+	public static void loadAll(String queriesFile) throws Exception {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + KB_location);
@@ -82,14 +84,32 @@ public class Definitions {
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 		
-		System.out.println("Loading queries answers from: " + goldStandardPath);
-		loadGoldStandard(goldStandardPath);
+		String lda_topics = new String();
+		String gold_standard = new String();
 		
-		System.out.println("Loading queries from: " + queriesPath);
-		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
+		if (queriesFile.equalsIgnoreCase("train_queries_2009.xml")) {
+			lda_topics = queries_lda_path+"train_queries_2009.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2009.xml"; 
+			
+		}
+		else if (queriesFile.equalsIgnoreCase("train_queries_2010.xml")) {
+			lda_topics = queries_lda_path+"train_queries_2010.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2010.xml";
+		}
 		
-		System.out.print("Loading queries LDA topics from: " + queries_lda_topics + "..." );
-		loadLDATopics(queries_lda_topics,queries_topics);
+		else if (queriesFile.equalsIgnoreCase("train_queries_2011.xml")) {
+			lda_topics = queries_lda_path+"train_queries_2011.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2011.xml";
+			
+		}
+		System.out.println("Loading queries from: " + queriesFile);
+		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesFile);
+		
+		System.out.println("Loading queries answers from: " + gold_standard);
+		loadGoldStandard(gold_standard);
+		
+		System.out.print("Loading queries LDA topics from: " + lda_topics + "..." );
+		loadLDATopics(queries_lda_path,queries_topics);
 		
 		System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
 		loadLDATopics(kb_lda_topics,kb_topics);
@@ -100,6 +120,7 @@ public class Definitions {
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 	}
 	
+	/*
 	public static void loadAll(String queriesPath) throws Exception {
 		
 		System.out.println("Loading stopwords from: " + stop_words_location);
@@ -108,10 +129,11 @@ public class Definitions {
 		System.out.println("Loading queries from: " + queriesPath);
 		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesPath);
 		
-		/* Document Collection Index */
+		//Document Collection Index
 		System.out.println("Document Collection index: " + DocumentCollection_location);
 		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
 	}
+	*/
 	
 	public static void loadClassifier(String filename) {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
