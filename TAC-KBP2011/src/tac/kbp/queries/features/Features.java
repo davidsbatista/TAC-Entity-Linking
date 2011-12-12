@@ -50,7 +50,7 @@ public class Features {
 	
 	public double[] inputVector(){
 		
-		double[] inputVector = new double[19];
+		double[] inputVector = new double[21];
 		
 		if (this.queryType == candidateType) {
 			inputVector[0] = 1;
@@ -109,7 +109,11 @@ public class Features {
 		inputVector[16] = (double) similarities.get("Jaro");
 		inputVector[17] = (double) similarities.get("JaroWinkler");
 		inputVector[18] = (double) similarities.get("Levenshtein");
-				
+		
+		
+		inputVector[19] = this.lucene_score;
+		inputVector[20] = this.cosine_similarity;
+		
 		return inputVector;
 	}
 

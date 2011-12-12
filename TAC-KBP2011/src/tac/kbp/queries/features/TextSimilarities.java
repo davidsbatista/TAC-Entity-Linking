@@ -84,13 +84,12 @@ public final class TextSimilarities {
     		//int startOffset = offsetAttribute.startOffset();
     		//int endOffset = offsetAttribute.endOffset();
     		term = termAttribute.term();
-    	}
-            
-    	try {
-			int value = result.get(term);
-			result.put(term, value + 1);
-		} catch (NullPointerException e) {
-			result.put(term, 1);
+    		try {
+    			int value = result.get(term);
+    			result.put(term, value + 1);
+    		} catch (NullPointerException e) {
+    			result.put(term, 1);
+    		}
 		}
 		return result;
 	}
@@ -112,6 +111,7 @@ public final class TextSimilarities {
         Double sim = 0.0;
         Map<String, Integer> wordsQ = tokenized(q);
         Map<String, Integer> wordsD = tokenized(d);
+        
         Double normQ = 0.0;
         Double normD = 0.0;
         

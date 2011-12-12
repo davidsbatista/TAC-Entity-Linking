@@ -104,7 +104,7 @@ public class Train {
 		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
 		
 		//extract features from all candidates
-		extractFeatures(q, false);
+		extractFeatures(q, true);
 	}
 	
 	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {

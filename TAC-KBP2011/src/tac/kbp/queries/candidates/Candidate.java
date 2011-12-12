@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.lucene.index.TermFreqVector;
-
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.features.Features;
@@ -75,6 +73,7 @@ public class Candidate {
 		else this.features.correct_answer = false;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		
 		List<Triple<String, Integer, Integer>> entities = tac.kbp.utils.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());

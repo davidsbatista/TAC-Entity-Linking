@@ -59,6 +59,7 @@ public class Definitions {
 	public static IndexSearcher documents = null;
 
 	/* StanfordNER CRF classifier */
+	@SuppressWarnings("rawtypes")
 	public static AbstractSequenceClassifier classifier = null;
 	
 	/* REDIS server */

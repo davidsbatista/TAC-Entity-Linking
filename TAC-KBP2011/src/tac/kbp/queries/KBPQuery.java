@@ -72,6 +72,7 @@ public class KBPQuery {
 		this.organizations = new HashSet<String>();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		getSupportDocument();
 		
