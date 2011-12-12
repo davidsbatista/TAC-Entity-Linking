@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.queries.features;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -10,29 +10,43 @@ public class Features {
 	/* semantic */
 	public NERType queryType; 
 	public NERType candidateType;
-	public boolean typeMatch;
-	public float namedEntitiesIntersection;
-	public boolean queryStringInWikiText;
-	public boolean candidateNameInSupportDocument;
-	public double[] topics_distribution = new double[100];  
-	public double kldivergence;
+	public boolean typeMatch;  // 1 if candidateType and queryType are the same  #1
+	public float namedEntitiesIntersection; // number of common named entities #2
+	public boolean queryStringInWikiText; // 1 if the query string in candidate's text #3
+	public boolean candidateNameInSupportDocument; // 1 if the candidate's string is in the support document #4
+	public double[] topics_distribution = new double[100]; // LDA topics distrubution 
+	public double kldivergence; // Kullback-Leibler Divergence between LDA topics distrubution #5
 	
 	/* string similarities */
-	public boolean exactMatch;
-	public boolean querySubStringOfCandidate;
-	public boolean candidateSubStringOfQuery;
-	public boolean queryStartsCandidateName;
-	public boolean queryEndsCandidateName;
-	public boolean candidateNameStartsQuery;
-	public boolean candidateNameEndsQuery;
-	public boolean queryStringAcronymOfCandidate;
-	public boolean candidateAcronymOfqueryString;
-	public HashMap<String, Float> similarities = new HashMap<String, Float>();	
+	public boolean exactMatch; // 1 if query string is equal to candidate's string #6
+	public boolean querySubStringOfCandidate; // 1 if the query string is a substring of the candidate's string #7
+	public boolean candidateSubStringOfQuery; // 1 if the candidate's string is a substring of query string #8
+	public boolean queryStartsCandidateName;  // 1 if the query string starts the candidate string #9
+	public boolean queryEndsCandidateName;    // 1 if the query string ends candidate string #10
+	public boolean candidateNameStartsQuery;  // 1 if candidate string starts query string #11 (NULL)
+	public boolean candidateNameEndsQuery;    // 1 if candidate string ends the query string #12 (NULL)
+	public boolean queryStringAcronymOfCandidate; // 1 if query string is an acronym of the candidate #13
+	public boolean candidateAcronymOfqueryString; // 1 if candidate's string is an acronym of the query string #14
 	
+	/* string similarities features:
+	 * 
+	 * DiceSimilarity 		#15
+	 * JaccardSimilarity	#16
+	 * Jaro					#17
+	 * JaroWinkler			#18
+	 * Levenshtein 			#19
+	 */
+	public HashMap<String, Float> similarities = new HashMap<String, Float>();
+	
+	
+	/* text similarities */
+	public float lucene_score; // the score given by Lucene #20
+	public double cosine_similarity; // cosine similarity #21
+		
 	/* other */
 	public String eid; 
-	public float lucene_score;
 	public boolean correct_answer;
+	
 	
 	public double[] inputVector(){
 		
@@ -105,7 +119,7 @@ public class Features {
 		}
 		else return 0;
 	}
-
+	
 	/* calculates the average of the string similarities */
 	public float average_similarities() {
 		Set<String> keys = similarities.keySet();

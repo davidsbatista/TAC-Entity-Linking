@@ -18,7 +18,7 @@ import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
-import tac.kbp.queries.GoldStandardQuery;
+import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
@@ -33,7 +33,7 @@ public class Definitions {
 	
 	/* queries */
 	public static List<KBPQuery> queries = null;
-	public static HashMap<String, GoldStandardQuery> queriesGold = new HashMap<String, GoldStandardQuery>();
+	public static HashMap<String, GoldQuery> queriesGold = new HashMap<String, GoldQuery>();
 	public static String queries_set = new String();
 	
 	/* resources locations */
@@ -85,31 +85,47 @@ public class Definitions {
 		loadStopWords(stop_words_location);
 		
 		String lda_topics = new String();
-		String gold_standard = new String();
+		String gold_standard = new String();		
 		
-		if (queriesFile.equalsIgnoreCase("train_queries_2009.xml")) {
+		if (queriesFile.contains("train_queries_2009")) {
 			lda_topics = queries_lda_path+"train_queries_2009.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2009.xml"; 
+			gold_standard = gold_standard_path+"train_results_2009.tab"; 
 			
 		}
-		else if (queriesFile.equalsIgnoreCase("train_queries_2010.xml")) {
+		else if (queriesFile.contains("train_queries_2010")) {
 			lda_topics = queries_lda_path+"train_queries_2010.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2010.xml";
+			gold_standard = gold_standard_path+"train_results_2010.tab";
 		}
 		
-		else if (queriesFile.equalsIgnoreCase("train_queries_2011.xml")) {
+		else if (queriesFile.contains("train_queries_2011")) {
 			lda_topics = queries_lda_path+"train_queries_2011.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2011.xml";
+			gold_standard = gold_standard_path+"train_results_2011.tab";
 			
 		}
+		
+		else if (queriesFile.contains("test_queries_2009")) {
+			lda_topics = queries_lda_path+"test_queries_2009.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2009.tab";
+		}
+		
+		else if (queriesFile.contains("test_queries_2010")) {
+			lda_topics = queries_lda_path+"test_queries_2010.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2010.tab";
+		}
+		
+		else if (queriesFile.contains("test_queries_2011")) {
+			lda_topics = queries_lda_path+"test_queries_2011.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2011.tab";
+		}
+		
 		System.out.println("Loading queries from: " + queriesFile);
-		queries = tac.kbp.queries.xml.ParseXML.loadQueries(queriesFile);
+		queries = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
 		
 		System.out.println("Loading queries answers from: " + gold_standard);
 		loadGoldStandard(gold_standard);
 		
 		System.out.print("Loading queries LDA topics from: " + lda_topics + "..." );
-		loadLDATopics(queries_lda_path,queries_topics);
+		loadLDATopics(lda_topics,queries_topics);
 		
 		System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
 		loadLDATopics(kb_lda_topics,kb_topics);
@@ -140,7 +156,7 @@ public class Definitions {
 	}
 
 	public static void loadLDATopics(String filename, HashMap<Integer, String> hashtable) throws Exception {
-		
+
 		BigFile file = new BigFile(filename);
 		int i=0;
 		
@@ -178,7 +194,7 @@ public class Definitions {
 		
 		BufferedReader input;
 		
-		if (filename.contains("2009") || filename.contains("2010/trainning")) {
+		if (filename.contains("2009") || filename.contains("2010/trainning") || filename.contains("train_results_2010")) {
 			
 			try {
 				
@@ -187,7 +203,7 @@ public class Definitions {
 		        
 				while (( line = input.readLine()) != null){
 		          String[] contents = line.split("\t");	          
-		          GoldStandardQuery gold = new GoldStandardQuery(contents[0], contents[1], contents[2]);
+		          GoldQuery gold = new GoldQuery(contents[0], contents[1], contents[2]);
 		          queriesGold.put(contents[0], gold);
 		        }
 		        
@@ -207,7 +223,7 @@ public class Definitions {
 		        
 				while (( line = input.readLine()) != null){
 		          String[] contents = line.split("\t");	          
-		          GoldStandardQuery gold = new GoldStandardQuery(contents[0], contents[1], contents[2], contents[3], contents[4]);
+		          GoldQuery gold = new GoldQuery(contents[0], contents[1], contents[2], contents[3], contents[4]);
 		          queriesGold.put(contents[0], gold);
 		        }
 		        

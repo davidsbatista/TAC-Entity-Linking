@@ -14,7 +14,7 @@ import org.w3c.dom.NodeList;
 
 import tac.kbp.queries.KBPQuery;
 
-public class ParseXML {
+public class ParseQueriesXMLFile {
 	
 	public static List<KBPQuery> loadQueries(String filename) {
 		

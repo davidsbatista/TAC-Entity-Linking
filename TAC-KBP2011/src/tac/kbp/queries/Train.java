@@ -23,6 +23,7 @@ import org.apache.lucene.search.TopDocs;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
+import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
@@ -103,15 +104,19 @@ public class Train {
 		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
 		
 		//extract features from all candidates
-		extractFeatures(q);
+		extractFeatures(q, false);
 	}
 	
-	static void extractFeatures(KBPQuery q) throws Exception {
+	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {
 		
 		System.out.print("Extracting features from candidates for query " + q.query_id);
+		PrintStream out = null;
 		
-		//file to where feature vectors are going to be written
-		PrintStream out = new PrintStream( new FileOutputStream(q.query_id+".txt"));
+		if (saveToFile) {
+			//file to where feature vectors are going to be written
+			out = new PrintStream( new FileOutputStream(q.query_id+".txt"));
+		}
+		
 		boolean foundCorrecEntity = false;
 		
 		for (Candidate c : q.candidates) {
@@ -120,8 +125,10 @@ public class Train {
 			if (c.features.correct_answer) {
 				foundCorrecEntity = true;
 			}
-			writeFeaturesVectortoFile(out, c);
-			out.println();
+			if (saveToFile) {
+				writeFeaturesVectortoFile(out, c);
+				out.println();
+			}
 		}
 
 		
@@ -143,12 +150,16 @@ public class Train {
 				Candidate c = new Candidate(doc,scoreDocs[0].doc);
 				c.features.lucene_score = scoreDocs[0].score; 
 				c.extractFeatures(q);
-				writeFeaturesVectortoFile(out, c);
-				out.println();
+				if (saveToFile) {
+					writeFeaturesVectortoFile(out, c);
+					out.println();
+				}
 			}
 		}
 		System.out.println();
-		out.close();
+		if (saveToFile) {
+			out.close();
+		}
 	}
 
 	static void writeFeaturesVectortoFile(PrintStream out, Candidate c) {
@@ -172,7 +183,7 @@ public class Train {
 
 	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 				
-		GoldStandardQuery q_gold = tac.kbp.utils.Definitions.queriesGold.get(q.query_id);
+		GoldQuery q_gold = tac.kbp.utils.Definitions.queriesGold.get(q.query_id);
 		
 		boolean found = false;
 		

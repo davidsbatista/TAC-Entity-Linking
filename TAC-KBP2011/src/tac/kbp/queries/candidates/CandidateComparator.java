@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.queries.candidates;
 
 import java.util.Comparator;
 

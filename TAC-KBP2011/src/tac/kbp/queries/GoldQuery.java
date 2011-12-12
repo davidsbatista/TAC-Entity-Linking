@@ -1,6 +1,6 @@
 package tac.kbp.queries;
 
-public class GoldStandardQuery {
+public class GoldQuery {
 	
 	public String  query_id;
 	public String  answer;
@@ -8,7 +8,7 @@ public class GoldStandardQuery {
 	public String  web_search; //indicates if the annotator made use of web searches to make the linking judgment
 	public String  genre; 		//source genre of the document for the query (WL for web data, or NW for newswire data)
 	
-	public GoldStandardQuery(String query_id, String answer, String type, String web_search, String genre) {
+	public GoldQuery(String query_id, String answer, String type, String web_search, String genre) {
 		super();
 		this.query_id = query_id;
 		this.answer = answer;
@@ -18,7 +18,7 @@ public class GoldStandardQuery {
 	}
 	
 
-	public GoldStandardQuery(String query_id, String answer, String type) {
+	public GoldQuery(String query_id, String answer, String type) {
 		super();
 		this.query_id = query_id;
 		this.answer = answer;

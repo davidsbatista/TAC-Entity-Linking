@@ -11,9 +11,9 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import tac.kbp.queries.Candidate;
-import tac.kbp.queries.Features;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.queries.features.Features;
 import tac.kbp.utils.Definitions;
 
 import com.aliasi.matrix.DenseVector;
