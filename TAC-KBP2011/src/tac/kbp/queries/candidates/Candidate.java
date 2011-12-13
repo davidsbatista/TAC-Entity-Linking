@@ -5,12 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import tac.kbp.bin.Definitions;
+import tac.kbp.bin.Definitions.NERType;
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.features.Features;
 import tac.kbp.queries.features.TextSimilarities;
-import tac.kbp.utils.Definitions;
-import tac.kbp.utils.Definitions.NERType;
 import edu.stanford.nlp.util.Triple;
 
 public class Candidate {
@@ -64,10 +64,7 @@ public class Candidate {
 		divergence(q.topics_distribution);
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 		
-		
-		String correctAnswer =  Definitions.queriesGold.get(q.query_id).answer;
-		
-		if (this.entity.id.equalsIgnoreCase(correctAnswer)) {
+		if (this.entity.id.equalsIgnoreCase(q.answer_kb_id)) {
 			this.features.correct_answer = true;
 		}
 		else this.features.correct_answer = false;
@@ -76,7 +73,7 @@ public class Candidate {
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		
-		List<Triple<String, Integer, Integer>> entities = tac.kbp.utils.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());
+		List<Triple<String, Integer, Integer>> entities = tac.kbp.bin.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());
 		
 		for (Triple<String, Integer, Integer> triple : entities) {			
 			String ename = entity.getWiki_text().substring(triple.second,triple.third);
@@ -218,17 +215,17 @@ public class Candidate {
 	
 	public NERType determineType(){
 		if (entity.type.equalsIgnoreCase("PER")) {
-			return tac.kbp.utils.Definitions.NERType.PERSON;
+			return tac.kbp.bin.Definitions.NERType.PERSON;
 		}
 		
 		if (entity.type.equalsIgnoreCase("ORG")) {
-			return tac.kbp.utils.Definitions.NERType.ORGANIZATION;
+			return tac.kbp.bin.Definitions.NERType.ORGANIZATION;
 		}
 			
 		if (entity.type.equalsIgnoreCase("GPE")) {
-			return tac.kbp.utils.Definitions.NERType.PLACE;
+			return tac.kbp.bin.Definitions.NERType.PLACE;
 		}
-		else return tac.kbp.utils.Definitions.NERType.UNK;
+		else return tac.kbp.bin.Definitions.NERType.UNK;
 			
 			
 	}

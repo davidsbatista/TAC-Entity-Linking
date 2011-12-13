@@ -13,8 +13,8 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
-import tac.kbp.utils.Definitions;
 
 public class SupportDocLDA {
 	
@@ -23,10 +23,10 @@ public class SupportDocLDA {
 	
 	public static void process(String queries, String stopwords, String dcIndex, String outputFile) throws Exception {
 				
-		tac.kbp.utils.Definitions.loadAll(queries);
+		tac.kbp.bin.Definitions.loadAll(queries);
 		
-		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords");
+		System.out.println(tac.kbp.bin.Definitions.queries.size() + " queries loaded");
+		System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
 		File aFile = new File(outputFile);					
@@ -34,7 +34,7 @@ public class SupportDocLDA {
 		
 		System.out.println("parsing support documents...");
 		
-		for (KBPQuery query : tac.kbp.utils.Definitions.queries) {
+		for (KBPQuery query : tac.kbp.bin.Definitions.queries) {
 			query.getSupportDocument(query);			
 			String text_parsed = parse(query.supportDocument);
 			output.write( text_parsed + "\n");
@@ -50,7 +50,7 @@ public class SupportDocLDA {
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
-        Document doc = tac.kbp.utils.Definitions.documents.doc(scoredocs[0].doc);        
+        Document doc = tac.kbp.bin.Definitions.documents.doc(scoredocs[0].doc);        
         q.supportDocument = doc.get("text");
 	}
 	

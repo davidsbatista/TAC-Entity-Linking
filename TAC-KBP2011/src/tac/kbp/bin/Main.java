@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.bin;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -16,11 +16,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.queries.candidates.CandidateComparator;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.SVMRank;
-import tac.kbp.utils.Definitions;
 import tac.kbp.utils.lda.SupportDocLDA;
 
 public class Main {
@@ -59,7 +59,7 @@ public class Main {
 			
 			if (line.hasOption("train")) {
 				
-				tac.kbp.utils.Definitions.loadAll(line.getOptionValue("queries"));				
+				tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));				
 				generateCandidates();
 				
 				// to train a logistic regression model
@@ -86,10 +86,9 @@ public class Main {
 					svmrank.svmRankFormat(Definitions.queries, "svmrank-train.dat");					
 				}
 				
-			//close indexes and REDIS connection
+			//close indexes
 			Definitions.searcher.close();
 			Definitions.documents.close();
-			Definitions.binaryjedis.disconnect();
 		}
 		
 		else if (line.hasOption("test")) {
@@ -100,7 +99,7 @@ public class Main {
 		else if (line.hasOption("vectors")) {
 			
 			//load queries
-			tac.kbp.utils.Definitions.loadAll(args[2]);
+			tac.kbp.bin.Definitions.loadAll(args[2]);
 			
 			generateCandidates();
 
@@ -139,10 +138,10 @@ public class Main {
 
 	static void test(String[] args, CommandLine line) throws Exception, IOException, ClassNotFoundException {
 		
-		tac.kbp.utils.Definitions.loadAll(line.getOptionValue("queries"));
+		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));
 		
 		//load queries gold standard
-		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " gold standard queries loaded");
+		System.out.println(tac.kbp.bin.Definitions.queriesGold.size() + " gold standard queries loaded");
 
 		LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe();
 		
@@ -187,24 +186,28 @@ public class Main {
 
 	static void generateCandidates() throws Exception {
 		
-		System.out.println(tac.kbp.utils.Definitions.queries.size() + " queries loaded");
-		System.out.println(tac.kbp.utils.Definitions.stop_words.size() + " stopwords loaded");
-		System.out.println(tac.kbp.utils.Definitions.queriesGold.size() + " queries gold standard loaded");
-					
-		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
+		//process each query
+		for (Iterator<KBPQuery> iterator = tac.kbp.bin.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery query = (KBPQuery) iterator.next();
 			
 			System.out.print(query.query_id + " \"" + query.name + '"');
-			Train.getSenses(Definitions.binaryjedis, query);
-			Train.processQuery(query);		
+			
+			//get possible alternative names/senses
+			query.getSenses(Definitions.binaryjedis);
+			
+			//retrieve candidates from KB
+			Train.getCandidates(query);		
 		}
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
 					
-		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.utils.Definitions.queries.size()-Train.NIL_queries);
-		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.utils.Definitions.queries.size()-Train.NIL_queries);
+		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);
+		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);
 		
 		System.out.println("Documents Retrieved: " + Integer.toString(Train.total_n_docs));
-		System.out.println("Queries: " + Integer.toString(tac.kbp.utils.Definitions.queries.size()));
-		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) tac.kbp.utils.Definitions.queries.size()));
+		System.out.println("Queries: " + Integer.toString(tac.kbp.bin.Definitions.queries.size()));
+		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) tac.kbp.bin.Definitions.queries.size()));
 		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(Train.n_queries_zero_docs));
 		System.out.println("Queries NIL: " + Train.NIL_queries);
 		System.out.println("Queries Not Found (Miss Rate): " + Train.MISS_queries + " (" + miss_rate * 100 + "%)" );

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,8 +24,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import redis.clients.jedis.BinaryJedis;
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.utils.Definitions;
 import edu.stanford.nlp.util.Triple;
 
 public class KBPQuery {
@@ -76,7 +78,7 @@ public class KBPQuery {
 	public void getNamedEntities() throws Exception {
 		getSupportDocument();
 		
-		List<Triple<String, Integer, Integer>> entities = tac.kbp.utils.Definitions.classifier.classifyToCharacterOffsets(supportDocument);
+		List<Triple<String, Integer, Integer>> entities = tac.kbp.bin.Definitions.classifier.classifyToCharacterOffsets(supportDocument);
 		
 		for (Triple<String, Integer, Integer> triple : entities) {			
 			String ename = this.supportDocument.substring(triple.second,triple.third);
@@ -103,7 +105,7 @@ public class KBPQuery {
 	
 	public void loadNamedEntitiesXML() throws ParserConfigurationException, SAXException, IOException {
 		
-		String filename = tac.kbp.utils.Definitions.named_entities_supportDoc+"/"+this.query_id+"-CRF-named-entities.xml";
+		String filename = tac.kbp.bin.Definitions.named_entities_supportDoc+"/"+this.query_id+"-CRF-named-entities.xml";
 		
 		File fXmlFile = new File(filename);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -139,7 +141,7 @@ public class KBPQuery {
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
-        Document doc = tac.kbp.utils.Definitions.documents.doc(scoredocs[0].doc);        
+        Document doc = tac.kbp.bin.Definitions.documents.doc(scoredocs[0].doc);        
         this.supportDocument = doc.get("text");
 	}
 	
@@ -171,7 +173,7 @@ public class KBPQuery {
 
 		try {
 	
-			input = new BufferedReader(new FileReader(tac.kbp.utils.Definitions.named_entities_supportDoc+"/"+this.query_id+"-named-entities.txt"));
+			input = new BufferedReader(new FileReader(tac.kbp.bin.Definitions.named_entities_supportDoc+"/"+this.query_id+"-named-entities.txt"));
 			String line = null;
 			boolean persons = false;
 			boolean org = false;
@@ -216,6 +218,39 @@ public class KBPQuery {
 	        
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();    	
+		}
+	}
+	
+	public void getSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
+		
+		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
+		byte[] queryStringLowbyteArray = this.name.toLowerCase().getBytes("UTF-8");
+			
+		byte[] acronyms = binaryjedis.get(queryStringLowbyteArray);
+		byte[] senses = binaryjedis.get(queryStringbyteArray);
+			
+		if (acronyms != null) {						
+			String acr = new String(acronyms, "UTF8");
+			String[] acronymsArray = acr.split(",\\s");
+				
+			for (int i = 0; i < acronymsArray.length; i++) {
+				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(acronymsArray[i]);
+				if (cleaned.compareToIgnoreCase(this.name) != 0) {
+					this.alternative_names.add(cleaned);
+				}
+										
+			}
+		}
+			
+		if (senses != null) {
+			String ses = new String(senses, "UTF8");
+			String[] sensesArray = ses.split(",\\s");
+			for (int i = 0; i < sensesArray.length; i++) {
+				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(sensesArray[i]);			
+				if (cleaned.compareToIgnoreCase(this.name) != 0) {
+					this.alternative_names.add(cleaned);
+				}		
+			}
 		}
 	}
 }

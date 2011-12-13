@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 
 public class ParseQueriesXMLFile {
@@ -52,6 +53,7 @@ public class ParseQueriesXMLFile {
 					String docid = getTagValue("docid", eElement);
 					
 					KBPQuery query = new KBPQuery(query_id, name, docid);
+					query.answer_kb_id = Definitions.queriesGold.get(query_id).answer;
 					queries.add(query);
 
 				}

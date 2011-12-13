@@ -5,9 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.utils.Definitions;
 
 public class SVMRank {
 	
@@ -26,7 +26,7 @@ public class SVMRank {
 		
 		for (KBPQuery q : queries) {
 			
-			out.write("#" + q.query_id + "\n");
+			out.write("#" + q.query_id + " " + q.answer_kb_id + "\n");
 			
 			for (Candidate c : q.candidates) {
 				

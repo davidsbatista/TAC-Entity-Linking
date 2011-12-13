@@ -3,7 +3,7 @@ package tac.kbp.queries.features;
 import java.util.HashMap;
 import java.util.Set;
 
-import tac.kbp.utils.Definitions.NERType;
+import tac.kbp.bin.Definitions.NERType;
 
 public class Features {
 	
@@ -14,8 +14,8 @@ public class Features {
 	public float namedEntitiesIntersection; // number of common named entities #2
 	public boolean queryStringInWikiText; // 1 if the query string in candidate's text #3
 	public boolean candidateNameInSupportDocument; // 1 if the candidate's string is in the support document #4
-	public double[] topics_distribution = new double[100]; // LDA topics distrubution 
-	public double kldivergence; // Kullback-Leibler Divergence between LDA topics distrubution #5
+	public double[] topics_distribution = new double[100]; // LDA topics distribution 
+	public double kldivergence; // Kullback-Leibler Divergence between LDA topics distribution #5
 	
 	/* string similarities */
 	public boolean exactMatch; // 1 if query string is equal to candidate's string #6
@@ -46,7 +46,6 @@ public class Features {
 	/* other */
 	public String eid; 
 	public boolean correct_answer;
-	
 	
 	public double[] inputVector(){
 		

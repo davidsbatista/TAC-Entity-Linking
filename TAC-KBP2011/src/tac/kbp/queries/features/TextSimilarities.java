@@ -11,7 +11,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 
-import tac.kbp.utils.Definitions;
+import tac.kbp.bin.Definitions;
 
 /**
  * 

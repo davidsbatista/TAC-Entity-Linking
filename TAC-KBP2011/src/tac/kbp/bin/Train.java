@@ -1,4 +1,4 @@
-package tac.kbp.queries;
+package tac.kbp.bin;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -21,10 +21,10 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
-import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
+import tac.kbp.queries.GoldQuery;
+import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.utils.Definitions;
 
 import com.google.common.base.Joiner;
 
@@ -39,49 +39,7 @@ public class Train {
 	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
 	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
-	static void getSenses(BinaryJedis binaryjedis, KBPQuery query) {
-	
-	try {
-
-		byte[] queryStringbyteArray = query.name.getBytes("UTF-8");
-		byte[] queryStringLowbyteArray = query.name.toLowerCase().getBytes("UTF-8");
-		
-		byte[] acronyms = binaryjedis.get(queryStringLowbyteArray);
-		byte[] senses = binaryjedis.get(queryStringbyteArray);
-		
-		if (acronyms != null) {						
-			String acr = new String(acronyms, "UTF8");
-			String[] acronymsArray = acr.split(",\\s");
-			
-			for (int i = 0; i < acronymsArray.length; i++) {
-				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(acronymsArray[i]);
-				if (cleaned.compareToIgnoreCase(query.name) != 0) {
-					query.alternative_names.add(cleaned);
-				}
-										
-			}
-		}
-		
-		if (senses != null) {
-			String ses = new String(senses, "UTF8");
-			String[] sensesArray = ses.split(",\\s");
-			for (int i = 0; i < sensesArray.length; i++) {
-				String cleaned = tac.kbp.utils.string.StringUtils.cleanString(sensesArray[i]);			
-				if (cleaned.compareToIgnoreCase(query.name) != 0) {
-					query.alternative_names.add(cleaned);
-				}		
-			}
-		}
-	}
-	
-	catch (Exception e) {
-			// Catch exception if any
-			System.out.println(e);
-			System.err.println("Error: " + e.getMessage());
-		}
-	}
-
-	static void processQuery(KBPQuery q) throws Exception {
+	static void getCandidates(KBPQuery q) throws Exception {
 
 		q.getSupportDocument();
 		
@@ -93,15 +51,14 @@ public class Train {
 		if (n_docs == 0)
 			n_queries_zero_docs++;
 		
-		System.out.print("\t correct answer: "+ tac.kbp.utils.Definitions.queriesGold.get(q.query_id).answer);
+		System.out.print("\t correct answer: "+ tac.kbp.bin.Definitions.queriesGold.get(q.query_id).answer);
 		findCorrectEntity(q);
-		System.out.println();
 
 		//load the recognized named-entities in the support document
 		q.getNamedEntities();
 		
 		//load the LDA topics distribution for the query support document
-		q.getTopicsDistribution(tac.kbp.utils.Definitions.queries.indexOf(q));
+		q.getTopicsDistribution(tac.kbp.bin.Definitions.queries.indexOf(q));
 		
 		//extract features from all candidates
 		extractFeatures(q, true);
@@ -109,7 +66,7 @@ public class Train {
 	
 	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {
 		
-		System.out.print("Extracting features from candidates for query " + q.query_id);
+		System.out.print(" Extracting features from candidates");
 		PrintStream out = null;
 		
 		if (saveToFile) {
@@ -130,21 +87,24 @@ public class Train {
 				out.println();
 			}
 		}
-
 		
-		//if correct entity is not part of the retrieved entities and correct answer is not NIL, 
-		//retrieve entity from KB and calculate features 
+		System.out.println("foundCorrecEntity: " + foundCorrecEntity);
+		
+		//if answer entity is not part of the retrieved entities and correct answer is not NIL, 
+		//retrieve answer entity from KB and extract features 
 		if (!foundCorrecEntity && !(Definitions.queriesGold.get(q.query_id).answer.startsWith("NIL")) ) {
+			
+			System.out.println("retrieving answer from KB");
 
 			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
 			ScoreDoc[] scoreDocs = null;
 			String queryS = "id:" + Definitions.queriesGold.get(q.query_id).answer;
 			
-			TopDocs docs = tac.kbp.utils.Definitions.searcher.search(queryParser.parse(queryS), 1);				
+			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;
 			
 			if (docs.totalHits != 0) {
-				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
+				Document doc = tac.kbp.bin.Definitions.searcher.doc(scoreDocs[0].doc);
 				
 				//extract features
 				Candidate c = new Candidate(doc,scoreDocs[0].doc);
@@ -183,7 +143,7 @@ public class Train {
 
 	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 				
-		GoldQuery q_gold = tac.kbp.utils.Definitions.queriesGold.get(q.query_id);
+		GoldQuery q_gold = tac.kbp.bin.Definitions.queriesGold.get(q.query_id);
 		
 		boolean found = false;
 		
@@ -208,7 +168,7 @@ public class Train {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (Iterator<KBPQuery> iterator = tac.kbp.utils.Definitions.queries.iterator(); iterator.hasNext();) {
+		for (Iterator<KBPQuery> iterator = tac.kbp.bin.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery q = (KBPQuery) iterator.next();
 			out.println(q.query_id.trim()+"\t"+q.answer_kb_id.trim());
 		}
@@ -244,7 +204,7 @@ public class Train {
 		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> l = tac.kbp.utils.Definitions.spellchecker.suggestSimilar(sense, 10);
+			List<SuggestWord> l = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, 10);
 			suggestedwords.addAll(l);
 		}
 		
@@ -263,7 +223,7 @@ public class Train {
 				break;			
 			
 			String queryS = "id:" + suggestWord.eid;
-			TopDocs docs = tac.kbp.utils.Definitions.searcher.search(queryParser.parse(queryS), 1);
+			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);
 			
 			if (docs.totalHits == 0) {
 				continue;				
@@ -271,7 +231,7 @@ public class Train {
 			
 			else {
 				scoreDocs = docs.scoreDocs; 
-				Document doc = tac.kbp.utils.Definitions.searcher.doc(scoreDocs[0].doc);
+				Document doc = tac.kbp.bin.Definitions.searcher.doc(scoreDocs[0].doc);
 				if (repeated.contains(scoreDocs[0].doc))
 					continue;
 				else {

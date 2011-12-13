@@ -1,4 +1,4 @@
-package tac.kbp.utils;
+package tac.kbp.bin;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -48,8 +48,6 @@ public class Definitions {
 	public static String queries_lda_path = "/collections/TAC-2011/LDA/queries/";
 	public static String gold_standard_path = "/collections/TAC-2011/queries/ivo/";
 	
-	//goldStandardFile
-	
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
 	
@@ -82,6 +80,7 @@ public class Definitions {
 		System.out.println("Document Collection index: " + DocumentCollection_location);
 		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
 		
+		//Stop-Words
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 		
@@ -119,22 +118,32 @@ public class Definitions {
 			gold_standard = gold_standard_path+"test_results_2011.tab";
 		}
 		
-		System.out.println("Loading queries from: " + queriesFile);
-		queries = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
-		
+		//Queries answer file
 		System.out.println("Loading queries answers from: " + gold_standard);
 		loadGoldStandard(gold_standard);
 		
+		//Queries XML file
+		System.out.println("Loading queries from: " + queriesFile);
+		queries = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
+
+		//LDA topics for queries
 		System.out.print("Loading queries LDA topics from: " + lda_topics + "..." );
 		loadLDATopics(lda_topics,queries_topics);
 		
+		//LDA topics for KB
 		System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
 		loadLDATopics(kb_lda_topics,kb_topics);
 		
+		//StanfordNER: Classifier MUC 3 
 		loadClassifier(serializedClassifier);
 		
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
+		
+		System.out.println(tac.kbp.bin.Definitions.queries.size() + " queries loaded");
+		System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords loaded");
+		System.out.println(tac.kbp.bin.Definitions.queriesGold.size() + " queries gold standard loaded");
+
 	}
 	
 	/*

@@ -11,10 +11,10 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.queries.features.Features;
-import tac.kbp.utils.Definitions;
 
 import com.aliasi.matrix.DenseVector;
 import com.aliasi.matrix.Vector;
@@ -168,15 +168,6 @@ public class LogisticRegressionLingPipe {
     	double[] featuresVector = c.features.inputVector();
     	DenseVector dV = new DenseVector(featuresVector); 
     	double[] conditionalProbs = regression.classify(dV);
-    	
-    	/*
-    	for (int i = 0; i < dV.numDimensions(); ++i)
-            System.out.printf("%3.1f ",dV.value(i));
-        
-		for (int k = 0; k < conditionalProbs.length; ++k)
-            System.out.printf(" p(%d|input)=%4.2f ",k,conditionalProbs[k]);
-        */
-		
 		c.conditionalProbabilities = conditionalProbs;
     }
 
