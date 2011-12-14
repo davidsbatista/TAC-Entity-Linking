@@ -56,45 +56,13 @@ public class Main {
 		}
 		
 		else {
-			
 			if (line.hasOption("train")) {
-				
-				tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));				
-				generateCandidates();
-				
-				// to train a logistic regression model
-				if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
-					
-					//training logistic regression model
-					LogisticRegressionLingPipe trainning = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
-					trainning.trainModel();
-					
-					//save model to disk
-					String filename = line.getOptionValue("modelFilename");
-					
-					if (!filename.equalsIgnoreCase("")) {
-						trainning.writeModel(filename);
-					}
-					
-					else trainning.writeModel("linear-regression");
-
-				}
-				
-				// to train a SVMRank model
-				else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
-					SVMRank svmrank = new SVMRank();
-					svmrank.svmRankFormat(Definitions.queries, "svmrank-train.dat");					
-				}
-				
-			//close indexes
-			Definitions.searcher.close();
-			Definitions.documents.close();
+				train(line);
 		}
 		
 		else if (line.hasOption("test")) {
-			test(args, line);
+				test(args, line);
 		}
-		
 		
 		else if (line.hasOption("vectors")) {
 			
@@ -133,6 +101,35 @@ public class Main {
 		
 		else if (args[0].equalsIgnoreCase("ldatopics"))
 			SupportDocLDA.process(args[1],args[2],args[3],args[4]);
+		}
+	}
+
+	static void train(CommandLine line) throws Exception, IOException {
+		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));				
+		generateCandidates();
+		
+		// to train a logistic regression model
+		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
+			
+			//training logistic regression model
+			LogisticRegressionLingPipe trainning = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
+			trainning.trainModel();
+			
+			//save model to disk
+			String filename = line.getOptionValue("modelFilename");
+			
+			if (!filename.equalsIgnoreCase("")) {
+				trainning.writeModel(filename);
+			}
+			
+			else trainning.writeModel("linear-regression");
+
+		}
+		
+		// to train a SVMRank model
+		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
+			SVMRank svmrank = new SVMRank();
+			svmrank.svmRankFormat(Definitions.queries, "svmrank-train.dat");					
 		}
 	}
 
@@ -201,6 +198,10 @@ public class Main {
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
+		
+		//close indexes
+		Definitions.searcher.close();
+		Definitions.documents.close();
 					
 		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);
 		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);

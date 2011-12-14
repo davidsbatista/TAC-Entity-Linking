@@ -44,6 +44,7 @@ public class SVMRank {
 				for (int i = 0; i < vector.length; i++) {
 					out.write((i+1)+":"+vector[i]+" ");
 				}
+				out.write("#" + c.entity.id);
 				out.write("\n");
 			}
 		}

@@ -26,7 +26,7 @@ public class Features {
 	public boolean candidateNameStartsQuery;  // 1 if candidate string starts query string #11 (NULL)
 	public boolean candidateNameEndsQuery;    // 1 if candidate string ends the query string #12 (NULL)
 	public boolean queryStringAcronymOfCandidate; // 1 if query string is an acronym of the candidate #13
-	public boolean candidateAcronymOfqueryString; // 1 if candidate's string is an acronym of the query string #14
+	public boolean candidateAcronymOfqueryString; // 1 if candidate's string is an acronym of the query string #14 (NULL)
 	
 	/* string similarities features:
 	 * 
