@@ -40,16 +40,16 @@ public class Features {
 	
 	
 	/* text similarities */
-	public float lucene_score; // the score given by Lucene #20
 	public double cosine_similarity; // cosine similarity #21
-		
+	//public float lucene_score; // the score given by Lucene #20
+	
 	/* other */
 	public String eid; 
 	public boolean correct_answer;
 	
 	public double[] inputVector(){
 		
-		double[] inputVector = new double[21];
+		double[] inputVector = new double[20];
 		
 		if (this.queryType == candidateType) {
 			inputVector[0] = 1;
@@ -109,9 +109,8 @@ public class Features {
 		inputVector[17] = (double) similarities.get("JaroWinkler");
 		inputVector[18] = (double) similarities.get("Levenshtein");
 		
-		
-		inputVector[19] = this.lucene_score;
-		inputVector[20] = this.cosine_similarity;
+		inputVector[19] = this.cosine_similarity;
+		//inputVector[19] = this.lucene_score;
 		
 		return inputVector;
 	}

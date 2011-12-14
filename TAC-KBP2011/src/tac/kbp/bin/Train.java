@@ -104,11 +104,15 @@ public class Train {
 			scoreDocs = docs.scoreDocs;
 			
 			if (docs.totalHits != 0) {
-				Document doc = tac.kbp.bin.Definitions.searcher.doc(scoreDocs[0].doc);
+				Document doc = tac.kbp.bin.Definitions.searcher.doc(scoreDocs[0].doc);				
+				
+				Candidate c = new Candidate(doc,scoreDocs[0].doc);
+				
+				//associate candidate with query
+				q.candidates.add(c);
+				//c.features.lucene_score = scoreDocs[0].score;
 				
 				//extract features
-				Candidate c = new Candidate(doc,scoreDocs[0].doc);
-				c.features.lucene_score = scoreDocs[0].score; 
 				c.extractFeatures(q);
 				if (saveToFile) {
 					writeFeaturesVectortoFile(out, c);
@@ -209,18 +213,16 @@ public class Train {
 		}
 		
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
-		ScoreDoc[] scoreDocs = null;
-				
 		List<SuggestWord> suggestedwordsList = new ArrayList<SuggestWord>(suggestedwords);
 		Collections.sort(suggestedwordsList);
 		
 		int i=0; // to limit the number of docs
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
-		for (SuggestWord suggestWord : suggestedwordsList) {
-			
+		for (SuggestWord suggestWord : suggestedwordsList) {			
+			//maximum of 70 candidates per query
 			if (i >= 70)
-				break;			
+				break;
 			
 			String queryS = "id:" + suggestWord.eid;
 			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);
@@ -230,15 +232,14 @@ public class Train {
 			}
 			
 			else {
-				scoreDocs = docs.scoreDocs; 
-				Document doc = tac.kbp.bin.Definitions.searcher.doc(scoreDocs[0].doc);
-				if (repeated.contains(scoreDocs[0].doc))
+				 
+				Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+				if (repeated.contains(docs.scoreDocs[0].doc))
 					continue;
 				else {
-					Candidate c = new Candidate(doc,scoreDocs[0].doc);
-					c.features.lucene_score = scoreDocs[0].score; 
+					Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 					q.candidates.add(c);
-					repeated.add(scoreDocs[0].doc);
+					repeated.add(docs.scoreDocs[0].doc);
 				}
 			}
 			i++;

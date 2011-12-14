@@ -6,7 +6,7 @@
         <jar destfile="/home/dsbatista/workspace/EntityLinking/TAC-EL.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="tac.kbp.queries.Main"/>
+                <attribute name="Rsrc-Main-Class" value="tac.kbp.bin.Main"/>
                 <attribute name="Class-Path" value="."/>
                 <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar commons-collections.jar servlet-api-2.5.jar commons-logging.jar commons-beanutils.jar commons-codec.jar commons-logging-api.jar commons-logging-adapters.jar commons-httpclient.jar jcaller.jar jtidy.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar junit.jar secondstring-20060615.jar stanford-ner.jar google-collect-1.0-rc2.jar lucene-core-3.0.3.jar lucene-spellchecker-3.0.3.jar lingpipe-4.1.0.jar commons-cli-1.2.jar"/>
             </manifest>
