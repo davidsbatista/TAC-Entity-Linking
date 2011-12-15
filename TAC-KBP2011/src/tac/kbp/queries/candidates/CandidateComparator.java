@@ -13,7 +13,7 @@ public class CandidateComparator implements Comparator<Candidate> {
 	    int value = 0;
 	    
 	    Double c1Prob = new Double(c1.getConditionalProbabilities()[1]);
-	    Double c2Prob = new Double(c1.getConditionalProbabilities()[1]);
+	    Double c2Prob = new Double(c2.getConditionalProbabilities()[1]);
 
 	    if (c1Prob == c2Prob ) value = EQUAL;
 	    if (c1Prob < c2Prob) value = AFTER;
