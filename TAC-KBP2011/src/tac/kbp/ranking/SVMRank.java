@@ -26,7 +26,7 @@ public class SVMRank {
 		
 		for (KBPQuery q : queries) {
 			
-			out.write("#" + q.query_id + " " + q.answer_kb_id + "\n");
+			out.write("#" + q.query_id + " " + q.gold_answer + "\n");
 			
 			for (Candidate c : q.candidates) {
 				

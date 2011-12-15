@@ -23,7 +23,7 @@ public class Candidate {
 	public HashSet<String> organizations = null;
 	
 	//logistic regression
-	public double[] conditionalProbabilities; 
+	public double[] conditionalProbabilities;
 	
 	public Features features;
 	
@@ -36,6 +36,8 @@ public class Candidate {
 	
 	public Candidate() {
 		super();
+		this.entity = new Entity();
+		this.conditionalProbabilities = new double[2];
 	}
 	
 	public Candidate(org.apache.lucene.document.Document doc, int indexID) {
@@ -64,7 +66,7 @@ public class Candidate {
 		divergence(q.topics_distribution);
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 		
-		if (this.entity.id.equalsIgnoreCase(q.answer_kb_id)) {
+		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {
 			this.features.correct_answer = true;
 		}
 		else this.features.correct_answer = false;

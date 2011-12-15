@@ -53,7 +53,7 @@ public class ParseQueriesXMLFile {
 					String docid = getTagValue("docid", eElement);
 					
 					KBPQuery query = new KBPQuery(query_id, name, docid);
-					query.answer_kb_id = Definitions.queriesGold.get(query_id).answer;
+					query.gold_answer = Definitions.queriesGold.get(query_id).answer;
 					queries.add(query);
 
 				}

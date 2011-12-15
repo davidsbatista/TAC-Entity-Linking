@@ -34,7 +34,7 @@ public class KBPQuery {
 	public String query_id;
 	public String name;
 	public String docid;
-	public String answer_kb_id;
+	public String gold_answer;
 	public String supportDocument = new String();
 	
 	// alternative senses for the string name
@@ -54,6 +54,14 @@ public class KBPQuery {
 	// ranked-list of candidates
 	public ArrayList<Candidate> candidatesRanked;
 	
+	
+	
+	// Constructors
+	public KBPQuery() {
+		super();
+		this.candidates = new HashSet<Candidate>();
+	}
+	
 	public KBPQuery(String query_id) {
 		super();
 		this.query_id = query_id;
@@ -65,7 +73,7 @@ public class KBPQuery {
 		this.query_id = query_id;
 		this.name = name;
 		this.docid = docid;
-		this.answer_kb_id = null;
+		this.gold_answer = null;
 		this.alternative_names = new HashSet<String>();
 		this.candidates = new HashSet<Candidate>();  
 		
@@ -74,6 +82,8 @@ public class KBPQuery {
 		this.organizations = new HashSet<String>();
 	}
 	
+	
+	// Methods
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		getSupportDocument();

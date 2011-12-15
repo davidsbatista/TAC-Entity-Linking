@@ -174,7 +174,7 @@ public class Train {
 		
 		for (Iterator<KBPQuery> iterator = tac.kbp.bin.Definitions.queries.iterator(); iterator.hasNext();) {
 			KBPQuery q = (KBPQuery) iterator.next();
-			out.println(q.query_id.trim()+"\t"+q.answer_kb_id.trim());
+			out.println(q.query_id.trim()+"\t"+q.gold_answer.trim());
 		}
 		out.close();		
 	}
