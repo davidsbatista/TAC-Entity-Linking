@@ -3,11 +3,14 @@ package tac.kbp.ranking;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.queries.KBPQueryComparator;
 import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.queries.candidates.CandidateComparator;
 
 public class SVMRank {
 	
@@ -23,6 +26,10 @@ public class SVMRank {
 
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
+
+		//to avoid: "ERROR: Query ID's in data file have to be in increasing order" from SVMRank
+		//sort queries according to id
+		Collections.sort(queries, new KBPQueryComparator());
 		
 		for (KBPQuery q : queries) {
 			
