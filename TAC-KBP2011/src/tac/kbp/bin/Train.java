@@ -39,20 +39,36 @@ public class Train {
 	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
 	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
-	static void getCandidates(KBPQuery q) throws Exception {
-
-		q.getSupportDocument();
+	static void tune(KBPQuery q) throws Exception {
 		
-		int n_docs = queryKB(q);
-		System.out.print("  " + n_docs);
+		//q.getSupportDocument();
+		//q.getSupportDocumentTerms();
+		
+		int n_docs = tune_recall(q);
 		
 		total_n_docs += n_docs;
 		
 		if (n_docs == 0)
 			n_queries_zero_docs++;
 		
-		System.out.print("\t correct answer: "+ tac.kbp.bin.Definitions.queriesGold.get(q.query_id).answer);
 		findCorrectEntity(q);
+		System.out.println();
+	}
+	
+	static void retrieveCandidates(KBPQuery q) throws Exception {
+
+		q.getSupportDocument();
+		System.out.print("  correct answer: " + q.gold_answer);
+		
+		int n_docs = queryKB(q);
+		System.out.print("  number of docs: " + n_docs);
+		total_n_docs += n_docs;
+		
+		if (n_docs == 0)
+			n_queries_zero_docs++;
+		
+		findCorrectEntity(q);
+		System.out.println();
 
 		//load the recognized named-entities in the support document
 		q.getNamedEntities();
@@ -145,26 +161,22 @@ public class Train {
 		outputs.add(c.features.output());
 	}
 
+	
 	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
-				
-		GoldQuery q_gold = tac.kbp.bin.Definitions.queriesGold.get(q.query_id);
 		
 		boolean found = false;
 		
 		for (Candidate c : q.candidates) {			
-			String eid = c.entity.id;
-			if (eid.equalsIgnoreCase(q_gold.answer)) {
-				System.out.print('\t' + " found");
+			if (c.entity.id.equalsIgnoreCase(q.gold_answer)) {				
 				FOUND_queries++;
 				found = true;
 				break;
 			}
 		}
-		
-		if (!found && q_gold.answer.startsWith("NIL"))
+		if (!found && q.gold_answer.startsWith("NIL"))
 			NIL_queries++;
 		
-		if (!found && !q_gold.answer.startsWith("NIL"))
+		if (!found && !q.gold_answer.startsWith("NIL"))
 			MISS_queries++;
 		}
 	
@@ -172,8 +184,7 @@ public class Train {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (Iterator<KBPQuery> iterator = tac.kbp.bin.Definitions.queries.iterator(); iterator.hasNext();) {
-			KBPQuery q = (KBPQuery) iterator.next();
+		for (KBPQuery q : Definitions.queries) {
 			out.println(q.query_id.trim()+"\t"+q.gold_answer.trim());
 		}
 		out.close();		
@@ -200,28 +211,83 @@ public class Train {
 		return result;
 	}
 	
-	static int queryKB(KBPQuery q) throws IOException, ParseException {
+	
+	static int tune_recall(KBPQuery q) throws IOException, ParseException {
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		HashMap<String, HashSet<String>> query = generateQuery(q);
-		
-		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();
+		HashMap<String, HashSet<String>> query = q.generateQuery();
+		ArrayList<SuggestWord> suggestedwords = new ArrayList<SuggestWord>();		
+		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> l = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, 10);
-			suggestedwords.addAll(l);
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_retrieves);
+			for (SuggestWord s : list) {
+				if (eid_already_retrieved.contains(s.eid)) continue;
+				else {
+					suggestedwords.add(s);
+					eid_already_retrieved.add(s.eid);
+				}
+			}
 		}
 		
-		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
+		Collections.sort(suggestedwords);		
+		System.out.print("\t"+suggestedwords.size());
+		
+		boolean found = false;
+		
+		//int n_candidates = 0;
+		
+		for (SuggestWord s : suggestedwords) {
+			
+			/*
+			if (n_candidates == Definitions.max_candidates)
+				break;
+			*/
+			
+			if (s.eid.equalsIgnoreCase(q.gold_answer)) {
+				System.out.print("\t" + q.alternative_names.size() + "\t" + s.score + "\t" + (suggestedwords.indexOf(s)+1));
+				found = true;
+			}
+			
+			Candidate c = new Candidate();
+			c.entity.id = s.eid;
+			q.candidates.add(c);
+			//n_candidates++;
+		}
+		if (!found) System.out.print("\t0"+"\t"+q.alternative_names.size()+"\t0");
+		
+		return suggestedwords.size();
+	}
+	
+	static int queryKB(KBPQuery q) throws IOException, ParseException {
+		
+		HashMap<String, HashSet<String>> query = q.generateQuery();
+		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();		
+		HashSet<String> eid_already_retrieved = new HashSet<String>();
+		
+		for (String sense : query.get("strings")) {
+			//get the top 30 candidates for each possible sense
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, 30);
+			for (SuggestWord s : list) {
+				if (eid_already_retrieved.contains(s.eid)) continue;
+				else {
+					suggestedwords.add(s);
+					eid_already_retrieved.add(s.eid);
+				}
+			}
+		}
+
 		List<SuggestWord> suggestedwordsList = new ArrayList<SuggestWord>(suggestedwords);
 		Collections.sort(suggestedwordsList);
 		
-		int i=0; // to limit the number of docs
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
+		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
+		
+		int i=0; 											// to limit the number of docs
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
 		for (SuggestWord suggestWord : suggestedwordsList) {			
-			//maximum of 70 candidates per query
-			if (i >= 70)
+			//top 30 candidates
+			if (i >= 30)
 				break;
 			
 			String queryS = "id:" + suggestWord.eid;
@@ -232,7 +298,6 @@ public class Train {
 			}
 			
 			else {
-				 
 				Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 				if (repeated.contains(docs.scoreDocs[0].doc))
 					continue;
@@ -241,8 +306,8 @@ public class Train {
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
 				}
-			}
 			i++;
+			}
 		}
 		
 		/*
@@ -295,46 +360,6 @@ public class Train {
 		*/
 		
 		return q.candidates.size();
-	}
-
-	static HashMap<String, HashSet<String>> generateQuery(KBPQuery q) {
-		
-		HashSet<String> queryStrings = new HashSet<String>(); 		
-		HashSet<String> queryTokens = new HashSet<String>();
-			
-		HashMap<String, HashSet<String>> query = new HashMap<String,HashSet<String>>();
-		
-		queryStrings.add('"' + q.name + '"');
-		
-		String[] tmp = q.name.split("\\s");
-		for (int z = 0; z < tmp.length; z++) {
-			if (!tmp[z].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
-				queryTokens.add('"' + tmp[z] + '"');
-			}
-		}
-		
-		for (Iterator<String> iterator = q.alternative_names.iterator(); iterator.hasNext();) {
-			String alternative = (String) iterator.next();
-			
-			String queryParsed = alternative.replaceAll("\\(", "").replaceAll("\\)","").
-										replaceAll("\\]", "").replaceAll("\\[", "").replaceAll("\"", "");
-			
-			queryStrings.add('"' + queryParsed + '"');
-			
-			String[] tokens = queryParsed.split("\\s");
-			
-			for (int i = 0; i < tokens.length; i++) {
-				if (!tokens[i].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
-					queryTokens.add('"' + tokens[i].trim() + '"');
-				}
-			}
-		}
-		
-		query.put("strings", queryStrings);
-		query.put("tokens", queryTokens);
-				
-		return query;
-		
 	}
 
 }

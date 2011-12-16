@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
@@ -25,6 +27,12 @@ import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 
 public class Definitions {
+	
+	/* Settings for Retrieval from Lucene */
+	
+	public static int max_retrieves = 10;
+	public static int max_candidates = 50;
+	
 	
 	/* named-entities type */
 	public enum NERType {
@@ -51,10 +59,14 @@ public class Definitions {
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
 	
+	static String lda_topics = new String();
+	static String gold_standard = new String();
+	
 	/* lucene indexes */
 	public static IndexSearcher searcher = null;
 	public static SpellChecker spellchecker = null;
 	public static IndexSearcher documents = null;
+	public static IndexReader docs_reader = null;
 
 	/* StanfordNER CRF classifier */
 	@SuppressWarnings("rawtypes")
@@ -64,6 +76,70 @@ public class Definitions {
 	public static int redis_port = 6379;
 	public static String redis_host = "agatha";
 	public static BinaryJedis binaryjedis = null;
+	
+	
+	public static void loaddRecall(String queriesFile) throws CorruptIndexException, IOException {
+		
+		/* Lucene Index */
+		System.out.println("Knowledge Base index: " + KB_location);
+		searcher = new IndexSearcher(FSDirectory.open(new File(KB_location)));
+		
+		/* SpellChecker Index */
+		System.out.println("SpellChecker index: " + SpellChecker_location);
+		FSDirectory spellDirectory = FSDirectory.open(new File(SpellChecker_location));
+		spellchecker = new SpellChecker(spellDirectory, "name", "id");
+		
+		/* Document Collection Index */
+		System.out.println("Document Collection (IndexReader): " + DocumentCollection_location);
+		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
+		docs_reader = documents.getIndexReader();
+		
+		//Stop-Words
+		System.out.println("Loading stopwords from: " + stop_words_location);
+		loadStopWords(stop_words_location);
+		
+		if (queriesFile.contains("train_queries_2009")) {
+			lda_topics = queries_lda_path+"train_queries_2009.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2009.tab"; 
+			
+		}
+		else if (queriesFile.contains("train_queries_2010")) {
+			lda_topics = queries_lda_path+"train_queries_2010.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2010.tab";
+		}
+		
+		else if (queriesFile.contains("train_queries_2011")) {
+			lda_topics = queries_lda_path+"train_queries_2011.txt.theta";
+			gold_standard = gold_standard_path+"train_results_2011.tab";
+			
+		}
+		
+		else if (queriesFile.contains("test_queries_2009")) {
+			lda_topics = queries_lda_path+"test_queries_2009.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2009.tab";
+		}
+		
+		else if (queriesFile.contains("test_queries_2010")) {
+			lda_topics = queries_lda_path+"test_queries_2010.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2010.tab";
+		}
+		
+		else if (queriesFile.contains("test_queries_2011")) {
+			lda_topics = queries_lda_path+"test_queries_2011.txt.theta";
+			gold_standard = gold_standard_path+"test_results_2011.tab";
+		}
+		
+		//Queries answer file
+		System.out.println("Loading queries answers from: " + gold_standard);
+		loadGoldStandard(gold_standard);
+		
+		//Queries XML file
+		System.out.println("Loading queries from: " + queriesFile);
+		queries = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
+		
+		System.out.println("Connecting to REDIS server.. ");
+		binaryjedis = new BinaryJedis(redis_host, redis_port);
+	}
 	
 	public static void loadAll(String queriesFile) throws Exception {
 		
@@ -83,9 +159,6 @@ public class Definitions {
 		//Stop-Words
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
-		
-		String lda_topics = new String();
-		String gold_standard = new String();		
 		
 		if (queriesFile.contains("train_queries_2009")) {
 			lda_topics = queries_lda_path+"train_queries_2009.txt.theta";

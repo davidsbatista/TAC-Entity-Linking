@@ -6,7 +6,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,17 +23,27 @@ public class SVMRankResults {
 	public static void main(String args[]) throws Exception {
 		parse(args[0],args[1]);
 		
+		float mean_reciprocalRank = 0; 
+		
 		//rank candidates according to classification scores
 		for (KBPQuery q : queries) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparator());
 			
-			System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer );
+			float reciprocalRank = q.reciprocalRank();
+			
+			System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
+			
+			mean_reciprocalRank += reciprocalRank;
+			
 			for (Candidate c : q.candidatesRanked) {
 				System.out.print(c.entity.id + '\t' + c.conditionalProbabilities[1] + "\n");
 			}
 			System.out.println();
 		}
+		
+		System.out.println("Mean Reciprocal Rank: " + mean_reciprocalRank / queries.size());
+		
 		generateOutput("results-SVMRank.txt");
 	}
 	
@@ -51,10 +60,6 @@ public class SVMRankResults {
 			}
 		}
 		out.close();		
-	}
-	
-	public void buildQuery() {
-		
 	}
 	
 	public static void parse(String predictionsFilePath, String goundtruthFilePath) throws Exception{
