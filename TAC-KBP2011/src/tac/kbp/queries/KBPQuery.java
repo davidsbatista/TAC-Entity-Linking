@@ -7,8 +7,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -163,8 +167,19 @@ public class KBPQuery {
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
-        Document doc = tac.kbp.bin.Definitions.documents.doc(scoredocs[0].doc);        
+        Document doc = Definitions.documents.doc(scoredocs[0].doc);        
         this.supportDocument = doc.get("text");
+	}
+	
+	public void getSupportDocumentTerms() throws IOException {
+		Map<String, Integer> wordsQ = tac.kbp.utils.string.StringUtils.tokenized(this.supportDocument);
+		
+		Set<String> keys = wordsQ.keySet();
+		System.out.println("number of terms: " + keys.size());
+		
+		for (String string : keys) {
+			System.out.println(string + '\t' + wordsQ.get(string));
+		}
 	}
 	
 	public void addEntitiesToQuery(NodeList nodeList, String tag) {
@@ -275,4 +290,45 @@ public class KBPQuery {
 			}
 		}
 	}
+
+	public HashMap<String, HashSet<String>> generateQuery() {
+		
+		HashSet<String> queryStrings = new HashSet<String>(); 		
+		HashSet<String> queryTokens = new HashSet<String>();
+			
+		HashMap<String, HashSet<String>> query = new HashMap<String,HashSet<String>>();
+		
+		queryStrings.add('"' + this.name + '"');
+		
+		String[] tmp = this.name.split("\\s");
+		for (int z = 0; z < tmp.length; z++) {
+			if (!tmp[z].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
+				queryTokens.add('"' + tmp[z] + '"');
+			}
+		}
+		
+		for (Iterator<String> iterator = this.alternative_names.iterator(); iterator.hasNext();) {
+			String alternative = (String) iterator.next();
+			
+			String queryParsed = alternative.replaceAll("\\(", "").replaceAll("\\)","").
+										replaceAll("\\]", "").replaceAll("\\[", "").replaceAll("\"", "");
+			
+			queryStrings.add('"' + queryParsed + '"');
+			
+			String[] tokens = queryParsed.split("\\s");
+			
+			for (int i = 0; i < tokens.length; i++) {
+				if (!tokens[i].matches("\\s*-\\s*|.*\\!|\\!.*|.*\\:|\\:.*|\\s*")) {
+					queryTokens.add('"' + tokens[i].trim() + '"');
+				}
+			}
+		}
+		
+		query.put("strings", queryStrings);
+		query.put("tokens", queryTokens);
+				
+		return query;
+		
+	}
+
 }
