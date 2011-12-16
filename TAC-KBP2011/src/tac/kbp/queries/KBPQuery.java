@@ -54,8 +54,6 @@ public class KBPQuery {
 	// ranked-list of candidates
 	public ArrayList<Candidate> candidatesRanked;
 	
-	
-	
 	// Constructors
 	public KBPQuery() {
 		super();
@@ -84,6 +82,20 @@ public class KBPQuery {
 	
 	
 	// Methods
+	
+	//Reciprocal rank
+	public float reciprocalRank(){
+		float reciprocalrank = 0;
+		for (int i = 0; i < candidatesRanked.size(); i++) {
+			if (candidatesRanked.get(i).entity.id.equalsIgnoreCase(this.gold_answer)) {
+				reciprocalrank =  (float) 1 / (float) (i+1);
+				break;
+			}
+		}
+		return reciprocalrank;
+		
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		getSupportDocument();
@@ -95,7 +107,7 @@ public class KBPQuery {
 			addEntitiesToCandidate(ename, triple.first);
 		}
 	}
-		
+	
 	public void addEntitiesToCandidate(String ename, String tag) {		   
 			
 			String entity = ename.replaceAll("\\*", "").replaceAll("\\n", " ").replaceAll("\\!", "");
