@@ -182,7 +182,7 @@ public class Definitions {
 		
 		System.out.println();
 		
-		if (queriesTestFile.contains("small")) {
+		if (queriesTestFile!=null && queriesTestFile.contains("small")) {
 			
 			//Training Queries XML file
 			System.out.println("Loading training queries from: " + queriesTrainFile);
