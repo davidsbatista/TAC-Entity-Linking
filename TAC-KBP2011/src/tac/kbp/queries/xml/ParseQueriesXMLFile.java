@@ -45,15 +45,11 @@ public class ParseQueriesXMLFile {
 
 				Node nNode = nList.item(temp);
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
 					Element eElement = (Element) nNode;
-
 					String query_id = eElement.getAttribute("id");
 					String name = getTagValue("name", eElement);
-					String docid = getTagValue("docid", eElement);
-					
+					String docid = getTagValue("docid", eElement);					
 					KBPQuery query = new KBPQuery(query_id, name, docid);
-					query.gold_answer = Definitions.queriesGold.get(query_id).answer;
 					queries.add(query);
 
 				}
