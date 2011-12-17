@@ -19,8 +19,8 @@ public class KBPQueryComparator implements Comparator<KBPQuery> {
 	    Integer qid2 = new Integer(Integer.parseInt(query2_parts[1]));
 
 	    if (qid1 == qid2 ) value = EQUAL;
-	    if (qid1 < qid2) value = AFTER;
-	    if (qid1 > qid2) value= BEFORE;
+	    if (qid1 > qid2) value = AFTER;
+	    if (qid1 < qid2) value= BEFORE;
 	    
 	    return value;
     }
