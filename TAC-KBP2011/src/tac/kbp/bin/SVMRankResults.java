@@ -20,8 +20,8 @@ public class SVMRankResults {
 	
 	static List<KBPQuery> queries = new LinkedList<KBPQuery>();
 	
-	public static void main(String args[]) throws Exception {
-		parse(args[0],args[1]);
+	public static void results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
+		parse(predictionsFilePath,goundtruthFilePath);
 		
 		float mean_reciprocalRank = 0; 
 		
@@ -32,18 +32,15 @@ public class SVMRankResults {
 			
 			float reciprocalRank = q.reciprocalRank();
 			
-			System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
-			
+			//System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
 			mean_reciprocalRank += reciprocalRank;
-			
+			/*
 			for (Candidate c : q.candidatesRanked) {
 				System.out.print(c.entity.id + '\t' + c.conditionalProbabilities[1] + "\n");
 			}
-			System.out.println();
+			*/
 		}
-		
 		System.out.println("Mean Reciprocal Rank: " + mean_reciprocalRank / queries.size());
-		
 		generateOutput("results-SVMRank.txt");
 	}
 	
@@ -98,11 +95,11 @@ public class SVMRankResults {
 			else  {
 				String[] data = line.split("\\s");
 
-				//o id da entidade fim da linha #E0554903
+				//entity's id in the end of the line #E0554903
 				String entity_id = data[22].split("#")[1];
 				
 				Candidate c = new Candidate();
-				c.entity.id = entity_id;//.split("#")[1];
+				c.entity.id = entity_id;	//.split("#")[1];
 				c.conditionalProbabilities[1] = predictions.get(i);
 				q.candidates.add(c);
 				

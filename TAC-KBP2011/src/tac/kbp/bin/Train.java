@@ -1,6 +1,5 @@
 package tac.kbp.bin;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -8,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +20,6 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.kb.index.spellchecker.SuggestWord;
-import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 
@@ -51,38 +48,84 @@ public class Train {
 		if (n_docs == 0)
 			n_queries_zero_docs++;
 		
-		findCorrectEntity(q);
+		boolean found = false;
+		
+		for (Candidate c : q.candidates) {			
+			if (c.entity.id.equalsIgnoreCase(q.gold_answer)) {				
+				FOUND_queries++;
+				found = true;
+				break;
+			}
+		}
+		if (!found && q.gold_answer.startsWith("NIL"))
+			NIL_queries++;
+		
+		if (!found && !q.gold_answer.startsWith("NIL"))
+			MISS_queries++;
+		
 		System.out.println();
+	}
+	
+	static void statisticsRecall() throws Exception {
+		
+		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.bin.Definitions.queriesTrain.size()-Train.NIL_queries);
+		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.bin.Definitions.queriesTrain.size()-Train.NIL_queries);
+		
+		System.out.println("Documents Retrieved: " + Integer.toString(Train.total_n_docs));
+		System.out.println("Queries: " + Integer.toString(tac.kbp.bin.Definitions.queriesTrain.size()));
+		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) tac.kbp.bin.Definitions.queriesTrain.size()));
+		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(Train.n_queries_zero_docs));
+		System.out.println("Queries NIL: " + Train.NIL_queries);
+		System.out.println("Queries Not Found (Miss Rate): " + Train.MISS_queries + " (" + miss_rate * 100 + "%)" );
+		System.out.println("Queries Found (Coverage): " + Train.FOUND_queries + " (" + coverage * 100 + "%)" );
+	}
+	
+	static void process(List<KBPQuery> queries) throws Exception {
+		
+		// Process each query 
+		for (KBPQuery q : queries) {
+			
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
+			
+			q.getSupportDocument();
+			q.getNamedEntities();			
+			q.getAlternativeSenses(Definitions.binaryjedis);
+			q.getTopicsDistribution(queries.indexOf(q));
+			
+			Train.retrieveCandidates(q);
+			Train.extractFeatures(q, false);
+		}
 	}
 	
 	static void retrieveCandidates(KBPQuery q) throws Exception {
-
-		q.getSupportDocument();
-		System.out.print("  correct answer: " + q.gold_answer);
 		
 		int n_docs = queryKB(q);
-		System.out.print("  number of docs: " + n_docs);
-		total_n_docs += n_docs;
 		
-		if (n_docs == 0)
-			n_queries_zero_docs++;
+		System.out.println(" " + n_docs + " candidates");
 		
-		findCorrectEntity(q);
-		System.out.println();
-
-		//load the recognized named-entities in the support document
-		q.getNamedEntities();
+		total_n_docs += n_docs;		
 		
-		//load the LDA topics distribution for the query support document
-		q.getTopicsDistribution(tac.kbp.bin.Definitions.queries.indexOf(q));
+		if (n_docs == 0) n_queries_zero_docs++;
 		
-		//extract features from all candidates
-		extractFeatures(q, true);
-	}
+		boolean found = false;
+		
+		for (Candidate c : q.candidates) {			
+			if (c.entity.id.equalsIgnoreCase(q.gold_answer)) {				
+				FOUND_queries++;
+				found = true;
+				break;
+			}
+		}
+		if (!found && q.gold_answer.startsWith("NIL"))
+			NIL_queries++;
+		
+		if (!found && !q.gold_answer.startsWith("NIL"))
+			MISS_queries++;
+	}		
 	
 	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {
 		
-		System.out.print(" Extracting features from candidates");
+		System.out.print("Extracting features from candidates");
 		PrintStream out = null;
 		
 		if (saveToFile) {
@@ -104,17 +147,13 @@ public class Train {
 			}
 		}
 		
-		System.out.println("foundCorrecEntity: " + foundCorrecEntity);
-		
 		//if answer entity is not part of the retrieved entities and correct answer is not NIL, 
-		//retrieve answer entity from KB and extract features 
-		if (!foundCorrecEntity && !(Definitions.queriesGold.get(q.query_id).answer.startsWith("NIL")) ) {
-			
-			System.out.println("retrieving answer from KB");
-
+		//we retrieve answer entity from KB and extract features
+		
+		if (!foundCorrecEntity && !(Definitions.queriesGoldTrain.get(q.query_id).answer.startsWith("NIL")) ) {
 			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
 			ScoreDoc[] scoreDocs = null;
-			String queryS = "id:" + Definitions.queriesGold.get(q.query_id).answer;
+			String queryS = "id:" + Definitions.queriesGoldTrain.get(q.query_id).answer;
 			
 			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;
@@ -126,7 +165,6 @@ public class Train {
 				
 				//associate candidate with query
 				q.candidates.add(c);
-				//c.features.lucene_score = scoreDocs[0].score;
 				
 				//extract features
 				c.extractFeatures(q);
@@ -136,7 +174,8 @@ public class Train {
 				}
 			}
 		}
-		System.out.println();
+		
+		System.out.println("done");
 		if (saveToFile) {
 			out.close();
 		}
@@ -160,36 +199,7 @@ public class Train {
 		inputs.add(c.features.inputVector());
 		outputs.add(c.features.output());
 	}
-
-	
-	static void findCorrectEntity(KBPQuery q) throws CorruptIndexException, IOException {
 		
-		boolean found = false;
-		
-		for (Candidate c : q.candidates) {			
-			if (c.entity.id.equalsIgnoreCase(q.gold_answer)) {				
-				FOUND_queries++;
-				found = true;
-				break;
-			}
-		}
-		if (!found && q.gold_answer.startsWith("NIL"))
-			NIL_queries++;
-		
-		if (!found && !q.gold_answer.startsWith("NIL"))
-			MISS_queries++;
-		}
-	
-	static void generateOutput(String output) throws FileNotFoundException {
-		
-		PrintStream out = new PrintStream( new FileOutputStream(output));
-		
-		for (KBPQuery q : Definitions.queries) {
-			out.println(q.query_id.trim()+"\t"+q.gold_answer.trim());
-		}
-		out.close();		
-	}
-	
 	static String concatenateEntities(String str1, String str2) {
 		
 		String result = new String();
@@ -211,7 +221,6 @@ public class Train {
 		return result;
 	}
 	
-	
 	static int tune_recall(KBPQuery q) throws IOException, ParseException {
 		
 		HashMap<String, HashSet<String>> query = q.generateQuery();
@@ -219,7 +228,7 @@ public class Train {
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_retrieves);
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_candidates);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -234,14 +243,7 @@ public class Train {
 		
 		boolean found = false;
 		
-		//int n_candidates = 0;
-		
 		for (SuggestWord s : suggestedwords) {
-			
-			/*
-			if (n_candidates == Definitions.max_candidates)
-				break;
-			*/
 			
 			if (s.eid.equalsIgnoreCase(q.gold_answer)) {
 				System.out.print("\t" + q.alternative_names.size() + "\t" + s.score + "\t" + (suggestedwords.indexOf(s)+1));
@@ -251,7 +253,6 @@ public class Train {
 			Candidate c = new Candidate();
 			c.entity.id = s.eid;
 			q.candidates.add(c);
-			//n_candidates++;
 		}
 		if (!found) System.out.print("\t0"+"\t"+q.alternative_names.size()+"\t0");
 		
@@ -265,8 +266,7 @@ public class Train {
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			//get the top 30 candidates for each possible sense
-			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, 30);
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_candidates);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -282,21 +282,15 @@ public class Train {
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
 		
-		int i=0; 											// to limit the number of docs
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
-		for (SuggestWord suggestWord : suggestedwordsList) {			
-			//top 30 candidates
-			if (i >= 30)
-				break;
+		for (SuggestWord suggestWord : suggestedwordsList) {
 			
 			String queryS = "id:" + suggestWord.eid;
 			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);
 			
-			if (docs.totalHits == 0) {
-				continue;				
-			}
-			
+			if (docs.totalHits == 0)
+				continue;
 			else {
 				Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 				if (repeated.contains(docs.scoreDocs[0].doc))
@@ -306,7 +300,6 @@ public class Train {
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
 				}
-			i++;
 			}
 		}
 		

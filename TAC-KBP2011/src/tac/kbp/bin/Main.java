@@ -1,12 +1,6 @@
 package tac.kbp.bin;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -17,8 +11,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import tac.kbp.queries.KBPQuery;
-import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.queries.candidates.CandidateComparator;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.SVMRank;
 import tac.kbp.utils.lda.SupportDocLDA;
@@ -33,18 +25,23 @@ public class Main {
 		// add options
 		options.addOption("train", false, "train a ranking model");
 		options.addOption("test", false, "test a trained ranking model");
+		//options.addOption("run", false, "train a ranking model and test it");
 		options.addOption("vectors", true, "test from a directory with extracted feature vectors");
 		options.addOption("recall", false, "to tune the recall");
 				
 		// add argument options
-		Option queries = OptionBuilder.withArgName("queries").hasArg().withDescription("XML file containing the queries").create( "queries" );
+		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
+		Option queriesTest = OptionBuilder.withArgName("queriesTest").hasArg().withDescription("XML file containing queries for testing").create( "queriesTest" );
 		Option vectors = OptionBuilder.withArgName("vectors").hasArg().withDescription("directory with extracted feature vectors").create( "vectors" );
 		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("svmrank or logistic").create( "model" );
 		Option modelFile = OptionBuilder.withArgName("filename").hasArg().withDescription("filename to save model").create("modelFilename");
+		Option n_candidates = OptionBuilder.withArgName("candidates").hasArg().withDescription("number of candidates to retrieve per sense").create("candidates");
 		
-		options.addOption(queries);
+		options.addOption(queriesTrain);
+		options.addOption(queriesTest);		
 		options.addOption(vectors);
 		options.addOption(model);
+		options.addOption(n_candidates);
 		
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse( options, args );
@@ -61,20 +58,23 @@ public class Main {
 				train(line);
 		}
 		
+		/*
 		else if (line.hasOption("test")) {
 				test(args, line);
 		}
+		*/
 			
 		else if (line.hasOption("recall")) {
 				recall(line);
 		}
 		
+		/*
 		else if (line.hasOption("vectors")) {
 			
 			//load queries
 			tac.kbp.bin.Definitions.loadAll(args[2]);
 			
-			generateCandidates(false);
+			statisticsRecall(false);
 
 			//read model from disk
 			LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
@@ -85,7 +85,7 @@ public class Main {
 			BufferedWriter out = new BufferedWriter(fstream);
 			
 			//apply the model to feature vectors
-			for (KBPQuery query : Definitions.queries) {
+			for (KBPQuery query : Definitions.queriesTrain) {
 				for (Candidate c: query.candidates) {
 					regression.applyTrainedModelCandidate(c);
 				}
@@ -103,24 +103,35 @@ public class Main {
 			}
 			out.close();
 		}
-		
+		*/
 		else if (args[0].equalsIgnoreCase("ldatopics"))
 			SupportDocLDA.process(args[1],args[2],args[3],args[4]);
 		}
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
+		
+		//close indexes
+		Definitions.searcher.close();
+		if (!line.hasOption("recall")) 
+			Definitions.documents.close();
 	}
 	
 	static void recall(CommandLine line) throws Exception {
 		
-		tac.kbp.bin.Definitions.loaddRecall(line.getOptionValue("queries"));
-		generateCandidates(true);
-		
+		tac.kbp.bin.Definitions.loaddRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
+		Train.statisticsRecall();
 	}
 
 	static void train(CommandLine line) throws Exception, IOException {
 		
-		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));			
+		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queriesTrain"),line.getOptionValue("queriesTest"));			
 		
-		generateCandidates(false);
+		System.out.println("\nProcessing training queries:");
+		Train.process(Definitions.queriesTrain);
+		
+		System.out.println("\nProcessing test queries:");
+		Train.process(Definitions.queriesTest);
 		
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
@@ -140,26 +151,51 @@ public class Main {
 
 		}
 		
-		// to train a SVMRank model
+		//SVMRank
 		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
+			
+			System.out.println();
+			
+			//TODO: catch stdoutput, stderror		
 			SVMRank svmrank = new SVMRank();
-			svmrank.svmRankFormat(Definitions.queries, "svmrank-train.dat");
+			Runtime runtime = Runtime.getRuntime();
+			String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
+			String classify_arguments = "svmrank-test.dat svmrank-trained-model.dat svmrank-predictions";
 			
-			//TODO
-			//automatizar o processo
-			//svm_rank_learn -c 3 example3/train.dat example3/model
-			//svm_rank_classify -c 3 example3/train.dat example3/model
- 
+			//Train a model
+			System.out.println("Training SVMRank model: ");
+			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			
-		}
-	}
+			//generate train features for SVMRank
+			svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesGoldTrain,"svmrank-train.dat");
+			
+			//call SVMRank
+			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 
+			//Test the trained model
+			System.out.println("Testing SVMRank model: ");
+			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+			
+			//generate test features for SVMRank
+			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesGoldTest,"svmrank-test.dat");
+			
+			//call SVMRank
+			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+			
+			//calculate accuracy
+			String predictionsFilePath = "svmrank-predictions";
+			String goundtruthFilePath = "svmrank-test.dat";
+			SVMRankResults.results(predictionsFilePath,goundtruthFilePath);
+ 		}
+	}
+	
+	/*
 	static void test(String[] args, CommandLine line) throws Exception, IOException, ClassNotFoundException {
 		
 		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));
 		
 		//load queries gold standard
-		System.out.println(tac.kbp.bin.Definitions.queriesGold.size() + " gold standard queries loaded");
+		System.out.println(tac.kbp.bin.Definitions.queriesGoldTrain.size() + " gold standard queries loaded");
 
 		LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe();
 		
@@ -169,17 +205,17 @@ public class Main {
 		//load features vectors with features already extracted, filename is query name;
 		//construct a KBPQuery with candidates and features for each candidate;
 		//add it to queries collection
-		Definitions.queries = new LinkedList<KBPQuery>();
+		Definitions.queriesTrain = new LinkedList<KBPQuery>();
 		regression.loadVectors(args[2]);
 		
-		System.out.println(Definitions.queries.size() + " queries loaded from feature vectors");
+		System.out.println(Definitions.queriesTrain.size() + " queries loaded from feature vectors");
 		
 		//file to write output results
 		FileWriter fstream = new FileWriter("results.txt");
 		BufferedWriter out = new BufferedWriter(fstream);
 		
 		//apply the model to feature vectors
-		for (KBPQuery query : Definitions.queries) {
+		for (KBPQuery query : Definitions.queriesTrain) {
 			for (Candidate c: query.candidates) {
 				regression.applyTrainedModelCandidate(c);
 			}
@@ -201,40 +237,7 @@ public class Main {
 		}
 		out.close();
 	}
+	*/
 
-	static void generateCandidates(boolean tune) throws Exception {
-		
-		//process each query
-		for (KBPQuery q : Definitions.queries) {
-			
-			System.out.print(q.query_id + "\t \"" + q.name + '"');
-			
-			//get possible alternative names/senses
-			q.getSenses(Definitions.binaryjedis);
-			
-			if (tune) {
-				Train.tune(q);
-			}
-			else Train.retrieveCandidates(q);					
-		}
-		
-		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
-		
-		//close indexes
-		Definitions.searcher.close();
-		if (!tune) 
-			Definitions.documents.close();
-
-		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);
-		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.bin.Definitions.queries.size()-Train.NIL_queries);
-		
-		System.out.println("Documents Retrieved: " + Integer.toString(Train.total_n_docs));
-		System.out.println("Queries: " + Integer.toString(tac.kbp.bin.Definitions.queries.size()));
-		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) tac.kbp.bin.Definitions.queries.size()));
-		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(Train.n_queries_zero_docs));
-		System.out.println("Queries NIL: " + Train.NIL_queries);
-		System.out.println("Queries Not Found (Miss Rate): " + Train.MISS_queries + " (" + miss_rate * 100 + "%)" );
-		System.out.println("Queries Found (Coverage): " + Train.FOUND_queries + " (" + coverage * 100 + "%)" );
-	}
+	
 }
