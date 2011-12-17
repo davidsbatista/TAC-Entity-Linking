@@ -22,10 +22,11 @@ public class SupportDocLDA {
 	public static int num_docs = 0;
 	
 	public static void process(String queries, String stopwords, String dcIndex, String outputFile) throws Exception {
-				
-		tac.kbp.bin.Definitions.loadAll(queries);
 		
-		System.out.println(tac.kbp.bin.Definitions.queries.size() + " queries loaded");
+		//TODO: this method needs to created this Definitions
+		//tac.kbp.bin.Definitions.loadAll(queries);
+		
+		System.out.println(tac.kbp.bin.Definitions.queriesTrain.size() + " queries loaded");
 		System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
@@ -34,7 +35,7 @@ public class SupportDocLDA {
 		
 		System.out.println("parsing support documents...");
 		
-		for (KBPQuery query : tac.kbp.bin.Definitions.queries) {
+		for (KBPQuery query : tac.kbp.bin.Definitions.queriesTrain) {
 			query.getSupportDocument(query);			
 			String text_parsed = parse(query.supportDocument);
 			output.write( text_parsed + "\n");
