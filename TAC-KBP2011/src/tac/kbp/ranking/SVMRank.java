@@ -4,9 +4,11 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import tac.kbp.bin.Definitions;
+import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.KBPQueryComparator;
 import tac.kbp.queries.candidates.Candidate;
@@ -22,13 +24,13 @@ public class SVMRank {
 	1 qid:1 1:0 2:0 3:1 4:0.3 5:0
 	*/
 	
-	public void svmRankFormat(List<KBPQuery> queries, String outputfile) throws IOException {
-
+	public void svmRankFormat(List<KBPQuery> queries, HashMap<String, GoldQuery> queries_answers, String outputfile) throws IOException {
+		
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
 
 		//to avoid: "ERROR: Query ID's in data file have to be in increasing order" from SVMRank
-		//sort queries according to id
+		//sort queries according to id  in increasing order
 		Collections.sort(queries, new KBPQueryComparator());
 		
 		for (KBPQuery q : queries) {
@@ -39,7 +41,7 @@ public class SVMRank {
 				
 				double[] vector = c.features.inputVector();
 				
-				if (Definitions.queriesGold.get(q.query_id).answer.equalsIgnoreCase(c.entity.id)) {
+				if (queries_answers.get(q.query_id).answer.equalsIgnoreCase(c.entity.id)) {
 					out.write("1"+" ");
 				}
 				

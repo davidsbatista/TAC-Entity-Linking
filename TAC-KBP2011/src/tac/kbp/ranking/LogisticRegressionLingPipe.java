@@ -89,7 +89,7 @@ public class LogisticRegressionLingPipe {
 			br.close();
 			in.close();
 			fstream.close();
-			Definitions.queries.add(query);
+			Definitions.queriesTrain.add(query);
 		}
 		catch (Exception e) {
 			System.out.println(e);

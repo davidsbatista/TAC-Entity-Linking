@@ -158,6 +158,11 @@ public class KBPQuery {
 		}
 	}
 	
+	public void getCandidates(){
+		
+	}
+	
+	
 	public void getSupportDocument() throws IOException {        
         getSupportDocument(this);
 	}
@@ -258,7 +263,7 @@ public class KBPQuery {
 		}
 	}
 	
-	public void getSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
+	public void getAlternativeSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
 		
 		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
 		byte[] queryStringLowbyteArray = this.name.toLowerCase().getBytes("UTF-8");
