@@ -7,24 +7,34 @@ import tac.kbp.bin.Definitions.NERType;
 
 public class Features {
 	
-	/* semantic */
+	/* other variables to hold values or used in features value's generation */
+	public double[] topics_distribution = new double[100]; // LDA topics distribution
+	public int highest_topic;
 	public NERType queryType; 
 	public NERType candidateType;
-	public boolean typeMatch;  // 1 if candidateType and queryType are the same  #1
-	public float namedEntitiesIntersection; // number of common named entities #2
-	public boolean queryStringInWikiText; // 1 if the query string in candidate's text #3
-	public boolean candidateNameInSupportDocument; // 1 if the candidate's string is in the support document #4
-	public double[] topics_distribution = new double[100]; // LDA topics distribution 
-	public double kldivergence; // Kullback-Leibler Divergence between LDA topics distribution #5
+	public String eid; 
+	public boolean correct_answer;
+	
+	/* textual similarities */
+	public double cosine_similarity; 				 // cosine similarity #21
+	public boolean typeMatch; 						 // 1 if candidateType and queryType are the same  #1
+	public float namedEntitiesIntersection; 		 // number of common named entities #2
+	public boolean queryStringInWikiText; 			 // 1 if the query string in candidate's text #3
+	public boolean candidateNameInSupportDocument; 	 // 1 if the candidate's string is in the support document #4
+	
+	/* topical similarity */
+	public double kldivergence; 				// Kullback-Leibler Divergence between LDA topics distribution #5
+	public boolean topicMatch;  				// 1 if the topic with the higest probability is the same in the query topic's distribution
+	public double topic_cosine_similarity;  	// 1 if the topic with the higest probability is the same in the query topic's distribution
 	
 	/* string similarities */
-	public boolean exactMatch; // 1 if query string is equal to candidate's string #6
-	public boolean querySubStringOfCandidate; // 1 if the query string is a substring of the candidate's string #7
-	public boolean candidateSubStringOfQuery; // 1 if the candidate's string is a substring of query string #8
-	public boolean queryStartsCandidateName;  // 1 if the query string starts the candidate string #9
-	public boolean queryEndsCandidateName;    // 1 if the query string ends candidate string #10
-	public boolean candidateNameStartsQuery;  // 1 if candidate string starts query string #11 (NULL)
-	public boolean candidateNameEndsQuery;    // 1 if candidate string ends the query string #12 (NULL)
+	public boolean exactMatch; 				      // 1 if query string is equal to candidate's string #6
+	public boolean querySubStringOfCandidate;     // 1 if the query string is a substring of the candidate's string #7
+	public boolean candidateSubStringOfQuery;     // 1 if the candidate's string is a substring of query string #8
+	public boolean queryStartsCandidateName;      // 1 if the query string starts the candidate string #9
+	public boolean queryEndsCandidateName;    	  // 1 if the query string ends candidate string #10
+	public boolean candidateNameStartsQuery;  	  // 1 if candidate string starts query string #11 (NULL)
+	public boolean candidateNameEndsQuery;    	  // 1 if candidate string ends the query string #12 (NULL)
 	public boolean queryStringAcronymOfCandidate; // 1 if query string is an acronym of the candidate #13
 	public boolean candidateAcronymOfqueryString; // 1 if candidate's string is an acronym of the query string #14 (NULL)
 	
@@ -39,15 +49,17 @@ public class Features {
 	public HashMap<String, Float> similarities = new HashMap<String, Float>();
 	
 	
-	/* text similarities */
-	public double cosine_similarity; // cosine similarity #21
-	//public float lucene_score; // the score given by Lucene #20
 	
-	/* other */
-	public String eid; 
-	public boolean correct_answer;
 	
-	public double[] inputVector(){
+	/* Methods */ 
+	
+	/* constuctor */
+	public Features() {
+		super();
+	}
+	
+	/* returns a feature vector */
+	public double[] featuresVector(){
 		
 		double[] inputVector = new double[20];
 		
@@ -188,9 +200,7 @@ public class Features {
 		this.similarities.put("Levenshtein", Float.parseFloat((features[18])));
 	}
 	
-	public Features() {
-		super();
-	}
+
 }
 
 

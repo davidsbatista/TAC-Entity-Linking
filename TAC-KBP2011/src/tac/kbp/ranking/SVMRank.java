@@ -39,7 +39,7 @@ public class SVMRank {
 			
 			for (Candidate c : q.candidates) {
 				
-				double[] vector = c.features.inputVector();
+				double[] vector = c.features.featuresVector();
 				
 				if (queries_answers.get(q.query_id).answer.equalsIgnoreCase(c.entity.id)) {
 					out.write("1"+" ");

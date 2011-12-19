@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.ScoreDoc;
@@ -32,9 +31,10 @@ public class Train {
 	static int n_queries_zero_docs = 0;
 	static int NIL_queries = 0;
 	static int MISS_queries = 0;
-	
 	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
 	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
+	
+	
 	
 	static void tune(KBPQuery q) throws Exception {
 		
@@ -84,18 +84,21 @@ public class Train {
 		
 		// Process each query 
 		for (KBPQuery q : queries) {
-			
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
-			
 			q.getSupportDocument();
 			q.getNamedEntities();			
 			q.getAlternativeSenses(Definitions.binaryjedis);
 			q.getTopicsDistribution(queries.indexOf(q));
-			
-			Train.retrieveCandidates(q);
-			Train.extractFeatures(q, false);
 		}
 	}
+	
+	static void generateFeatures(List<KBPQuery> queries) throws Exception{
+		for (KBPQuery q : queries) {
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
+			retrieveCandidates(q);
+			extractFeatures(q, false);
+		}
+	}	
 	
 	static void retrieveCandidates(KBPQuery q) throws Exception {
 		
@@ -184,7 +187,7 @@ public class Train {
 	static void writeFeaturesVectortoFile(PrintStream out, Candidate c) {
 		
 		//write feature vector to file
-		double[] vector = c.features.inputVector();
+		double[] vector = c.features.featuresVector();
 		int output = c.features.output();
 
 		//first field of line is candidate identifier;
@@ -196,7 +199,7 @@ public class Train {
 		out.print(output);
 
 		//structures holding all the generated features vectors + outputs: to be passed to LogisticRegression
-		inputs.add(c.features.inputVector());
+		inputs.add(c.features.featuresVector());
 		outputs.add(c.features.output());
 	}
 		

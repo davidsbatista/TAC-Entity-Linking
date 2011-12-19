@@ -108,9 +108,6 @@ public class Main {
 			SupportDocLDA.process(args[1],args[2],args[3],args[4]);
 		}
 		
-		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
-		
 		//close indexes
 		Definitions.searcher.close();
 		if (!line.hasOption("recall")) 
@@ -130,8 +127,17 @@ public class Main {
 		System.out.println("\nProcessing training queries:");
 		Train.process(Definitions.queriesTrain);
 		
-		System.out.println("\nProcessing test queries:");
+		System.out.println("\n\nProcessing test queries:");
 		Train.process(Definitions.queriesTest);
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
+		
+		System.out.println("\nGenerating features for training queries:");
+		Train.generateFeatures(Definitions.queriesTrain);
+		
+		System.out.println("\nGenerating features for test queries:");
+		Train.generateFeatures(Definitions.queriesTest);
 		
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {

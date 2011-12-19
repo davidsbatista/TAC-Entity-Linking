@@ -30,7 +30,7 @@ import tac.kbp.queries.xml.ParseQueriesXMLFile;
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
-	public static int max_candidates = 30;
+	public static int max_candidates = 5;
 	
 	/* named-entities type */
 	public enum NERType {

@@ -51,6 +51,7 @@ public class KBPQuery {
 	
 	// topic-distribution associated with the support document
 	public double[] topics_distribution = new double[100];
+	public int highest_topic;
 	
 	// list of candidates retrieved from the Knowledge-Base
 	public HashSet<Candidate> candidates;
@@ -153,15 +154,19 @@ public class KBPQuery {
 		String line = Definitions.queries_topics.get(index);
 		String[] topics = line.split(" ");
 		
-		for (int i = 0; i < topics.length ; i++) {
-			topics_distribution[i] = Double.parseDouble(topics[i]);	
-		}
-	}
-	
-	public void getCandidates(){
+		int max_topic = 0;
+		double max_value = 0;
 		
+		for (int i = 0; i < topics.length ; i++) {
+			topics_distribution[i] = Double.parseDouble(topics[i]);
+			if (topics_distribution[i] > max_value) {
+				max_topic = i;
+				max_value = topics_distribution[i];
+			}
+		}
+		
+		this.highest_topic = max_topic;
 	}
-	
 	
 	public void getSupportDocument() throws IOException {        
         getSupportDocument(this);

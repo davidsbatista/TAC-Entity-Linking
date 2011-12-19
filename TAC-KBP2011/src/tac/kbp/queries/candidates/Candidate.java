@@ -56,14 +56,45 @@ public class Candidate {
 		this.indexID = indexID;
 	}
 	
+	public double cosine_similarity(double[] query_topics){
+		
+		double dot_product = 0;
+		double candidate_norm = 0;
+		double query_norm = 0;
+		
+		for (int i = 0; i < query_topics.length; i++) {
+			
+			candidate_norm += Math.pow(query_topics[i], 2); 
+			query_norm += Math.pow(this.features.topics_distribution[i], 2);
+			dot_product += this.features.topics_distribution[i] * query_topics[i];
+			
+		}
+		
+		return dot_product / (Math.sqrt(candidate_norm) * Math.sqrt(query_norm)); 
+	}
+	
+	public void topicalSimilaraties(KBPQuery q){
+		
+		divergence(q.topics_distribution);
+		cosine_similarity(q.topics_distribution);
+		if (q.highest_topic == this.features.highest_topic) {
+			features.topicMatch = true;
+		}		
+	}
+		
 	public void extractFeatures(KBPQuery q) throws Exception{
 		
+		/* first get named entities and topics distribution */
 		getNamedEntities();
-		namedEntitiesIntersection(q);
-		nameSimilarities(q.name);
-		semanticFeatures(q);
 		getTopicsDistribution();
-		divergence(q.topics_distribution);
+		
+		namedEntitiesIntersection(q);
+		nameSimilarities(q.name);		
+		
+		semanticFeatures(q);
+		
+		topicalSimilaraties(q);
+		
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 		
 		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {
@@ -255,22 +286,31 @@ public class Candidate {
 	}
 
 	public void getTopicsDistribution() {		
+		
 		String line = Definitions.kb_topics.get(this.indexID);
 		String[] topics = line.split(" ");
+		
+		int max_topic = 0;
+		double max_value = 0.0;
+		
 		for (int i = 0; i < topics.length ; i++) {
 			features.topics_distribution[i] =  Double.parseDouble(topics[i]);
+			if (features.topics_distribution[i] > max_value) {
+				max_topic = i;
+				max_value = features.topics_distribution[i];
+			}
 		}
+		
+		this.features.highest_topic = max_topic;
 	}
 	
 	public void divergence(double[] lda_query) {
 		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
 	}
 
-	
 	public double[] getConditionalProbabilities() {
 		return conditionalProbabilities;
 	}
-		
 }
 
 

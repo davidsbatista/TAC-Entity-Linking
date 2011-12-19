@@ -63,8 +63,7 @@ public class SpellChecker implements java.io.Closeable {
    * Field name for each word in the ngram index.
    */
   public static final String F_WORD = "title";
-  public static final String F_ID = "id";
-  
+  public static final String F_ID = "id";  
   private static final Term F_WORD_TERM = new Term(F_WORD);
 
   /**

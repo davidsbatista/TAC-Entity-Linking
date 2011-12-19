@@ -83,7 +83,7 @@ public class LogisticRegressionLingPipe {
 				Features features = new Features(data[0], featuresArray);
 				query.candidates.add(new Candidate(data[0], features));
 				eid.add(features.eid);
-				inputs.add(features.inputVector());
+				inputs.add(features.featuresVector());
 				outputs.add(Integer.parseInt(featuresArray[featuresArray.length-1]));
 			}
 			br.close();
@@ -165,7 +165,7 @@ public class LogisticRegressionLingPipe {
     
     public void applyTrainedModelCandidate(Candidate c) {
    
-    	double[] featuresVector = c.features.inputVector();
+    	double[] featuresVector = c.features.featuresVector();
     	DenseVector dV = new DenseVector(featuresVector); 
     	double[] conditionalProbs = regression.classify(dV);
 		c.conditionalProbabilities = conditionalProbs;
