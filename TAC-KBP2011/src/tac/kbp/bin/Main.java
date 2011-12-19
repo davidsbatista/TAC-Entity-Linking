@@ -24,16 +24,16 @@ public class Main {
 
 		// add options
 		options.addOption("train", false, "train a ranking model");
-		options.addOption("test", false, "test a trained ranking model");
+		options.addOption("test", false,  "test a trained ranking model");
 		//options.addOption("run", false, "train a ranking model and test it");
-		options.addOption("vectors", true, "test from a directory with extracted feature vectors");
-		options.addOption("recall", false, "to tune the recall");
+		//options.addOption("vectors", true, "test from a directory with extracted feature vectors");
+		options.addOption("recall", false, "used to tune the recall");
 				
 		// add argument options
 		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
 		Option queriesTest = OptionBuilder.withArgName("queriesTest").hasArg().withDescription("XML file containing queries for testing").create( "queriesTest" );
 		Option vectors = OptionBuilder.withArgName("vectors").hasArg().withDescription("directory with extracted feature vectors").create( "vectors" );
-		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("svmrank or logistic").create( "model" );
+		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("<baseline|svmrank|logistic>").create( "model" );
 		Option modelFile = OptionBuilder.withArgName("filename").hasArg().withDescription("filename to save model").create("modelFilename");
 		Option n_candidates = OptionBuilder.withArgName("candidates").hasArg().withDescription("number of candidates to retrieve per sense").create("candidates");
 		
@@ -104,8 +104,6 @@ public class Main {
 			out.close();
 		}
 		*/
-		else if (args[0].equalsIgnoreCase("ldatopics"))
-			SupportDocLDA.process(args[1],args[2],args[3],args[4]);
 		}
 		
 		//close indexes
@@ -122,7 +120,7 @@ public class Main {
 
 	static void train(CommandLine line) throws Exception, IOException {
 		
-		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queriesTrain"),line.getOptionValue("queriesTest"));			
+		tac.kbp.bin.Definitions.loadAll(line);
 		
 		System.out.println("\nProcessing training queries:");
 		Train.process(Definitions.queriesTrain);
@@ -157,7 +155,7 @@ public class Main {
 
 		}
 		
-		//SVMRank
+		// SVMRank
 		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
 			
 			System.out.println();
@@ -193,6 +191,25 @@ public class Main {
 			String goundtruthFilePath = "svmrank-test.dat";
 			SVMRankResults.results(predictionsFilePath,goundtruthFilePath);
  		}
+		// Baseline
+		else if (line.getOptionValue("model").equalsIgnoreCase("baseline")) {
+			
+			System.out.println("\n\nProcessing test queries:");
+			Train.process(Definitions.queriesTest);
+			
+			System.out.println("\nGetting candidates from Lucene:");
+			
+			for (KBPQuery q: Definitions.queriesTest) {
+				Train.retrieveCandidates(q);
+			}
+			
+			//rank candidates according to Lucene score
+			
+			
+			//produce answers based on lucene ranking
+			
+		}
+
 	}
 	
 	/*

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -156,7 +157,7 @@ public class Definitions {
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 	}
 	
-	public static void loadAll(String queriesTrainFile, String queriesTestFile) throws Exception {
+	public static void loadAll(CommandLine line) throws Exception {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + KB_location);
@@ -180,138 +181,144 @@ public class Definitions {
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 		
-		System.out.println();
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		String queriesTrainFile = line.getOptionValue("queriesTrain");
 		
 		if (queriesTestFile!=null && queriesTestFile.contains("small")) {
-			
-			//Training Queries XML file
-			System.out.println("Loading training queries from: " + queriesTrainFile);
-			queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
-			
-			//Test Queries XML file
-			System.out.println("Loading test queries: " + queriesTestFile);
-			queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
-			
-			if (queriesTrainFile.contains("train_queries_2009")) {				
-				lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-				lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";				
-				gold_standard = gold_standard_path+"train_results_2009.tab";
-				test_queries_answers = gold_standard_path+"test_results_2009.tab";
-			}
-						
-			//Test Queries answer file
-			System.out.println("Loading test queries answers from: " + test_queries_answers);
-			queriesGoldTest = loadGoldStandard(test_queries_answers);
-			
-			System.out.println("Loading training queries answers from: " + gold_standard);
-			//Training Queries answer file
-			queriesGoldTrain = loadGoldStandard(gold_standard);
-			
-			for (KBPQuery q : queriesTest) {
-				q.gold_answer = queriesGoldTest.get(q.query_id).answer;
-			}
-			
-			for (KBPQuery q : queriesTrain) {
-				q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
-			}
-			
-			//LDA topics for queries
-			System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
-			loadLDATopics(lda_topics_train,queries_topics);
-			
-			//LDA topics for KB
-			System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
-			loadLDATopics(kb_lda_topics,kb_topics);
-			
+				
+				//Training Queries XML file
+				System.out.println("Loading training queries from: " + queriesTrainFile);
+				queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+				
+				//Test Queries XML file
+				System.out.println("Loading test queries: " + queriesTestFile);
+				queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+				
+				if (queriesTrainFile.contains("train_queries_2009")) {				
+					lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
+					lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";				
+					gold_standard = gold_standard_path+"train_results_2009.tab";
+					test_queries_answers = gold_standard_path+"test_results_2009.tab";
+				}
+							
+				//Test Queries answer file
+				System.out.println("Loading test queries answers from: " + test_queries_answers);
+				queriesGoldTest = loadGoldStandard(test_queries_answers);
+				
+				System.out.println("Loading training queries answers from: " + gold_standard);
+				//Training Queries answer file
+				queriesGoldTrain = loadGoldStandard(gold_standard);
+				
+				for (KBPQuery q : queriesTest) {
+					q.gold_answer = queriesGoldTest.get(q.query_id).answer;
+				}
+				
+				for (KBPQuery q : queriesTrain) {
+					q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
+				}
+					
+				//LDA topics for queries
+				System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
+				loadLDATopics(lda_topics_train,queries_topics);
+					
+				//LDA topics for KB
+				System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
+				loadLDATopics(kb_lda_topics,kb_topics);
+
+				
 		}
 		
-		else {
+		else  {
 			
-			if (queriesTrainFile.contains("train_queries_2009")) {
-				lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-				gold_standard = gold_standard_path+"train_results_2009.tab";
-				test_queries = queriesPath+"test_queries_2009.xml";
-				test_queries_answers = gold_standard_path+"test_results_2009.tab";
-				lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";
+				if (queriesTrainFile.contains("train_queries_2009")) {
+					lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
+					gold_standard = gold_standard_path+"train_results_2009.tab";
+					test_queries = queriesPath+"test_queries_2009.xml";
+					test_queries_answers = gold_standard_path+"test_results_2009.tab";
+					lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";
+					
+				}
 				
-			}
-			else if (queriesTrainFile.contains("train_queries_2010")) {
-				lda_topics_train = queries_lda_path+"train_queries_2010.txt.theta";
-				gold_standard = gold_standard_path+"train_results_2010.tab";
-				test_queries = queriesPath+"test_queries_2010.xml";
-				test_queries_answers = gold_standard_path+"test_results_2010.tab";
-				lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
-			}
-			
-			else if (queriesTrainFile.contains("train_queries_2011")) {
-				lda_topics_train = queries_lda_path+"train_queries_2011.txt.theta";
-				gold_standard = gold_standard_path+"train_results_2011.tab";
-				test_queries = queriesPath+"test_queries_2010.xml";
-				test_queries_answers = gold_standard_path+"test_results_2011.tab";
-				lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
+				else if (queriesTrainFile.contains("train_queries_2010")) {
+					lda_topics_train = queries_lda_path+"train_queries_2010.txt.theta";
+					gold_standard = gold_standard_path+"train_results_2010.tab";
+					test_queries = queriesPath+"test_queries_2010.xml";
+					test_queries_answers = gold_standard_path+"test_results_2010.tab";
+					lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
+				}
 				
-			}
-			
-			else if (queriesTrainFile.contains("test_queries_2009")) {
-				lda_topics_train = queries_lda_path+"test_queries_2009.txt.theta";
-				gold_standard = gold_standard_path+"test_results_2009.tab";
-			}
-			
-			else if (queriesTrainFile.contains("test_queries_2010")) {
-				lda_topics_train = queries_lda_path+"test_queries_2010.txt.theta";
-				gold_standard = gold_standard_path+"test_results_2010.tab";
-			}
-			
-			else if (queriesTrainFile.contains("test_queries_2011")) {
-				lda_topics_train = queries_lda_path+"test_queries_2011.txt.theta";
-				gold_standard = gold_standard_path+"test_results_2011.tab";
-			}
+				else if (queriesTrainFile.contains("train_queries_2011")) {
+					lda_topics_train = queries_lda_path+"train_queries_2011.txt.theta";
+					gold_standard = gold_standard_path+"train_results_2011.tab";
+					test_queries = queriesPath+"test_queries_2010.xml";
+					test_queries_answers = gold_standard_path+"test_results_2011.tab";
+					lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
+				}
 				
-			//Loads all queries
-			
-			//Training Queries answer file
-			System.out.println("Loading training queries answers from: " + gold_standard);
-			queriesGoldTrain = loadGoldStandard(gold_standard);
-			
-			//Training Queries XML file
-			System.out.println("Loading training queries from: " + queriesTrainFile);
-			queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
-			
-			for (KBPQuery q : queriesTrain) {
-				q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
+				else if (queriesTrainFile.contains("test_queries_2009")) {
+					lda_topics_train = queries_lda_path+"test_queries_2009.txt.theta";
+					gold_standard = gold_standard_path+"test_results_2009.tab";
+				}
+				
+				else if (queriesTrainFile.contains("test_queries_2010")) {
+					lda_topics_train = queries_lda_path+"test_queries_2010.txt.theta";
+					gold_standard = gold_standard_path+"test_results_2010.tab";
+				}
+				
+				else if (queriesTrainFile.contains("test_queries_2011")) {
+					lda_topics_train = queries_lda_path+"test_queries_2011.txt.theta";
+					gold_standard = gold_standard_path+"test_results_2011.tab";
+				}
+					
+				//Loads all queries
+				
+				//Training Queries answer file
+				System.out.println("Loading training queries answers from: " + gold_standard);
+				queriesGoldTrain = loadGoldStandard(gold_standard);
+				
+				//Training Queries XML file
+				System.out.println("Loading training queries from: " + queriesTrainFile);
+				queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+				
+				for (KBPQuery q : queriesTrain) {
+					q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
+				}
+				
+				//Test Queries answer file
+				System.out.println("Loading test queries answers from: " + test_queries);
+				queriesGoldTest = loadGoldStandard(test_queries_answers);
+				
+				//Test Queries XML file
+				System.out.println("Loading test queries: " + test_queries);
+				queriesTest = ParseQueriesXMLFile.loadQueries(test_queries);
+				
+				for (KBPQuery q : queriesTest) {
+					q.gold_answer = queriesGoldTest.get(q.query_id).answer;
+				}
+				
+				System.out.println();
+				
+				if (!line.getOptionValue("model").equalsIgnoreCase("baseline")) {
+		
+					//LDA topics for queries
+					System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
+					loadLDATopics(lda_topics_train,queries_topics);
+					
+					//LDA topics for KB
+					System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
+					loadLDATopics(kb_lda_topics,kb_topics);
+				
+				}
 			}
 			
-			//Test Queries answer file
-			System.out.println("Loading test queries answers from: " + test_queries);
-			queriesGoldTest = loadGoldStandard(test_queries_answers);
+			System.out.println("Connecting to REDIS server.. ");
+			binaryjedis = new BinaryJedis(redis_host, redis_port);
 			
-			//Test Queries XML file
-			System.out.println("Loading test queries: " + test_queries);
-			queriesTest = ParseQueriesXMLFile.loadQueries(test_queries);
-			
-			for (KBPQuery q : queriesTest) {
-				q.gold_answer = queriesGoldTest.get(q.query_id).answer;
-			}
-			
+			System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords loaded");
 			System.out.println();
-	
-			//LDA topics for queries
-			System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
-			loadLDATopics(lda_topics_train,queries_topics);
-			
-			//LDA topics for KB
-			System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
-			loadLDATopics(kb_lda_topics,kb_topics);
+			System.out.println(tac.kbp.bin.Definitions.queriesTrain.size() + " queries loaded");
+			System.out.println(tac.kbp.bin.Definitions.queriesGoldTrain.size() + " queries gold standard loaded");
 		}
-		
-		System.out.println("Connecting to REDIS server.. ");
-		binaryjedis = new BinaryJedis(redis_host, redis_port);
-		
-		System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords loaded");
-		System.out.println();
-		System.out.println(tac.kbp.bin.Definitions.queriesTrain.size() + " queries loaded");
-		System.out.println(tac.kbp.bin.Definitions.queriesGoldTrain.size() + " queries gold standard loaded");
-	}
 	
 	public static void loadClassifier(String filename) {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);

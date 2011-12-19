@@ -34,8 +34,6 @@ public class Train {
 	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
 	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
-	
-	
 	static void tune(KBPQuery q) throws Exception {
 		
 		//q.getSupportDocument();
@@ -102,7 +100,9 @@ public class Train {
 	
 	static void retrieveCandidates(KBPQuery q) throws Exception {
 		
-		int n_docs = queryKB(q);
+		List<SuggestWord> suggestedwords = queryKB(q);
+		
+		int n_docs = getCandidates(q,suggestedwords);
 		
 		System.out.println(" " + n_docs + " candidates");
 		
@@ -262,7 +262,7 @@ public class Train {
 		return suggestedwords.size();
 	}
 	
-	static int queryKB(KBPQuery q) throws IOException, ParseException {
+	static List<SuggestWord> queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		HashMap<String, HashSet<String>> query = q.generateQuery();
 		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();		
@@ -281,6 +281,11 @@ public class Train {
 
 		List<SuggestWord> suggestedwordsList = new ArrayList<SuggestWord>(suggestedwords);
 		Collections.sort(suggestedwordsList);
+		
+		return suggestedwordsList;
+	}
+		
+	static int getCandidates(KBPQuery q, List<SuggestWord> suggestedwordsList) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
@@ -306,7 +311,11 @@ public class Train {
 			}
 		}
 		
-		/*
+		return q.candidates.size();
+		
+	}
+
+	/*
 		Joiner orJoiner = Joiner.on(" OR ");
 		
 		HashSet<String> strings = query.get("strings");
@@ -353,9 +362,5 @@ public class Train {
 			e.printStackTrace();
 			System.exit(0);		
 		}
-		*/
-		
-		return q.candidates.size();
-	}
-
+	*/
 }
