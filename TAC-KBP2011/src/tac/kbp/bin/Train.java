@@ -82,10 +82,12 @@ public class Train {
 		
 		// Process each query 
 		for (KBPQuery q : queries) {
+
 			if (supportDocument) {
 				q.getSupportDocument();
-				q.getNamedEntities();
+				//q.getNamedEntities();
 			}
+
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
 			
 			q.getAlternativeSenses(Definitions.binaryjedis);
@@ -96,10 +98,15 @@ public class Train {
 	}
 	
 	static void generateFeatures(List<KBPQuery> queries) throws Exception{
+		
+		int count = 1;
+		
 		for (KBPQuery q : queries) {
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			retrieveCandidates(q);
 			extractFeatures(q, false);
+			System.out.print("\t(" + count + "/" + queries.size() + ")\n");
+			count++;
 		}
 	}	
 	
@@ -153,10 +160,10 @@ public class Train {
 		//if answer entity is not part of the retrieved entities and correct answer is not NIL, 
 		//we retrieve answer entity from KB and extract features
 		
-		if (!foundCorrecEntity && !(Definitions.queriesAnswersTrain.get(q.query_id).answer.startsWith("NIL")) ) {
+		if (!foundCorrecEntity && !(q.gold_answer.startsWith("NIL")) ) {
 			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
 			ScoreDoc[] scoreDocs = null;
-			String queryS = "id:" + Definitions.queriesAnswersTrain.get(q.query_id).answer;
+			String queryS = "id:" + q.gold_answer;
 			
 			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;
@@ -178,7 +185,7 @@ public class Train {
 			}
 		}
 		
-		System.out.println("done");
+		System.out.print("done");
 		if (saveToFile) {
 			out.close();
 		}
@@ -314,53 +321,4 @@ public class Train {
 		return q.candidates.size();
 		
 	}
-
-	/*
-		Joiner orJoiner = Joiner.on(" OR ");
-		
-		HashSet<String> strings = query.get("strings");
-		HashSet<String> tokens = query.get("tokens");
-		
-		// remove stop words
-		strings.removeAll(stop_words);
-		tokens.removeAll(stop_words);
-		
-		String qString = orJoiner.join(strings);		
-		String qTokens = orJoiner.join(tokens);
-		
-		String qStringTokens =  qString + " OR " + qTokens;
-		
-		/*
-		String persons = orJoiner.join(q.persons); 
-		String organizations = orJoiner.join(q.organizations);
-		String places = orJoiner.join(q.places);
-		
-		String queryEntities = concatenateEntities(persons, organizations);
-		queryEntities += concatenateEntities(queryEntities, places);
-		
-		if (queryEntities.length() > 0) {
-			qStringTokens += " OR " + queryEntities;
-		}
-
-		//query the name and the wiki_title with the alternative names and tokens made up from the alternative names
-		MultiFieldQueryParser multiFieldqueryParser = new MultiFieldQueryParser(org.apache.lucene.util.Version.LUCENE_30, new String[] {"name", "wiki_title","wiki_text"}, analyzer);		
-		scoreDocs = null;
-
-		try {
-			
-			TopDocs docs = searcher.search(multiFieldqueryParser.parse(qStringTokens), 30);
-			scoreDocs = docs.scoreDocs;
-			
-			for (int i = 0; i < scoreDocs.length; i++) {
-				Document doc = searcher.doc(scoreDocs[i].doc);
-				String id = doc.getField("id").stringValue();
-				q.candidates.add(id);
-			}
-			
-		} catch (Exception e) {
-			//TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(0);		
-		}
-	*/
 }

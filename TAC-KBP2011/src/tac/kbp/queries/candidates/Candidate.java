@@ -73,7 +73,7 @@ public class Candidate {
 		return dot_product / (Math.sqrt(candidate_norm) * Math.sqrt(query_norm)); 
 	}
 	
-	public void topicalSimilaraties(KBPQuery q){
+	public void topicalSimilarities(KBPQuery q){
 		
 		divergence(q.topics_distribution);
 		cosine_similarity(q.topics_distribution);
@@ -85,16 +85,14 @@ public class Candidate {
 	public void extractFeatures(KBPQuery q) throws Exception{
 		
 		/* first get named entities and topics distribution */
-		getNamedEntities();
-		getTopicsDistribution();
+		//getNamedEntities();
+		//getTopicsDistribution();
 		
-		namedEntitiesIntersection(q);
-		nameSimilarities(q.name);		
+		//namedEntitiesIntersection(q);
+		//semanticFeatures(q);		
+		//topicalSimilarities(q);
 		
-		semanticFeatures(q);
-		
-		topicalSimilaraties(q);
-		
+		//nameSimilarities(q.name);
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 		
 		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {

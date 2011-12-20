@@ -115,11 +115,13 @@ public class Features {
 			inputVector[13] = 1;
 		}
 		
+		/*
 		inputVector[14] = (double) similarities.get("DiceSimilarity");
 		inputVector[15] = (double) similarities.get("JaccardSimilarity");
 		inputVector[16] = (double) similarities.get("Jaro");
 		inputVector[17] = (double) similarities.get("JaroWinkler");
 		inputVector[18] = (double) similarities.get("Levenshtein");
+		*/
 		
 		inputVector[19] = this.cosine_similarity;
 		//inputVector[19] = this.lucene_score;

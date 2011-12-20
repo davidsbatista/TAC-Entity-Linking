@@ -157,30 +157,64 @@ public class Main {
 		Definitions.loadClassifier(Definitions.serializedClassifier);
 		
 		/* LDA KB*/
+		System.out.println("Load KB LDA topics ...");
 		Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
-
-		/* Load both queries set and get: named entities and alternative names */
+		
+		
+		
+		
+		/* Train queries XML file */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
-		String queriesTestFile = line.getOptionValue("queriesTest");
-
+		System.out.println("Loading queries from: " + queriesTrainFile);
+		Definitions.queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTrain) {
+			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
+		}
+		
+		/* LDA Train Queries */
+		Definitions.determineLDAFile(queriesTrainFile);
+		
 		System.out.println("\nProcessing training queries:");
 		Train.process(Definitions.queriesTrain, true, true);
 		
+		System.out.println();		
+		
+		/* Test queries XML file */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("\nLoading queries from: " + queriesTestFile);
+		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
+		}
+		
+		/* LDA Test Queries */
+		Definitions.determineLDAFile(queriesTestFile);		
 		System.out.println("\n\nProcessing test queries:");
 		Train.process(Definitions.queriesTest, true, true);
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
-		
+				
 		System.out.println("\nGenerating features for training queries:");
-		/* LDA Train Queries */
-		Definitions.determineLDAFile(queriesTrainFile);
 		Train.generateFeatures(Definitions.queriesTrain);
 		
 		System.out.println("\nGenerating features for test queries:");
 		/* LDA Test Queries */
 		Definitions.determineLDAFile(queriesTestFile);
 		Train.generateFeatures(Definitions.queriesTest);
+		
+		
+		
 		
 		
 		// to train a logistic regression model
@@ -233,6 +267,7 @@ public class Main {
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
 			
 			//calculate accuracy
+			Thread.sleep(5*1000);
 			String predictionsFilePath = "svmrank-predictions";
 			String goundtruthFilePath = "svmrank-test.dat";
 			SVMRankResults.results(predictionsFilePath,goundtruthFilePath);
