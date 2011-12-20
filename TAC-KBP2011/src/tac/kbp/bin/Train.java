@@ -78,15 +78,20 @@ public class Train {
 		System.out.println("Queries Found (Coverage): " + Train.FOUND_queries + " (" + coverage * 100 + "%)" );
 	}
 	
-	static void process(List<KBPQuery> queries) throws Exception {
+	static void process(List<KBPQuery> queries, boolean topics, boolean supportDocument) throws Exception {
 		
 		// Process each query 
 		for (KBPQuery q : queries) {
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
-			q.getSupportDocument();
-			q.getNamedEntities();			
+			if (supportDocument) {
+				q.getSupportDocument();
+				q.getNamedEntities();
+			}
+			if (topics) q.getTopicsDistribution(queries.indexOf(q));
+			
 			q.getAlternativeSenses(Definitions.binaryjedis);
-			q.getTopicsDistribution(queries.indexOf(q));
+			
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());
+			
 		}
 	}
 	
@@ -100,28 +105,23 @@ public class Train {
 	
 	static void retrieveCandidates(KBPQuery q) throws Exception {
 		
-		List<SuggestWord> suggestedwords = queryKB(q);
-		
+		List<SuggestWord> suggestedwords = queryKB(q);		
 		int n_docs = getCandidates(q,suggestedwords);
 		
-		System.out.println(" " + n_docs + " candidates");
+		System.out.println(" " + n_docs + " candidates");				
 		
 		total_n_docs += n_docs;		
-		
-		if (n_docs == 0) n_queries_zero_docs++;
-		
+		if (n_docs == 0) n_queries_zero_docs++;		
 		boolean found = false;
-		
 		for (Candidate c : q.candidates) {			
 			if (c.entity.id.equalsIgnoreCase(q.gold_answer)) {				
 				FOUND_queries++;
 				found = true;
 				break;
 			}
-		}
+		}		
 		if (!found && q.gold_answer.startsWith("NIL"))
 			NIL_queries++;
-		
 		if (!found && !q.gold_answer.startsWith("NIL"))
 			MISS_queries++;
 	}		
@@ -153,10 +153,10 @@ public class Train {
 		//if answer entity is not part of the retrieved entities and correct answer is not NIL, 
 		//we retrieve answer entity from KB and extract features
 		
-		if (!foundCorrecEntity && !(Definitions.queriesGoldTrain.get(q.query_id).answer.startsWith("NIL")) ) {
+		if (!foundCorrecEntity && !(Definitions.queriesAnswersTrain.get(q.query_id).answer.startsWith("NIL")) ) {
 			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
 			ScoreDoc[] scoreDocs = null;
-			String queryS = "id:" + Definitions.queriesGoldTrain.get(q.query_id).answer;
+			String queryS = "id:" + Definitions.queriesAnswersTrain.get(q.query_id).answer;
 			
 			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;

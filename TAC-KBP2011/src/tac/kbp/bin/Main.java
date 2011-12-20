@@ -1,6 +1,9 @@
 package tac.kbp.bin;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,10 +13,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.queries.xml.ParseQueriesXMLFile;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.SVMRank;
-import tac.kbp.utils.lda.SupportDocLDA;
 
 public class Main {
 	
@@ -25,7 +29,7 @@ public class Main {
 		// add options
 		options.addOption("train", false, "train a ranking model");
 		options.addOption("test", false,  "test a trained ranking model");
-		//options.addOption("run", false, "train a ranking model and test it");
+		options.addOption("baseline", false, "only uses Lucene to generate answers");
 		//options.addOption("vectors", true, "test from a directory with extracted feature vectors");
 		options.addOption("recall", false, "used to tune the recall");
 				
@@ -53,63 +57,17 @@ public class Main {
 			System.exit(0);
 		}
 		
-		else {
-			if (line.hasOption("train")) {
-				train(line);
-		}
-		
-		/*
-		else if (line.hasOption("test")) {
-				test(args, line);
-		}
-		*/
+		else {			
+			if (line.hasOption("train")) train(line);	
+			else if (line.hasOption("recall")) recall(line);
+			else if (line.hasOption("baseline")) baseline(line);
 			
-		else if (line.hasOption("recall")) {
-				recall(line);
-		}
-		
-		/*
-		else if (line.hasOption("vectors")) {
-			
-			//load queries
-			tac.kbp.bin.Definitions.loadAll(args[2]);
-			
-			statisticsRecall(false);
-
-			//read model from disk
-			LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
-			regression.readModel(args[1]);
-						
-			//file to write output results
-			FileWriter fstream = new FileWriter("results.txt");
-			BufferedWriter out = new BufferedWriter(fstream);
-			
-			//apply the model to feature vectors
-			for (KBPQuery query : Definitions.queriesTrain) {
-				for (Candidate c: query.candidates) {
-					regression.applyTrainedModelCandidate(c);
-				}
-				
-				//rank candidates according to conditional_probabilities
-				query.candidatesRanked = new ArrayList<Candidate>(query.candidates);
-				Collections.sort(query.candidatesRanked, new CandidateComparator());
-				
-				if (query.candidatesRanked.size() != 0) {
-					//write results to file			
-					out.write(query.query_id+'\t'+query.candidatesRanked.get(0).entity.id +"\n");
-				}
-				else
-					out.write(query.query_id+"\tNIL\n");
-			}
-			out.close();
-		}
-		*/
-		}
-		
 		//close indexes
 		Definitions.searcher.close();
-		if (!line.hasOption("recall")) 
+		if (line.hasOption("train")) 
 			Definitions.documents.close();
+		
+		}
 	}
 	
 	static void recall(CommandLine line) throws Exception {
@@ -117,25 +75,113 @@ public class Main {
 		tac.kbp.bin.Definitions.loaddRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
 		Train.statisticsRecall();
 	}
-
+	
+	static void baseline(CommandLine line) throws Exception {
+		
+		/* Lucene Index */		
+		Definitions.loadKBIndex();
+		
+		/* SpellChecker Index */
+		Definitions.loadSpellCheckerIndex();
+		
+		/* REDIS connection */
+		Definitions.connectionREDIS();
+		
+		System.out.println();
+		
+		/* Queries XML file */
+		String queriesTrainFile = line.getOptionValue("queriesTrain");
+		System.out.println("Loading queries from: " + queriesTrainFile);
+		Definitions.queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTrain) {
+			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
+		}	
+		
+		/* Start processing queries: get alternative names */
+		System.out.println("\n\nProcessing test queries:");
+		Train.process(Definitions.queriesTrain,false,false);
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
+		
+		System.out.println("\n\nGetting candidates from Lucene:");
+			
+		for (KBPQuery q: Definitions.queriesTrain) {			
+			List<SuggestWord> suggested = Train.queryKB(q);
+			q.suggestedwords = suggested;
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.suggestedwords.size());
+		}
+		
+		//produce answers based on lucene ranking
+		String output = "results.txt";
+		PrintStream out = new PrintStream( new FileOutputStream(output));
+			
+		for (KBPQuery q : Definitions.queriesTrain) {
+			if (q.suggestedwords.size()==0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			else {
+				out.println(q.query_id.trim()+"\t"+q.suggestedwords.get(0).eid);
+			}
+		}
+		out.close();			
+	}
+	
 	static void train(CommandLine line) throws Exception, IOException {
 		
-		tac.kbp.bin.Definitions.loadAll(line);
+		/* Lucene Index */		
+		Definitions.loadKBIndex();
 		
+		/* SpellChecker Index */
+		Definitions.loadSpellCheckerIndex();
+		
+		/* Document Collection */
+		Definitions.loadDocumentCollecion();
+		
+		System.out.println();
+		
+		/* REDIS connection */
+		Definitions.connectionREDIS();
+		
+		System.out.println();
+		
+		/* Stop words */
+		Definitions.loadStopWords();
+		
+		/* Stanford NER */
+		Definitions.loadClassifier(Definitions.serializedClassifier);
+		
+		/* LDA KB*/
+		Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+
+		/* Load both queries set and get: named entities and alternative names */
+		String queriesTrainFile = line.getOptionValue("queriesTrain");
+		String queriesTestFile = line.getOptionValue("queriesTest");
+
 		System.out.println("\nProcessing training queries:");
-		Train.process(Definitions.queriesTrain);
+		Train.process(Definitions.queriesTrain, true, true);
 		
 		System.out.println("\n\nProcessing test queries:");
-		Train.process(Definitions.queriesTest);
+		Train.process(Definitions.queriesTest, true, true);
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
 		
 		System.out.println("\nGenerating features for training queries:");
+		/* LDA Train Queries */
+		Definitions.determineLDAFile(queriesTrainFile);
 		Train.generateFeatures(Definitions.queriesTrain);
 		
 		System.out.println("\nGenerating features for test queries:");
+		/* LDA Test Queries */
+		Definitions.determineLDAFile(queriesTestFile);
 		Train.generateFeatures(Definitions.queriesTest);
+		
 		
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
@@ -171,7 +217,7 @@ public class Main {
 			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			
 			//generate train features for SVMRank
-			svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesGoldTrain,"svmrank-train.dat");
+			svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
 			
 			//call SVMRank
 			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
@@ -181,7 +227,7 @@ public class Main {
 			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
 			
 			//generate test features for SVMRank
-			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesGoldTest,"svmrank-test.dat");
+			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
 			
 			//call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
@@ -191,76 +237,5 @@ public class Main {
 			String goundtruthFilePath = "svmrank-test.dat";
 			SVMRankResults.results(predictionsFilePath,goundtruthFilePath);
  		}
-		// Baseline
-		else if (line.getOptionValue("model").equalsIgnoreCase("baseline")) {
-			
-			System.out.println("\n\nProcessing test queries:");
-			Train.process(Definitions.queriesTest);
-			
-			System.out.println("\nGetting candidates from Lucene:");
-			
-			for (KBPQuery q: Definitions.queriesTest) {
-				Train.retrieveCandidates(q);
-			}
-			
-			//rank candidates according to Lucene score
-			
-			
-			//produce answers based on lucene ranking
-			
-		}
-
 	}
-	
-	/*
-	static void test(String[] args, CommandLine line) throws Exception, IOException, ClassNotFoundException {
-		
-		tac.kbp.bin.Definitions.loadAll(line.getOptionValue("queries"));
-		
-		//load queries gold standard
-		System.out.println(tac.kbp.bin.Definitions.queriesGoldTrain.size() + " gold standard queries loaded");
-
-		LogisticRegressionLingPipe regression = new LogisticRegressionLingPipe();
-		
-		//read model from disk
-		regression.readModel(line.getOptionValue("filename"));
-		
-		//load features vectors with features already extracted, filename is query name;
-		//construct a KBPQuery with candidates and features for each candidate;
-		//add it to queries collection
-		Definitions.queriesTrain = new LinkedList<KBPQuery>();
-		regression.loadVectors(args[2]);
-		
-		System.out.println(Definitions.queriesTrain.size() + " queries loaded from feature vectors");
-		
-		//file to write output results
-		FileWriter fstream = new FileWriter("results.txt");
-		BufferedWriter out = new BufferedWriter(fstream);
-		
-		//apply the model to feature vectors
-		for (KBPQuery query : Definitions.queriesTrain) {
-			for (Candidate c: query.candidates) {
-				regression.applyTrainedModelCandidate(c);
-			}
-			
-			//rank candidates according to conditional_probabilities
-			query.candidatesRanked = new ArrayList<Candidate>(query.candidates);
-			Collections.sort(query.candidatesRanked, new CandidateComparator());
-			
-			System.out.println(query.query_id);
-			System.out.println("candidates: " + query.candidates.size());
-			System.out.println("candidates ranked: " + query.candidatesRanked.size());
-			
-			//write results to file
-			if (query.candidatesRanked.size() != 0) {			
-				out.write(query.query_id+'\t'+query.candidatesRanked.get(0).entity.id +"\n");
-			}
-			else
-				out.write(query.query_id+"\tNIL\n");
-		}
-		out.close();
-	}
-	*/
-
-	
 }

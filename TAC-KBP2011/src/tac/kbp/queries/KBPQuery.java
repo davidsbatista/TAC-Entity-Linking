@@ -30,6 +30,7 @@ import org.xml.sax.SAXException;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.bin.Definitions;
+import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.candidates.Candidate;
 import edu.stanford.nlp.util.Triple;
 
@@ -59,6 +60,10 @@ public class KBPQuery {
 	// ranked-list of candidates
 	public ArrayList<Candidate> candidatesRanked;
 	
+	// list of suggested words from query
+	public List<SuggestWord> suggestedwords;
+	
+	
 	// Constructors
 	public KBPQuery() {
 		super();
@@ -84,6 +89,8 @@ public class KBPQuery {
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 	}
+	
+	
 	
 	
 	// Methods
@@ -128,25 +135,6 @@ public class KBPQuery {
 				   if (tag.equalsIgnoreCase("LOCATION"))
 					   this.places.add('"' + entity.trim() + '"');
 			   }
-	}
-	
-	public void loadNamedEntitiesXML() throws ParserConfigurationException, SAXException, IOException {
-		
-		String filename = tac.kbp.bin.Definitions.named_entities_supportDoc+"/"+this.query_id+"-CRF-named-entities.xml";
-		
-		File fXmlFile = new File(filename);
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		org.w3c.dom.Document doc = dBuilder.parse(fXmlFile);
-		doc.getDocumentElement().normalize();
- 
-		NodeList persons = doc.getElementsByTagName("PERSON");
-		NodeList organizations = doc.getElementsByTagName("ORGANIZATION");
-		NodeList locations = doc.getElementsByTagName("LOCATION");
-		
-		addEntitiesToQuery(persons, "PERSON");
-		addEntitiesToQuery(organizations, "ORGANIZATION");
-		addEntitiesToQuery(locations, "LOCATION");
 	}
 	
 	public void getTopicsDistribution(int index) {

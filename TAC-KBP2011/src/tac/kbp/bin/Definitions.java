@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -23,10 +22,10 @@ import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.queries.xml.ParseQueriesXMLFile;
 import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
-import tac.kbp.queries.xml.ParseQueriesXMLFile;
 
 public class Definitions {
 	
@@ -39,36 +38,32 @@ public class Definitions {
 	}
 	
 	/* queries */
+	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
 	public static List<KBPQuery> queriesTrain = null;
-	public static List<KBPQuery> queriesTest = null;
-	
+	public static List<KBPQuery> queriesTest = null;	
 	public static String test_queries = new String();
 	public static String test_queries_answers = new String();
+	public static HashMap<String, GoldQuery> queriesAnswersTrain = null;
+	public static HashMap<String, GoldQuery> queriesAnswersTest = null;
 	
-	public static HashMap<String, GoldQuery> queriesGoldTrain = null;
-	public static HashMap<String, GoldQuery> queriesGoldTest = null;
-	
-	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
-	
-	/* resources locations */
+	/* indexes locations */
 	public static String KB_location = "/collections/TAC-2011/index";
 	public static String SpellChecker_location = "/collections/TAC-2011/spellchecker_index";
 	public static String DocumentCollection_location = "/collections/TAC-2011/document_collection_index";
-	
+
+	/* support doc and named-entities recognizer */
 	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
 	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
 	
+	/* stopwords */
 	public static String stop_words_location = "/collections/TAC-2011/resources/stopwords.txt";
 	public static Set<String> stop_words = new HashSet<String>();
 	
+	/* LDA topics */
 	public static String kb_lda_topics = "/collections/TAC-2011/LDA/model/model-final.theta";
 	public static String queries_lda_path = "/collections/TAC-2011/LDA/queries/";
-	public static String gold_standard_path = "/collections/TAC-2011/queries/ivo/";
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
-	static String lda_topics_train = new String();
-	static String lda_topics_test = new String();
-	static String gold_standard = new String();
 	
 	/* Lucene indexes */
 	public static IndexSearcher searcher = null;
@@ -114,40 +109,42 @@ public class Definitions {
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 		
+		/*
 		if (queriesFile.contains("train_queries_2009")) {
 			lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2009.tab"; 
+			answers = gold_standard_path+"train_results_2009.tab"; 
 			
 		}
 		else if (queriesFile.contains("train_queries_2010")) {
 			lda_topics_train = queries_lda_path+"train_queries_2010.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2010.tab";
+			answers = gold_standard_path+"train_results_2010.tab";
 		}
 		
 		else if (queriesFile.contains("train_queries_2011")) {
 			lda_topics_train = queries_lda_path+"train_queries_2011.txt.theta";
-			gold_standard = gold_standard_path+"train_results_2011.tab";
+			answers = gold_standard_path+"train_results_2011.tab";
 			
 		}
 		
 		else if (queriesFile.contains("test_queries_2009")) {
 			lda_topics_train = queries_lda_path+"test_queries_2009.txt.theta";
-			gold_standard = gold_standard_path+"test_results_2009.tab";
+			answers = gold_standard_path+"test_results_2009.tab";
 		}
 		
 		else if (queriesFile.contains("test_queries_2010")) {
 			lda_topics_train = queries_lda_path+"test_queries_2010.txt.theta";
-			gold_standard = gold_standard_path+"test_results_2010.tab";
+			answers = gold_standard_path+"test_results_2010.tab";
 		}
 		
 		else if (queriesFile.contains("test_queries_2011")) {
 			lda_topics_train = queries_lda_path+"test_queries_2011.txt.theta";
-			gold_standard = gold_standard_path+"test_results_2011.tab";
+			answers = gold_standard_path+"test_results_2011.tab";
 		}
 		
 		//Queries answer file
-		System.out.println("Loading queries answers from: " + gold_standard);
-		queriesGoldTrain = loadGoldStandard(gold_standard);
+		System.out.println("Loading queries answers from: " + answers);
+		queriesAnswersTrain = loadQueriesAnswers(answers);
+		*/
 		
 		//Queries XML file
 		System.out.println("Loading queries from: " + queriesFile);
@@ -157,187 +154,53 @@ public class Definitions {
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 	}
 	
-	public static void loadAll(CommandLine line) throws Exception {
+	public static void loadKBIndex() throws CorruptIndexException, IOException {
 		
-		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + KB_location);
 		searcher = new IndexSearcher(FSDirectory.open(new File(KB_location)));
 		
-		/* SpellChecker Index */
+	}
+
+	/* SpellChecker Index */
+	
+	public static void loadSpellCheckerIndex() throws CorruptIndexException, IOException {
+		
 		System.out.println("SpellChecker index: " + SpellChecker_location);
 		FSDirectory spellDirectory = FSDirectory.open(new File(SpellChecker_location));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
+	}
+	
+	/* Document Collection Index */	
+	
+	public static void loadDocumentCollecion() throws CorruptIndexException, IOException {
 		
-		/* Document Collection Index */
 		System.out.println("Document Collection index: " + DocumentCollection_location);
-		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
-		
-		System.out.println();
-		
-		//StanfordNER: Classifier MUC 3 
-		loadClassifier(serializedClassifier);
-		
-		//Stop-Words
+		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));	
+	}
+
+	/* Stop-Words */
+
+	public static void loadStopWords() {
+
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
-		
-		String queriesTestFile = line.getOptionValue("queriesTest");
-		String queriesTrainFile = line.getOptionValue("queriesTrain");
-		
-		if (queriesTestFile!=null && queriesTestFile.contains("small")) {
-				
-				//Training Queries XML file
-				System.out.println("Loading training queries from: " + queriesTrainFile);
-				queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
-				
-				//Test Queries XML file
-				System.out.println("Loading test queries: " + queriesTestFile);
-				queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
-				
-				if (queriesTrainFile.contains("train_queries_2009")) {				
-					lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-					lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";				
-					gold_standard = gold_standard_path+"train_results_2009.tab";
-					test_queries_answers = gold_standard_path+"test_results_2009.tab";
-				}
-							
-				//Test Queries answer file
-				System.out.println("Loading test queries answers from: " + test_queries_answers);
-				queriesGoldTest = loadGoldStandard(test_queries_answers);
-				
-				System.out.println("Loading training queries answers from: " + gold_standard);
-				//Training Queries answer file
-				queriesGoldTrain = loadGoldStandard(gold_standard);
-				
-				for (KBPQuery q : queriesTest) {
-					q.gold_answer = queriesGoldTest.get(q.query_id).answer;
-				}
-				
-				for (KBPQuery q : queriesTrain) {
-					q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
-				}
-					
-				//LDA topics for queries
-				System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
-				loadLDATopics(lda_topics_train,queries_topics);
-					
-				//LDA topics for KB
-				System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
-				loadLDATopics(kb_lda_topics,kb_topics);
+	}
+	
+	/* REDIS Connection */
 
-				
-		}
-		
-		else  {
-			
-				if (queriesTrainFile.contains("train_queries_2009")) {
-					lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-					gold_standard = gold_standard_path+"train_results_2009.tab";
-					test_queries = queriesPath+"test_queries_2009.xml";
-					test_queries_answers = gold_standard_path+"test_results_2009.tab";
-					lda_topics_test = queries_lda_path+"test_queries_2009.txt.theta";
-					
-				}
-				
-				else if (queriesTrainFile.contains("train_queries_2010")) {
-					lda_topics_train = queries_lda_path+"train_queries_2010.txt.theta";
-					gold_standard = gold_standard_path+"train_results_2010.tab";
-					test_queries = queriesPath+"test_queries_2010.xml";
-					test_queries_answers = gold_standard_path+"test_results_2010.tab";
-					lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
-				}
-				
-				else if (queriesTrainFile.contains("train_queries_2011")) {
-					lda_topics_train = queries_lda_path+"train_queries_2011.txt.theta";
-					gold_standard = gold_standard_path+"train_results_2011.tab";
-					test_queries = queriesPath+"test_queries_2010.xml";
-					test_queries_answers = gold_standard_path+"test_results_2011.tab";
-					lda_topics_test = queries_lda_path+"test_queries_2010.txt.theta";
-				}
-				
-				else if (queriesTrainFile.contains("test_queries_2009")) {
-					lda_topics_train = queries_lda_path+"test_queries_2009.txt.theta";
-					gold_standard = gold_standard_path+"test_results_2009.tab";
-				}
-				
-				else if (queriesTrainFile.contains("test_queries_2010")) {
-					lda_topics_train = queries_lda_path+"test_queries_2010.txt.theta";
-					gold_standard = gold_standard_path+"test_results_2010.tab";
-				}
-				
-				else if (queriesTrainFile.contains("test_queries_2011")) {
-					lda_topics_train = queries_lda_path+"test_queries_2011.txt.theta";
-					gold_standard = gold_standard_path+"test_results_2011.tab";
-				}
-					
-				//Loads all queries
-				
-				//Training Queries answer file
-				System.out.println("Loading training queries answers from: " + gold_standard);
-				queriesGoldTrain = loadGoldStandard(gold_standard);
-				
-				//Training Queries XML file
-				System.out.println("Loading training queries from: " + queriesTrainFile);
-				queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
-				
-				for (KBPQuery q : queriesTrain) {
-					q.gold_answer = queriesGoldTrain.get(q.query_id).answer;
-				}
-				
-				//Test Queries answer file
-				System.out.println("Loading test queries answers from: " + test_queries);
-				queriesGoldTest = loadGoldStandard(test_queries_answers);
-				
-				//Test Queries XML file
-				System.out.println("Loading test queries: " + test_queries);
-				queriesTest = ParseQueriesXMLFile.loadQueries(test_queries);
-				
-				for (KBPQuery q : queriesTest) {
-					q.gold_answer = queriesGoldTest.get(q.query_id).answer;
-				}
-				
-				System.out.println();
-				
-				if (!line.getOptionValue("model").equalsIgnoreCase("baseline")) {
-		
-					//LDA topics for queries
-					System.out.print("Loading queries LDA topics from: " + lda_topics_train + "..." );
-					loadLDATopics(lda_topics_train,queries_topics);
-					
-					//LDA topics for KB
-					System.out.print("Loading KB LDA topics from: " + kb_lda_topics + "..." );
-					loadLDATopics(kb_lda_topics,kb_topics);
-				
-				}
-			}
-			
-			System.out.println("Connecting to REDIS server.. ");
-			binaryjedis = new BinaryJedis(redis_host, redis_port);
-			
-			System.out.println(tac.kbp.bin.Definitions.stop_words.size() + " stopwords loaded");
-			System.out.println();
-			System.out.println(tac.kbp.bin.Definitions.queriesTrain.size() + " queries loaded");
-			System.out.println(tac.kbp.bin.Definitions.queriesGoldTrain.size() + " queries gold standard loaded");
-		}
+	public static void connectionREDIS() {
+		System.out.println("Connecting to REDIS server.. ");
+		binaryjedis = new BinaryJedis(redis_host, redis_port);
+	}
+
+	/* Stanford NER-CRF Classifier */
 	
 	public static void loadClassifier(String filename) {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
 	}
-
-	public static void loadLDATopics(String filename, HashMap<Integer, String> hashtable) throws Exception {
-
-		BigFile file = new BigFile(filename);
-		int i=0;
-		
-		for (String line : file) {
-			hashtable.put(i, line);
-			i++;
-		}
-		
-		System.out.println("lines red: " + i);
-
-	}
-
+	
+	/* load StopWords list */
+	
 	public static void loadStopWords(String file) { 
 		
 		try{
@@ -359,16 +222,44 @@ public class Definitions {
 			}
 	}
 	
-	public static HashMap<String, GoldQuery> loadGoldStandard(String filename) throws IOException {
+	/* load LDATopics file */
+	
+	/* load LDA topics file */ 
+	public static void loadLDATopics(String filename, HashMap<Integer, String> hashtable) throws Exception {
+
+		BigFile file = new BigFile(filename);
+		int i=0;
+		
+		for (String line : file) {
+			hashtable.put(i, line);
+			i++;
+		}
+	}
+	
+	/* load queries answers */
+	public static HashMap<String, GoldQuery> loadQueriesAnswers(String queries) throws IOException {
+		
+		/* determine answers file based on input file */
+		
+		String answers = null;
+		
+		if (queries.contains("train_queries_2009")) answers = queriesPath+"train_results_2009.tab";
+		else if (queries.contains("train_queries_2010")) answers = queriesPath+"train_results_2010.tab";
+		else if (queries.contains("train_queries_2011")) answers = queriesPath+"train_results_2011.tab";
+		else if (queries.contains("test_queries_2009")) answers = queriesPath+"test_results_2009.tab";
+		else if (queries.contains("test_queries_2010")) answers = queriesPath+"test_results_2010.tab";
+		else if (queries.contains("test_queries_2011")) answers = queriesPath+"test_results_2011.tab";
+		
+		System.out.println("Loading queries answers from: " + answers);
 		
 		BufferedReader input;
 		HashMap<String, GoldQuery> queriesGoldTrain = new HashMap<String, GoldQuery>();
 		
-		if (filename.contains("2009") || filename.contains("2010/trainning") || filename.contains("train_results_2010")) {
+		if (queries.contains("2009") || queries.contains("2010/trainning") || queries.contains("train_results_2010")) {
 			
 			try {
 				
-				input = new BufferedReader(new FileReader(filename));
+				input = new BufferedReader(new FileReader(answers));
 				String line = null;
 		        
 				while (( line = input.readLine()) != null){
@@ -378,17 +269,15 @@ public class Definitions {
 		        }
 		        
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();    	
 			}
-			
 		}
 		
 		else {
 			
 			try {
 				
-				input = new BufferedReader(new FileReader(filename));
+				input = new BufferedReader(new FileReader(answers));
 				String line = null;
 		        
 				while (( line = input.readLine()) != null){
@@ -398,13 +287,26 @@ public class Definitions {
 		        }
 		        
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();    	
 			}
-			
 		}
-
-		return queriesGoldTrain;
-		
+		return queriesGoldTrain;		
 	}
+	
+	public static void determineLDAFile(String queries) throws Exception {
+		
+		String lda_topics = null;
+		
+		if (queries.contains("train_queries_2009")) lda_topics = queries_lda_path+"train_queries_2009.txt.theta";
+		else if (queries.contains("train_queries_2010")) lda_topics = queries_lda_path+"train_queries_2010.txt.theta";
+		else if (queries.contains("train_queries_2011")) lda_topics = queries_lda_path+"train_queries_2011.txt.theta";
+		else if (queries.contains("test_queries_2009")) lda_topics = queries_lda_path+"test_queries_2009.txt.theta";
+		else if (queries.contains("test_queries_2010")) lda_topics = queries_lda_path+"test_queries_2010.txt.theta";
+		else if (queries.contains("test_queries_2011")) lda_topics = queries_lda_path+"test_queries_2011.txt.theta";
+			
+		//LDA topics for queries
+		System.out.print("Loading queries LDA topics from: " + lda_topics + "..." );
+		loadLDATopics(lda_topics,queries_topics);
+		
+	}	
 }
