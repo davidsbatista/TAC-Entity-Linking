@@ -18,6 +18,7 @@ import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.xml.ParseQueriesXMLFile;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.SVMRank;
+import tac.kbp.ranking.SVMRankOutputResults;
 
 public class Main {
 	
@@ -30,20 +31,21 @@ public class Main {
 		options.addOption("train", false, "train a ranking model");
 		options.addOption("test", false,  "test a trained ranking model");
 		options.addOption("baseline", false, "only uses Lucene to generate answers");
-		//options.addOption("vectors", true, "test from a directory with extracted feature vectors");
 		options.addOption("recall", false, "used to tune the recall");
-				
+		options.addOption("svmresults", false, "output results from SVMRank output");		
+		
 		// add argument options
 		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
 		Option queriesTest = OptionBuilder.withArgName("queriesTest").hasArg().withDescription("XML file containing queries for testing").create( "queriesTest" );
-		Option vectors = OptionBuilder.withArgName("vectors").hasArg().withDescription("directory with extracted feature vectors").create( "vectors" );
+		//Option vectors = OptionBuilder.withArgName("vectors").hasArg().withDescription("directory with extracted feature vectors").create( "vectors" );
 		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("<baseline|svmrank|logistic>").create( "model" );
 		Option modelFile = OptionBuilder.withArgName("filename").hasArg().withDescription("filename to save model").create("modelFilename");
 		Option n_candidates = OptionBuilder.withArgName("candidates").hasArg().withDescription("number of candidates to retrieve per sense").create("candidates");
+		Option directory = OptionBuilder.withArgName("dir").hasArg().withDescription("directory containning: svmrank-test.dat, svmrank-train.dat, svmrank-trained-model.dat").create("dir");
 		
 		options.addOption(queriesTrain);
 		options.addOption(queriesTest);		
-		options.addOption(vectors);
+		options.addOption(directory);
 		options.addOption(model);
 		options.addOption(n_candidates);
 		
@@ -61,12 +63,13 @@ public class Main {
 			if (line.hasOption("train")) train(line);	
 			else if (line.hasOption("recall")) recall(line);
 			else if (line.hasOption("baseline")) baseline(line);
+			else if (line.hasOption("svmresults")) svmresults(line);
 			
-		//close indexes
-		Definitions.searcher.close();
-		if (line.hasOption("train")) 
-			Definitions.documents.close();
-		
+			//close indexes
+			if (line.hasOption("train") || line.hasOption("baseline") ) {
+				Definitions.searcher.close();
+				Definitions.documents.close();
+			}
 		}
 	}
 	
@@ -160,9 +163,6 @@ public class Main {
 		System.out.println("Load KB LDA topics ...");
 		Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
 		
-		
-		
-		
 		/* Train queries XML file */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
 		System.out.println("Loading queries from: " + queriesTrainFile);
@@ -214,9 +214,6 @@ public class Main {
 		Train.generateFeatures(Definitions.queriesTest);
 		
 		
-		
-		
-		
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
 			
@@ -255,9 +252,11 @@ public class Main {
 			
 			//call SVMRank
 			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
+			svmLearn.waitFor();
 
+			
 			//Test the trained model
-			System.out.println("Testing SVMRank model: ");
+			System.out.println("\nTesting SVMRank model: ");
 			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
 			
 			//generate test features for SVMRank
@@ -265,12 +264,27 @@ public class Main {
 			
 			//call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+			svmClassify.waitFor();
 			
 			//calculate accuracy
-			Thread.sleep(5*1000);
 			String predictionsFilePath = "svmrank-predictions";
 			String goundtruthFilePath = "svmrank-test.dat";
-			SVMRankResults.results(predictionsFilePath,goundtruthFilePath);
+			SVMRankOutputResults.results(predictionsFilePath,goundtruthFilePath);
  		}
 	}
+
+	static void svmresults(CommandLine line) throws Exception {
+		
+		String path = line.getOptionValue("dir");
+		
+		String goundtruthFilePath = path+"/svmrank-test.dat";
+		String predictionsFilePath = path+"/svmrank-predictions";		
+		SVMRankOutputResults.results(predictionsFilePath, goundtruthFilePath);
+	}
+	
+	
 }
+
+
+
+

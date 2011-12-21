@@ -109,43 +109,6 @@ public class Definitions {
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 		
-		/*
-		if (queriesFile.contains("train_queries_2009")) {
-			lda_topics_train = queries_lda_path+"train_queries_2009.txt.theta";
-			answers = gold_standard_path+"train_results_2009.tab"; 
-			
-		}
-		else if (queriesFile.contains("train_queries_2010")) {
-			lda_topics_train = queries_lda_path+"train_queries_2010.txt.theta";
-			answers = gold_standard_path+"train_results_2010.tab";
-		}
-		
-		else if (queriesFile.contains("train_queries_2011")) {
-			lda_topics_train = queries_lda_path+"train_queries_2011.txt.theta";
-			answers = gold_standard_path+"train_results_2011.tab";
-			
-		}
-		
-		else if (queriesFile.contains("test_queries_2009")) {
-			lda_topics_train = queries_lda_path+"test_queries_2009.txt.theta";
-			answers = gold_standard_path+"test_results_2009.tab";
-		}
-		
-		else if (queriesFile.contains("test_queries_2010")) {
-			lda_topics_train = queries_lda_path+"test_queries_2010.txt.theta";
-			answers = gold_standard_path+"test_results_2010.tab";
-		}
-		
-		else if (queriesFile.contains("test_queries_2011")) {
-			lda_topics_train = queries_lda_path+"test_queries_2011.txt.theta";
-			answers = gold_standard_path+"test_results_2011.tab";
-		}
-		
-		//Queries answer file
-		System.out.println("Loading queries answers from: " + answers);
-		queriesAnswersTrain = loadQueriesAnswers(answers);
-		*/
-		
 		//Queries XML file
 		System.out.println("Loading queries from: " + queriesFile);
 		queriesTrain = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
@@ -253,44 +216,23 @@ public class Definitions {
 		System.out.println("Loading queries answers from: " + answers);
 		
 		BufferedReader input;
-		HashMap<String, GoldQuery> queriesGoldTrain = new HashMap<String, GoldQuery>();
+		HashMap<String, GoldQuery> queriesAnswers = new HashMap<String, GoldQuery>();
 		
-		if (queries.contains("2009") || queries.contains("2010/trainning") || queries.contains("train_results_2010")) {
+		try {
 			
-			try {
-				
-				input = new BufferedReader(new FileReader(answers));
-				String line = null;
+			input = new BufferedReader(new FileReader(answers));
+			String line = null;
 		        
-				while (( line = input.readLine()) != null){
-		          String[] contents = line.split("\t");	          
-		          GoldQuery gold = new GoldQuery(contents[0], contents[1], contents[2]);
-		          queriesGoldTrain.put(contents[0], gold);
-		        }
-		        
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();    	
+			while (( line = input.readLine()) != null){				
+				String[] contents = line.split("\t");
+				GoldQuery gold = new GoldQuery(contents[0], contents[1], contents[2]);
+				queriesAnswers.put(contents[0], gold);
 			}
-		}
-		
-		else {
 			
-			try {
-				
-				input = new BufferedReader(new FileReader(answers));
-				String line = null;
-		        
-				while (( line = input.readLine()) != null){
-		          String[] contents = line.split("\t");	          
-		          GoldQuery gold = new GoldQuery(contents[0], contents[1], contents[2], contents[3], contents[4]);
-		          queriesGoldTrain.put(contents[0], gold);
-		        }
-		        
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();    	
-			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
 		}
-		return queriesGoldTrain;		
+		return queriesAnswers;		
 	}
 	
 	public static void determineLDAFile(String queries) throws Exception {

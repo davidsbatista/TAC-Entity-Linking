@@ -87,13 +87,9 @@ public class Train {
 				q.getSupportDocument();
 				//q.getNamedEntities();
 			}
-
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
-			
-			q.getAlternativeSenses(Definitions.binaryjedis);
-			
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());
-			
+			q.getAlternativeSenses(Definitions.binaryjedis);			
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());			
 		}
 	}
 	
