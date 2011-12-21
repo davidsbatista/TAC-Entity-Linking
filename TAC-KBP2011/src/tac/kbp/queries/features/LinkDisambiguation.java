@@ -8,6 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.TopDocs;
+
+import tac.kbp.bin.Definitions;
+
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.dict.DictionaryEntry;
@@ -87,33 +95,56 @@ public class LinkDisambiguation {
         
         return types.toArray(new String[0]);
     }
-
     
-    public static String getWikiText ( String pageID ) {
-    	// TODO : get Wiki Text
+    public static String getWikiText ( String pageID ) throws IOException, ParseException {
+    	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
+		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"name",analyzer);
+    	
+    	String query = "name:" + pageID;
+		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
+		
+		if (docs.totalHits == 0)
+			System.out.println("Error!");
+		
+		else {
+			Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+			System.out.println(doc.getField("wiki_text"));
+			System.out.println(doc.getField("wiki_title"));
+		}    	
     	return pageID.replace("_"," ");
     }
 
-    public static double getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateContext ) {
-		String pagesQuery[] = chunk(chunker,queryContext);
+    public static double getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateContext ) throws IOException, ParseException {
+		
+    	String pagesQuery[] = chunk(chunker,queryContext);
 		String pagesCandidate[] = chunk(chunker,candidateContext);
+		
 		int cnt1 = 0, cnt2 = 0;
-		for ( String s1 : pagesCandidate ) for ( String s2 : pagesQuery ) if ( s2.equals(s1) ) cnt1++;
+		for ( String s1 : pagesCandidate ) 
+			for ( String s2 : pagesQuery ) 
+				if ( s2.equals(s1) ) cnt1++;
+		
 		for ( String s : pagesQuery ) {
 			String aux[] = chunk(chunker,getWikiText(s));
-			for ( String s1 : aux ) for ( String s2 : pagesQuery ) if ( s2.equals(s1) ) cnt2++;
+			for ( String s1 : aux ) 
+				for ( String s2 : pagesQuery ) 
+					if ( s2.equals(s1) ) cnt2++;
 		}
 		// TODO : Return just one metric or normalize before doing the combination
 		return cnt1 + cnt2;
     }
 
-    public static Map<String,Double> getScore ( ExactDictionaryChunker chunker, String queryContext , String[] candidateContext ) {
+    public static Map<String,Double> getScore ( ExactDictionaryChunker chunker, String queryContext , String[] candidateContext ) throws IOException, ParseException {
 		Map<String,Double> scores = new HashMap<String,Double>();
 		for ( String c : candidateContext ) scores.put(c,getScore(chunker,queryContext,c));
 		return scores;
     }
 
     public static void main(String[] args) throws Exception {
+    	
+    	Definitions.loadKBIndex();
+    	
+    	
 		ExactDictionaryChunker chunker = buildDictionary ( args[0] );
 		// TODO : Serializar o chunker, para arrancar mais rápido da próxima vez
 		String queryContext = "The best type of government is Anarchism, but people have Amnesia.";
