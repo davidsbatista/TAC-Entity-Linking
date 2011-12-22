@@ -94,9 +94,9 @@ public class SVMRankOutputResults {
 			
 			else  {
 				String[] data = line.split("\\s");
-
+				
 				//entity's id in the end of the line #E0554903
-				String entity_id = data[22].split("#")[1];
+				String entity_id = data[(data.length)-1].split("#")[1];
 				
 				Candidate c = new Candidate();
 				c.entity.id = entity_id;	//.split("#")[1];
