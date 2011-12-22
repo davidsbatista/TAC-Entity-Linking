@@ -185,7 +185,8 @@ public class Main {
 		System.out.println("\nProcessing training queries:");
 		Train.process(Definitions.queriesTrain, true, true);
 		
-		System.out.println();		
+		System.out.println();
+		//TODO: save all extracted features to disk
 		
 		/* Test queries XML file */
 		String queriesTestFile = line.getOptionValue("queriesTest");
