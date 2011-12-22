@@ -18,6 +18,11 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
+import com.aliasi.dict.DictionaryEntry;
+import com.aliasi.dict.ExactDictionaryChunker;
+import com.aliasi.dict.MapDictionary;
+import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
+
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.queries.GoldQuery;
@@ -58,6 +63,11 @@ public class Definitions {
 	/* stopwords */
 	public static String stop_words_location = "/collections/TAC-2011/resources/stopwords.txt";
 	public static Set<String> stop_words = new HashSet<String>();
+	
+	/* list of all entities in KB, for link disambiguation */
+	static final double CHUNK_SCORE = 1.0;
+	public static String entities = "/collections/TAC-2011/backup/KnowledgeBase-LCD2009E58/entities.txt";
+	public static ExactDictionaryChunker chunker = null;
 	
 	/* LDA topics */
 	public static String kb_lda_topics = "/collections/TAC-2011/LDA/model/model-final.theta";
@@ -117,6 +127,31 @@ public class Definitions {
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
 	}
 	
+	/* builds a dictionary of entities from the KB */
+	public static void buildDictionary() throws IOException {
+    	
+    	System.out.println("Loading dictionary...");
+    	
+    	BufferedReader input = new BufferedReader( new FileReader(entities) );
+    	MapDictionary<String> dictionary = new MapDictionary<String>();	
+    	String aux = null;
+    	
+		while ((aux=input.readLine())!=null) {
+			// TODO : remove the two lines below if reading from a proper dictionary
+			if (aux.length()==0)
+				continue;			
+			aux = aux.split("\\s")[2].split("wiki_title:")[1];
+			aux.replaceAll("([A-Z])"," $1").trim();
+			
+			String str = new String(aux.replace("_"," "));
+			String clas = new String(aux);
+	        dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
+		}		
+        chunker = new ExactDictionaryChunker(dictionary,IndoEuropeanTokenizerFactory.INSTANCE,true,true);
+        System.out.println("Dictionary contains " + dictionary.size() + " entries.");
+    }
+
+	
 	public static void loadKBIndex() throws CorruptIndexException, IOException {
 		
 		System.out.println("Knowledge Base index: " + KB_location);
@@ -125,7 +160,6 @@ public class Definitions {
 	}
 
 	/* SpellChecker Index */
-	
 	public static void loadSpellCheckerIndex() throws CorruptIndexException, IOException {
 		
 		System.out.println("SpellChecker index: " + SpellChecker_location);
@@ -133,8 +167,7 @@ public class Definitions {
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 	}
 	
-	/* Document Collection Index */	
-	
+	/* Document Collection Index */		
 	public static void loadDocumentCollecion() throws CorruptIndexException, IOException {
 		
 		System.out.println("Document Collection index: " + DocumentCollection_location);
