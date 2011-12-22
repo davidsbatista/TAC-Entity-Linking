@@ -1,15 +1,19 @@
 package tac.kbp.queries.candidates;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.lucene.queryParser.ParseException;
 
 import tac.kbp.bin.Definitions;
 import tac.kbp.bin.Definitions.NERType;
 import tac.kbp.kb.index.xml.Entity;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.features.Features;
+import tac.kbp.queries.features.LinkDisambiguation;
 import tac.kbp.queries.features.TextSimilarities;
 import edu.stanford.nlp.util.Triple;
 
@@ -88,17 +92,29 @@ public class Candidate {
 		//getNamedEntities();
 		//getTopicsDistribution();
 		
-		//namedEntitiesIntersection(q);
 		//semanticFeatures(q);		
 		//topicalSimilarities(q);
-		
 		//nameSimilarities(q.name);
-		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
-		
+		textualSimilarities(q);
+		linkDisambiguation(q);
+		isCorrect(q);
+	}
+	
+	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException{
+		HashMap<String, Integer> scores = LinkDisambiguation.getScore(Definitions.chunker, q.supportDocument, this.entity.wiki_text);
+		this.features.inDegree = scores.get("inDegree");
+		this.features.outDegree = scores.get("outDegree");
+	}
+	
+	public void isCorrect(KBPQuery q) {
 		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {
 			this.features.correct_answer = true;
 		}
 		else this.features.correct_answer = false;
+	}
+	
+	public void textualSimilarities(KBPQuery q) throws IOException {
+		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -218,6 +234,7 @@ public class Candidate {
 		features.queryStringInWikiText = queryStringInWikiText(q);
 		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
 		features.candidateType = determineType();
+		this.namedEntitiesIntersection(q);
 
 	}
 	
@@ -310,5 +327,4 @@ public class Candidate {
 		return conditionalProbabilities;
 	}
 }
-
 
