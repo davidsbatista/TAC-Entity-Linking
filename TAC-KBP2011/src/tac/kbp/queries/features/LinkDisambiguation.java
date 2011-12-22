@@ -1,12 +1,9 @@
 package tac.kbp.queries.features;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
@@ -14,14 +11,9 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
-import tac.kbp.bin.Definitions;
-
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
-import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.ExactDictionaryChunker;
-import com.aliasi.dict.MapDictionary;
-import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 
 // Out-Degree
 // N = set of names of entities mentioned in the context g
@@ -35,37 +27,6 @@ import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 
 
 public class LinkDisambiguation {
-
-    static final double CHUNK_SCORE = 1.0;
-
-    public static ExactDictionaryChunker buildDictionary ( String path ) throws IOException {
-    	
-    	System.out.println("Loading dictionary...");
-    	
-    	BufferedReader input = new BufferedReader( new FileReader(path) );
-    	MapDictionary<String> dictionary = new MapDictionary<String>();	
-    	String aux = null;
-    	
-		while ((aux=input.readLine())!=null) {
-			// TODO : remove the two lines below if reading from a proper dictionary
-			if (aux.length()==0)
-				continue;			
-			aux = aux.split("\\s")[2].split("wiki_title:")[1];
-			aux.replaceAll("([A-Z])"," $1").trim();
-			
-			String str = new String(aux.replace("_"," "));
-			String clas = new String(aux);
-	        dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
-		}
-		
-        ExactDictionaryChunker dictionaryChunkerTT = new ExactDictionaryChunker(dictionary,
-                                                         IndoEuropeanTokenizerFactory.INSTANCE,
-                                                         true,true);
-	
-        System.out.println("Dictionary contains " + dictionary.size() + " entries.");
-        
-        return dictionaryChunkerTT;
-    }
 
     public static String[] chunk(ExactDictionaryChunker chunker, String[] texts) {
     	
@@ -89,67 +50,72 @@ public class LinkDisambiguation {
             int end = chunk.end();
             String type = chunk.type();
             double score = chunk.score();
-            String phrase = text.substring(start,end);
+            String phrase = text.substring(start,end);            
 	    types.add(type);
+	    
         }
         
         return types.toArray(new String[0]);
     }
     
     public static String getWikiText ( String pageID ) throws IOException, ParseException {
+    	
     	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"name",analyzer);
     	
-    	String query = "name:" + pageID;
+    	String query = "wiki_title:" + '"' + pageID + '"';
 		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
+		Document doc = null;
 		
-		if (docs.totalHits == 0)
-			System.out.println("Error!");
-		
-		else {
-			Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
-			System.out.println(doc.getField("wiki_text"));
-			System.out.println(doc.getField("wiki_title"));
-		}    	
-    	return pageID.replace("_"," ");
-    }
-
-    public static double getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateContext ) throws IOException, ParseException {
-		
-    	String pagesQuery[] = chunk(chunker,queryContext);
-		String pagesCandidate[] = chunk(chunker,candidateContext);
-		
-		int cnt1 = 0, cnt2 = 0;
-		for ( String s1 : pagesCandidate ) 
-			for ( String s2 : pagesQuery ) 
-				if ( s2.equals(s1) ) cnt1++;
-		
-		for ( String s : pagesQuery ) {
-			String aux[] = chunk(chunker,getWikiText(s));
-			for ( String s1 : aux ) 
-				for ( String s2 : pagesQuery ) 
-					if ( s2.equals(s1) ) cnt2++;
+		if (docs.totalHits == 0) {
+			System.out.print("Error!");
+			return " ";
 		}
-		// TODO : Return just one metric or normalize before doing the combination
-		return cnt1 + cnt2;
+		else {
+			doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+			return doc.getField("wiki_text").stringValue();	
+		}
     }
-
+    
+    public static HashMap<String, Integer> getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateWikiText ) throws IOException, ParseException {
+		
+    	String pagesInContext[] = chunk(chunker,queryContext);
+		String pagesInCandidateWikiText[] = chunk(chunker,candidateWikiText);
+		
+		int outDegree = 0, inDegree = 0;
+		HashMap<String, Integer> scores = new HashMap<String, Integer>();
+				
+		//out-degree
+		for ( String s1 : pagesInCandidateWikiText )			
+			for ( String contextName : pagesInContext ) 
+				if ( contextName.equals(s1) ) outDegree++;
+		
+		//in-degree
+		for ( String queryContextName : pagesInContext ) {
+			String aux[] = chunk(chunker,getWikiText(queryContextName));
+			
+			for ( String s1 : aux ) 
+				for ( String s2 : pagesInContext ) 
+					if ( s2.equals(s1) ) inDegree++;
+		}
+		
+		scores.put("outDegree", outDegree);
+		scores.put("inDegree", inDegree);
+		
+		return scores;
+    }
+    
+    /*
     public static Map<String,Double> getScore ( ExactDictionaryChunker chunker, String queryContext , String[] candidateContext ) throws IOException, ParseException {
 		Map<String,Double> scores = new HashMap<String,Double>();
 		for ( String c : candidateContext ) scores.put(c,getScore(chunker,queryContext,c));
 		return scores;
     }
-
-    public static void main(String[] args) throws Exception {
-    	
-    	Definitions.loadKBIndex();
-    	
-    	
-		ExactDictionaryChunker chunker = buildDictionary ( args[0] );
-		// TODO : Serializar o chunker, para arrancar mais rápido da próxima vez
-		String queryContext = "The best type of government is Anarchism, but people have Amnesia.";
-		String candidateContext = "Anarchism is a type of government.";
-		System.out.println( "Score: " + getScore(chunker,queryContext,candidateContext));
-    }
+    */
 
 }
+
+
+
+
+

@@ -16,37 +16,42 @@ public class Features {
 	public boolean correct_answer;
 	
 	/* textual similarities */
-	public double cosine_similarity; 				 // cosine similarity #21
-	public boolean typeMatch; 						 // 1 if candidateType and queryType are the same  #1
-	public float namedEntitiesIntersection; 		 // number of common named entities #2
-	public boolean queryStringInWikiText; 			 // 1 if the query string in candidate's text #3
-	public boolean candidateNameInSupportDocument; 	 // 1 if the candidate's string is in the support document #4
+	public double cosine_similarity; 				 	// cosine similarity #21
+	public boolean typeMatch; 						 	// 1 if candidateType and queryType are the same  #1
+	public float namedEntitiesIntersection; 		 	// number of common named entities #2
+	public boolean queryStringInWikiText; 			 	// 1 if the query string in candidate's text #3
+	public boolean candidateNameInSupportDocument; 	 	// 1 if the candidate's string is in the support document #4
 	
 	/* topical similarity */
-	public double kldivergence; 				// Kullback-Leibler Divergence between LDA topics distribution #5
-	public boolean topicMatch;  				// 1 if the topic with the higest probability is the same in the query topic's distribution
-	public double topic_cosine_similarity;  	// 1 if the topic with the higest probability is the same in the query topic's distribution
+	public double kldivergence; 						// Kullback-Leibler Divergence between LDA topics distribution #5
+	public boolean topicMatch;  						// 1 if the topic with the higest probability is the same in the query topic's distribution
+	public double topic_cosine_similarity;  			// 1 if the topic with the higest probability is the same in the query topic's distribution
 	
 	/* string similarities */
-	public boolean exactMatch; 				      // 1 if query string is equal to candidate's string #6
-	public boolean querySubStringOfCandidate;     // 1 if the query string is a substring of the candidate's string #7
-	public boolean candidateSubStringOfQuery;     // 1 if the candidate's string is a substring of query string #8
-	public boolean queryStartsCandidateName;      // 1 if the query string starts the candidate string #9
-	public boolean queryEndsCandidateName;    	  // 1 if the query string ends candidate string #10
-	public boolean candidateNameStartsQuery;  	  // 1 if candidate string starts query string #11 (NULL)
-	public boolean candidateNameEndsQuery;    	  // 1 if candidate string ends the query string #12 (NULL)
-	public boolean queryStringAcronymOfCandidate; // 1 if query string is an acronym of the candidate #13
-	public boolean candidateAcronymOfqueryString; // 1 if candidate's string is an acronym of the query string #14 (NULL)
+	public boolean exactMatch; 				     		// 1 if query string is equal to candidate's string #6
+	public boolean querySubStringOfCandidate;     		// 1 if the query string is a substring of the candidate's string #7
+	public boolean candidateSubStringOfQuery;    	 	// 1 if the candidate's string is a substring of query string #8
+	public boolean queryStartsCandidateName;      		// 1 if the query string starts the candidate string #9
+	public boolean queryEndsCandidateName;    	  		// 1 if the query string ends candidate string #10
+	public boolean candidateNameStartsQuery;  	  		// 1 if candidate string starts query string #11 (NULL)
+	public boolean candidateNameEndsQuery;    	  		// 1 if candidate string ends the query string #12 (NULL)
+	public boolean queryStringAcronymOfCandidate; 		// 1 if query string is an acronym of the candidate #13
+	public boolean candidateAcronymOfqueryString;	 	// 1 if candidate's string is an acronym of the query string #14 (NULL)
 	
-	/* string similarities features:
-	 * 
+	public HashMap<String, Float> similarities = new HashMap<String, Float>();
+	/* 
 	 * DiceSimilarity 		#15
 	 * JaccardSimilarity	#16
 	 * Jaro					#17
 	 * JaroWinkler			#18
 	 * Levenshtein 			#19
 	 */
-	public HashMap<String, Float> similarities = new HashMap<String, Float>();
+	
+	
+	/* link disambiguation */
+	public int outDegree;	// the out-degree measure according <paper here>
+	public int inDegree;	// the in-degree measure according <paper here>
+
 	
 	
 	
@@ -61,7 +66,7 @@ public class Features {
 	/* returns a feature vector */
 	public double[] featuresVector(){
 		
-		double[] inputVector = new double[20];
+		double[] inputVector = new double[22];
 		
 		if (this.queryType == candidateType) {
 			inputVector[0] = 1;
@@ -124,7 +129,8 @@ public class Features {
 		*/
 		
 		inputVector[19] = this.cosine_similarity;
-		//inputVector[19] = this.lucene_score;
+		inputVector[20] = this.inDegree;
+		inputVector[21] = this.outDegree;
 		
 		return inputVector;
 	}
