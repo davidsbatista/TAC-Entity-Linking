@@ -159,9 +159,12 @@ public class Main {
 		/* Stanford NER */
 		Definitions.loadClassifier(Definitions.serializedClassifier);
 		
-		/* LDA KB*/
+		/* LDA Knowledge Base */
 		System.out.println("Load KB LDA topics ...");
 		Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+		
+		/* Dictionary of name-entities based on the Knowledge Base */
+		Definitions.buildDictionary();
 		
 		/* Train queries XML file */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
@@ -209,14 +212,16 @@ public class Main {
 		Train.generateFeatures(Definitions.queriesTrain);
 		
 		System.out.println("\nGenerating features for test queries:");
+		
 		/* LDA Test Queries */
 		Definitions.determineLDAFile(queriesTestFile);
 		Train.generateFeatures(Definitions.queriesTest);
 		
 		
+				
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
-			
+					
 			//training logistic regression model
 			LogisticRegressionLingPipe trainning = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
 			trainning.trainModel();
@@ -231,6 +236,7 @@ public class Main {
 			else trainning.writeModel("linear-regression");
 
 		}
+		
 		
 		// SVMRank
 		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
@@ -250,6 +256,9 @@ public class Main {
 			//generate train features for SVMRank
 			svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
 			
+			//free memory for Train queries data
+			Definitions.queriesTrain = null;
+			
 			//call SVMRank
 			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			svmLearn.waitFor();
@@ -261,6 +270,9 @@ public class Main {
 			
 			//generate test features for SVMRank
 			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
+			
+			//free memory for Test queries data
+			Definitions.queriesTest = null;
 			
 			//call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
