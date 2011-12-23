@@ -63,9 +63,9 @@ public class LinkDisambiguation {
     	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"name",analyzer);
 		
-    	String query = "wiki_title:" + '"' + pageID.replace('"', '\"') + '"';    	
-    	System.out.println(query);
+    	String query = "wiki_title:" + '"' + pageID.replaceAll("\"", "") + '"';
     	
+    	    	
 		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
 		Document doc = null;
 		

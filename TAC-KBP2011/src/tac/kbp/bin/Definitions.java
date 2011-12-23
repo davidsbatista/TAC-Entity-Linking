@@ -130,6 +130,7 @@ public class Definitions {
 	/* builds a dictionary of entities from the KB */
 	public static void buildDictionary() throws IOException {
     	
+		//TODO: ignore entities lik: ".com", "!!!"
     	System.out.println("Loading dictionary...");
     	
     	BufferedReader input = new BufferedReader( new FileReader(entities) );
@@ -217,8 +218,6 @@ public class Definitions {
 				System.err.println("Error: " + e.getMessage());
 			}
 	}
-	
-	/* load LDATopics file */
 	
 	/* load LDA topics file */ 
 	public static void loadLDATopics(String filename, HashMap<Integer, String> hashtable) throws Exception {
