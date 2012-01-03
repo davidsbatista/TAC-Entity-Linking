@@ -69,10 +69,10 @@ public class Candidate {
 	public void extractFeatures(KBPQuery q) throws Exception{
 		
 		/* first get named entities and topics distribution */
-		getNamedEntities();
-		getTopicsDistribution();
+		//getNamedEntities();
+		//getTopicsDistribution();
 		
-		topicalSimilarities(q);
+		//topicalSimilarities(q);
 		nameSimilarities(q.name);
 		textualSimilarities(q);
 		linkDisambiguation(q);

@@ -49,9 +49,16 @@ public class SVMRankOutputResults {
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
 		for (KBPQuery q : queries) {
+			
 			if (q.candidatesRanked.size()==0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
+			
+			// if in-degree is 0 write NIL
+			else if (q.candidatesRanked.get(0).features.inDegree == 0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
 			else {
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
 			}

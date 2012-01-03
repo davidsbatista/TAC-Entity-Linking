@@ -263,7 +263,6 @@ public class Main {
 			//call SVMRank
 			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			svmLearn.waitFor();
-
 			
 			//Test the trained model
 			System.out.println("\nTesting SVMRank model: ");
