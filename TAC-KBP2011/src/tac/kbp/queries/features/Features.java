@@ -15,47 +15,51 @@ public class Features {
 	public String eid; 
 	public boolean correct_answer;
 	
+	// to control which features are going to be generated
+	public boolean textualSimilarities;
+	public boolean topicalSimilarities;
+	public boolean nameSimilarities;
+	public boolean linkDisambiguation;
+	
 	/* textual similarities */
-	public double cosine_similarity; 				 	// cosine similarity #21
-	public boolean typeMatch; 						 	// 1 if candidateType and queryType are the same  #1
-	public float namedEntitiesIntersection; 		 	// number of common named entities #2
-	public boolean queryStringInWikiText; 			 	// 1 if the query string in candidate's text #3
-	public boolean candidateNameInSupportDocument; 	 	// 1 if the candidate's string is in the support document #4
+	public double cosine_similarity; 				 	// cosine similarity #1
+	public boolean typeMatch; 						 	// 1 if candidateType and queryType are the same  #2
+	public float namedEntitiesIntersection; 		 	// number of common named entities #3
+	public boolean queryStringInWikiText; 			 	// 1 if the query string in candidate's text #4
+	public boolean candidateNameInSupportDocument; 	 	// 1 if the candidate's string is in the support document #5
 	
 	/* topical similarity */
-	public double kldivergence; 						// Kullback-Leibler Divergence between LDA topics distribution #5
-	public boolean topicMatch;  						// 1 if the topic with the higest probability is the same in the query topic's distribution
-	public double topic_cosine_similarity;  			// 1 if the topic with the higest probability is the same in the query topic's distribution
+	public double  kldivergence; 						// Kullback-Leibler Divergence between LDA topics distribution #6
+	public boolean topicMatch;  						// 1 if the topic with the higest probability is the same in the query topic's distribution #7
+	public double  topic_cosine_similarity;  			// 1 if the topic with the higest probability is the same in the query topic's distribution #8
 	
-	/* string similarities */
-	public boolean exactMatch; 				     		// 1 if query string is equal to candidate's string #6
-	public boolean querySubStringOfCandidate;     		// 1 if the query string is a substring of the candidate's string #7
-	public boolean candidateSubStringOfQuery;    	 	// 1 if the candidate's string is a substring of query string #8
-	public boolean queryStartsCandidateName;      		// 1 if the query string starts the candidate string #9
-	public boolean queryEndsCandidateName;    	  		// 1 if the query string ends candidate string #10
-	public boolean candidateNameStartsQuery;  	  		// 1 if candidate string starts query string #11 (NULL)
-	public boolean candidateNameEndsQuery;    	  		// 1 if candidate string ends the query string #12 (NULL)
-	public boolean queryStringAcronymOfCandidate; 		// 1 if query string is an acronym of the candidate #13
-	public boolean candidateAcronymOfqueryString;	 	// 1 if candidate's string is an acronym of the query string #14 (NULL)
+	/* name string similarities */
+	public boolean exactMatch; 				     		// 1 if query string is equal to candidate's string #9
+	public boolean querySubStringOfCandidate;     		// 1 if the query string is a substring of the candidate's string #10
+	public boolean candidateSubStringOfQuery;    	 	// 1 if the candidate's string is a substring of query string #11
+	public boolean queryStartsCandidateName;      		// 1 if the query string starts the candidate string #12
+	public boolean queryEndsCandidateName;    	  		// 1 if the query string ends candidate string #13
+	public boolean candidateNameStartsQuery;  	  		// 1 if candidate string starts query string #14 (NULL)
+	public boolean candidateNameEndsQuery;    	  		// 1 if candidate string ends the query string #15 (NULL)
+	public boolean queryStringAcronymOfCandidate; 		// 1 if query string is an acronym of the candidate #16
+	public boolean candidateAcronymOfqueryString;	 	// 1 if candidate's string is an acronym of the query string #17 (NULL)
 	
 	public HashMap<String, Float> similarities = new HashMap<String, Float>();
-	/* 
-	 * DiceSimilarity 		#15
-	 * JaccardSimilarity	#16
-	 * Jaro					#17
-	 * JaroWinkler			#18
-	 * Levenshtein 			#19
+	
+	/* Hashtable containing the following keys
+	 *  
+	 * DiceSimilarity 		#18
+	 * JaccardSimilarity	#19
+	 * Jaro					#20
+	 * JaroWinkler			#21
+	 * Levenshtein 			#22
 	 */
 	
-	
 	/* link disambiguation */
-	public int outDegree;	// the out-degree measure according <paper here>
-	public int inDegree;	// the in-degree measure according <paper here>
+	public int outDegree;	// the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
+	public int inDegree;	// the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24
+	
 
-	
-	
-	
-	
 	/* Methods */ 
 	
 	/* constuctor */
@@ -66,71 +70,93 @@ public class Features {
 	/* returns a feature vector */
 	public double[] featuresVector(){
 		
-		double[] inputVector = new double[22];
+		double[] inputVector = new double[23];
 		
-		if (this.queryType == candidateType) {
-			inputVector[0] = 1;
-		}
-		
-		inputVector[1] = namedEntitiesIntersection;
-		
-		if (this.queryStringInWikiText) {
-			inputVector[2] = 1;
-		}
+		if (textualSimilarities) {
 			
-		if (this.candidateNameInSupportDocument) {
-			inputVector[3] = 1;
+			// cosine
+			inputVector[0] = this.cosine_similarity;
+			
+			// type match
+			if (this.queryType == candidateType) {
+				inputVector[0] = 1;
+			}
+			// named-entities intersection
+			inputVector[1] = namedEntitiesIntersection;
+			
+			// query is in the wiki text
+			if (this.queryStringInWikiText) {
+				inputVector[2] = 1;
+			}
+			
+			// candidate name string is in the support document
+			if (this.candidateNameInSupportDocument) {
+				inputVector[3] = 1;
+			}
 		}
+		
+		if (topicalSimilarities) {
+			
+			inputVector[4] = this.kldivergence;
+			
+			if (this.topicMatch) {
+				inputVector[5] = 1;
+			}
 
-		inputVector[4] = this.kldivergence;
-		
-		if (this.exactMatch) {
-			inputVector[5] = 1;
+			inputVector[6] = this.topic_cosine_similarity;
+			
 		}
 		
-		if (this.querySubStringOfCandidate) {
-			inputVector[6] = 1;
+		if (nameSimilarities) {
+			
+			if (this.exactMatch) {
+				inputVector[7] = 1;
+			}
+			
+			if (this.querySubStringOfCandidate) {
+				inputVector[8] = 1;
+			}
+			
+			if (this.candidateSubStringOfQuery) {
+				inputVector[9] = 1;
+			}
+			
+			if (this.queryStartsCandidateName) {
+				inputVector[10] = 1;
+			}
+			
+			if (this.queryEndsCandidateName) {
+				inputVector[11] = 1;
+			}
+			
+			if (this.candidateNameStartsQuery) {
+				inputVector[12] = 1;
+			}
+			
+			if (this.candidateNameEndsQuery) {
+				inputVector[13] = 1;
+			}
+			
+			if (this.queryStringAcronymOfCandidate) {
+				inputVector[14] = 1;
+			}
+			
+			if (this.candidateAcronymOfqueryString) {
+				inputVector[15] = 1;
+			}
+			
+			inputVector[16] = (double) similarities.get("DiceSimilarity");
+			inputVector[17] = (double) similarities.get("JaccardSimilarity");
+			inputVector[18] = (double) similarities.get("Jaro");
+			inputVector[19] = (double) similarities.get("JaroWinkler");
+			inputVector[20] = (double) similarities.get("Levenshtein");
+			
 		}
 		
-		if (this.candidateSubStringOfQuery) {
-			inputVector[7] = 1;
+		if (linkDisambiguation) {
+			inputVector[21] = this.inDegree;
+			inputVector[22] = this.outDegree;			
 		}
-		
-		if (this.queryStartsCandidateName) {
-			inputVector[8] = 1;
-		}
-		
-		if (this.queryEndsCandidateName) {
-			inputVector[9] = 1;
-		}
-		
-		if (this.candidateNameStartsQuery) {
-			inputVector[10] = 1;
-		}
-		
-		if (this.candidateNameEndsQuery) {
-			inputVector[11] = 1;
-		}
-		
-		if (this.queryStringAcronymOfCandidate) {
-			inputVector[12] = 1;
-		}
-		
-		if (this.candidateAcronymOfqueryString) {
-			inputVector[13] = 1;
-		}
-		
-		/*
-		inputVector[14] = (double) similarities.get("DiceSimilarity");
-		inputVector[15] = (double) similarities.get("JaccardSimilarity");
-		inputVector[16] = (double) similarities.get("Jaro");
-		inputVector[17] = (double) similarities.get("JaroWinkler");
-		inputVector[18] = (double) similarities.get("Levenshtein");
-		*/
-		
-		inputVector[19] = this.cosine_similarity;
-		inputVector[20] = this.inDegree;
-		inputVector[21] = this.outDegree;
 		
 		return inputVector;
 	}
@@ -153,7 +179,7 @@ public class Features {
 		
 		return average / similarities.size();
 	}
-	
+
 	@Override
 	public String toString() {
 		 
@@ -207,8 +233,6 @@ public class Features {
 		this.similarities.put("JaroWinkler", Float.parseFloat((features[17])));
 		this.similarities.put("Levenshtein", Float.parseFloat((features[18])));
 	}
-	
-
 }
 
 
