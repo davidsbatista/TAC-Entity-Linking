@@ -93,69 +93,74 @@ public class Features {
 			if (this.candidateNameInSupportDocument) {
 				inputVector[3] = 1;
 			}
+			
+			if (this.topicMatch) {
+				inputVector[4] = 1;
+			}
+			
 		}
 		
 		if (topicalSimilarities) {
 			
-			inputVector[4] = this.kldivergence;
+			inputVector[5] = this.kldivergence;
 			
 			if (this.topicMatch) {
-				inputVector[5] = 1;
+				inputVector[6] = 1;
 			}
 
-			inputVector[6] = this.topic_cosine_similarity;
+			inputVector[7] = this.topic_cosine_similarity;
 			
 		}
 		
 		if (nameSimilarities) {
 			
 			if (this.exactMatch) {
-				inputVector[7] = 1;
-			}
-			
-			if (this.querySubStringOfCandidate) {
 				inputVector[8] = 1;
 			}
 			
-			if (this.candidateSubStringOfQuery) {
+			if (this.querySubStringOfCandidate) {
 				inputVector[9] = 1;
 			}
 			
-			if (this.queryStartsCandidateName) {
+			if (this.candidateSubStringOfQuery) {
 				inputVector[10] = 1;
 			}
 			
-			if (this.queryEndsCandidateName) {
+			if (this.queryStartsCandidateName) {
 				inputVector[11] = 1;
 			}
 			
-			if (this.candidateNameStartsQuery) {
+			if (this.queryEndsCandidateName) {
 				inputVector[12] = 1;
 			}
 			
-			if (this.candidateNameEndsQuery) {
+			if (this.candidateNameStartsQuery) {
 				inputVector[13] = 1;
 			}
 			
-			if (this.queryStringAcronymOfCandidate) {
+			if (this.candidateNameEndsQuery) {
 				inputVector[14] = 1;
 			}
 			
-			if (this.candidateAcronymOfqueryString) {
+			if (this.queryStringAcronymOfCandidate) {
 				inputVector[15] = 1;
 			}
 			
-			inputVector[16] = (double) similarities.get("DiceSimilarity");
-			inputVector[17] = (double) similarities.get("JaccardSimilarity");
-			inputVector[18] = (double) similarities.get("Jaro");
-			inputVector[19] = (double) similarities.get("JaroWinkler");
-			inputVector[20] = (double) similarities.get("Levenshtein");
+			if (this.candidateAcronymOfqueryString) {
+				inputVector[16] = 1;
+			}
+			
+			inputVector[17] = (double) similarities.get("DiceSimilarity");
+			inputVector[18] = (double) similarities.get("JaccardSimilarity");
+			inputVector[19] = (double) similarities.get("Jaro");
+			inputVector[20] = (double) similarities.get("JaroWinkler");
+			inputVector[21] = (double) similarities.get("Levenshtein");
 			
 		}
 		
 		if (linkDisambiguation) {
-			inputVector[21] = this.inDegree;
-			inputVector[22] = this.outDegree;			
+			inputVector[22] = this.inDegree;
+			inputVector[23] = this.outDegree;			
 		}
 		
 		return inputVector;
