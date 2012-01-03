@@ -31,6 +31,8 @@ public class Candidate {
 	
 	public Features features;
 	
+	
+	// Constructors
 	public Candidate(String eid, Features features) {
 		super();
 		entity = new Entity();
@@ -60,7 +62,26 @@ public class Candidate {
 		this.indexID = indexID;
 	}
 	
-	public double cosine_similarity(double[] query_topics){
+	
+	
+	// Methods
+	
+	public void extractFeatures(KBPQuery q) throws Exception{
+		
+		/* first get named entities and topics distribution */
+		getNamedEntities();
+		getTopicsDistribution();
+		
+		topicalSimilarities(q);
+		nameSimilarities(q.name);
+		textualSimilarities(q);
+		linkDisambiguation(q);
+		isCorrect(q);
+	}
+	
+	
+	// LDA topic similarities
+	public void cosine_similarity(double[] query_topics){
 		
 		double dot_product = 0;
 		double candidate_norm = 0;
@@ -71,10 +92,11 @@ public class Candidate {
 			candidate_norm += Math.pow(query_topics[i], 2); 
 			query_norm += Math.pow(this.features.topics_distribution[i], 2);
 			dot_product += this.features.topics_distribution[i] * query_topics[i];
-			
 		}
 		
-		return dot_product / (Math.sqrt(candidate_norm) * Math.sqrt(query_norm)); 
+		
+		this.features.topic_cosine_similarity = dot_product / (Math.sqrt(candidate_norm) * Math.sqrt(query_norm)); 
+  
 	}
 	
 	public void topicalSimilarities(KBPQuery q){
@@ -86,37 +108,151 @@ public class Candidate {
 		}		
 	}
 		
-	public void extractFeatures(KBPQuery q) throws Exception{
+	public void getTopicsDistribution() {		
 		
-		/* first get named entities and topics distribution */
-		//getNamedEntities();
-		//getTopicsDistribution();
+		String line = Definitions.kb_topics.get(this.indexID);
+		String[] topics = line.split(" ");
 		
-		//semanticFeatures(q);		
-		//topicalSimilarities(q);
-		//nameSimilarities(q.name);
-		textualSimilarities(q);
-		linkDisambiguation(q);
-		isCorrect(q);
+		int max_topic = 0;
+		double max_value = 0.0;
+		
+		for (int i = 0; i < topics.length ; i++) {
+			features.topics_distribution[i] =  Double.parseDouble(topics[i]);
+			if (features.topics_distribution[i] > max_value) {
+				max_topic = i;
+				max_value = features.topics_distribution[i];
+			}
+		}
+		
+		this.features.highest_topic = max_topic;
 	}
 	
+	public void divergence(double[] lda_query) {
+		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
+	}
+	
+	
+	// Graph Structure
 	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException{
 		HashMap<String, Integer> scores = LinkDisambiguation.getScore(Definitions.chunker, q.supportDocument, this.entity.wiki_text);
 		this.features.inDegree = scores.get("inDegree");
 		this.features.outDegree = scores.get("outDegree");
 	}
+		
 	
-	public void isCorrect(KBPQuery q) {
-		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {
-			this.features.correct_answer = true;
-		}
-		else this.features.correct_answer = false;
-	}
-	
+	// Textual Similarities
 	public void textualSimilarities(KBPQuery q) throws IOException {
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
+		this.features.queryStringInWikiText = queryStringInWikiText(q);
+		this.features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
+		this.features.candidateType = determineType();
+		this.namedEntitiesIntersection(q);
+	}
+
+	
+	
+	// Name Similarities
+	public void nameSimilarities(String query) {
+		
+		this.features.similarities = tac.kbp.utils.string.StringSimilarities.compareStrings(query,this.entity.name);
+		
+		features.exactMatch = query.equalsIgnoreCase(entity.name);
+		features.querySubStringOfCandidate = entity.name.toLowerCase().contains(query.toLowerCase());
+		features.candidateSubStringOfQuery = query.toLowerCase().contains(entity.name.toLowerCase());		
+		features.queryStartsCandidateName = query.toLowerCase().startsWith(entity.name.toLowerCase());
+		features.queryEndsCandidateName = query.toLowerCase().endsWith(entity.name.toLowerCase());		
+		features.candidateNameStartsQuery = query.toLowerCase().startsWith(entity.name);		
+		features.candidateNameEndsQuery = query.toLowerCase().endsWith(entity.name);
+		
+		if (tac.kbp.utils.string.StringUtils.isUpper(query)) {			
+			if (isAcroynym(query, entity.name)) {
+				features.queryStringAcronymOfCandidate = true;
+			}
+			if (isAcroynym(entity.name, query)) {
+				features.candidateAcronymOfqueryString = true;
+			}	
+		}
+	}
+
+	private boolean isAcroynym(String query, String name) {		
+		String [] words = name.split(" ");
+		char [] accro = query.toLowerCase().toCharArray();
+		
+		if (words.length == accro.length) {
+			for (int i = 0; i < accro.length; i++) {		
+				if (accro[i] != (words[i]).toLowerCase().charAt(0)) {
+					return false;
+				}	
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public boolean queryStringNamedEntity() {
+		System.out.println("entity: " + entity.name);
+		
+		for (String p : persons) {
+			System.out.print(p + " ");
+		}
+		
+		System.out.println();
+		
+		System.out.print("PLACES: ");
+		for (String p : places) {
+			System.out.print(p + " ");
+		}
+		
+		System.out.println();
+		
+		System.out.print("ORG: ");
+		for (String p : organizations) {
+			System.out.print(p + " ");
+		}	
+		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);
 	}
 	
+	public NERType determineType(){
+		if (entity.type.equalsIgnoreCase("PER")) {
+			return tac.kbp.bin.Definitions.NERType.PERSON;
+		}
+		
+		if (entity.type.equalsIgnoreCase("ORG")) {
+			return tac.kbp.bin.Definitions.NERType.ORGANIZATION;
+		}
+			
+		if (entity.type.equalsIgnoreCase("GPE")) {
+			return tac.kbp.bin.Definitions.NERType.PLACE;
+		}
+		else return tac.kbp.bin.Definitions.NERType.UNK;
+			
+			
+	}
+	
+	public boolean queryStringInWikiText(KBPQuery q){
+		
+		boolean nameInWikiText = entity.wiki_text.toUpperCase().indexOf(q.name.toUpperCase()) != -1;
+		boolean alternativeWikiText = false;
+		
+		for (String sense : q.alternative_names) {
+			if (entity.wiki_text.toUpperCase().indexOf(sense.toUpperCase()) != -1) {
+				alternativeWikiText = true;
+				break;
+			}
+		}
+		
+		return (nameInWikiText || alternativeWikiText);
+	}
+	
+	public boolean candidateNameInSupportDocument(KBPQuery q) {
+		//TODO: entity.name can have several tokens, suggestion:
+		//TODO: try to match each token, instead of the whole string		
+		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
+	}
+	
+	
+	
+	// Named-Entities related methods
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		
@@ -191,136 +327,14 @@ public class Candidate {
 		this.features.namedEntitiesIntersection = intersection.size();
 		
 	}
-	
-	public void nameSimilarities(String query) {
-		
-		this.features.similarities = tac.kbp.utils.string.StringSimilarities.compareStrings(query,this.entity.name);
-		
-		features.exactMatch = query.equalsIgnoreCase(entity.name);
-		features.querySubStringOfCandidate = entity.name.toLowerCase().contains(query.toLowerCase());
-		features.candidateSubStringOfQuery = query.toLowerCase().contains(entity.name.toLowerCase());		
-		features.queryStartsCandidateName = query.toLowerCase().startsWith(entity.name.toLowerCase());
-		features.queryEndsCandidateName = query.toLowerCase().endsWith(entity.name.toLowerCase());		
-		features.candidateNameStartsQuery = query.toLowerCase().startsWith(entity.name);		
-		features.candidateNameEndsQuery = query.toLowerCase().endsWith(entity.name);
-		
-		if (tac.kbp.utils.string.StringUtils.isUpper(query)) {			
-			if (isAcroynym(query, entity.name)) {
-				features.queryStringAcronymOfCandidate = true;
-			}
-			if (isAcroynym(entity.name, query)) {
-				features.candidateAcronymOfqueryString = true;
-			}	
-		}
-	}
 
-	private boolean isAcroynym(String query, String name) {		
-		String [] words = name.split(" ");
-		char [] accro = query.toLowerCase().toCharArray();
-		
-		if (words.length == accro.length) {
-			for (int i = 0; i < accro.length; i++) {		
-				if (accro[i] != (words[i]).toLowerCase().charAt(0)) {
-					return false;
-				}	
-			}
-			return true;
-		}
-		return false;
-	}
-
-	public void semanticFeatures(KBPQuery q) throws IOException {
-		
-		features.queryStringInWikiText = queryStringInWikiText(q);
-		features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
-		features.candidateType = determineType();
-		this.namedEntitiesIntersection(q);
-
-	}
 	
-	public boolean queryStringNamedEntity() {
-		System.out.println("entity: " + entity.name);
-		
-		for (String p : persons) {
-			System.out.print(p + " ");
+	// Other
+	public void isCorrect(KBPQuery q) {
+		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {
+			this.features.correct_answer = true;
 		}
-		
-		System.out.println();
-		
-		System.out.print("PLACES: ");
-		for (String p : places) {
-			System.out.print(p + " ");
-		}
-		
-		System.out.println();
-		
-		System.out.print("ORG: ");
-		for (String p : organizations) {
-			System.out.print(p + " ");
-		}	
-		return persons.contains(entity.name) || places.contains(entity.name) || organizations.contains(entity.name);
-	}
-	
-	public NERType determineType(){
-		if (entity.type.equalsIgnoreCase("PER")) {
-			return tac.kbp.bin.Definitions.NERType.PERSON;
-		}
-		
-		if (entity.type.equalsIgnoreCase("ORG")) {
-			return tac.kbp.bin.Definitions.NERType.ORGANIZATION;
-		}
-			
-		if (entity.type.equalsIgnoreCase("GPE")) {
-			return tac.kbp.bin.Definitions.NERType.PLACE;
-		}
-		else return tac.kbp.bin.Definitions.NERType.UNK;
-			
-			
-	}
-	
-	public boolean queryStringInWikiText(KBPQuery q){
-		
-		boolean nameInWikiText = entity.wiki_text.toUpperCase().indexOf(q.name.toUpperCase()) != -1;
-		boolean alternativeWikiText = false;
-		
-		for (String sense : q.alternative_names) {
-			if (entity.wiki_text.toUpperCase().indexOf(sense.toUpperCase()) != -1) {
-				alternativeWikiText = true;
-				break;
-			}
-		}
-		
-		return (nameInWikiText || alternativeWikiText);
-	}
-	
-	public boolean candidateNameInSupportDocument(KBPQuery q) {
-		//TODO: entity.name can have several tokens, suggestion:
-		//TODO: try to match each token, instead of the whole string		
-		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
-		
-	}
-
-	public void getTopicsDistribution() {		
-		
-		String line = Definitions.kb_topics.get(this.indexID);
-		String[] topics = line.split(" ");
-		
-		int max_topic = 0;
-		double max_value = 0.0;
-		
-		for (int i = 0; i < topics.length ; i++) {
-			features.topics_distribution[i] =  Double.parseDouble(topics[i]);
-			if (features.topics_distribution[i] > max_value) {
-				max_topic = i;
-				max_value = features.topics_distribution[i];
-			}
-		}
-		
-		this.features.highest_topic = max_topic;
-	}
-	
-	public void divergence(double[] lda_query) {
-		this.features.kldivergence = com.aliasi.stats.Statistics.klDivergence(lda_query, this.features.topics_distribution);
+		else this.features.correct_answer = false;
 	}
 
 	public double[] getConditionalProbabilities() {
