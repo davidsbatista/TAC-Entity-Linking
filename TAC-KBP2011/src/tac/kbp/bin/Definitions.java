@@ -42,6 +42,12 @@ public class Definitions {
 	    PERSON, ORGANIZATION, PLACE, UNK
 	}
 	
+	/* to control which features are going to be generated */
+	public static boolean textualSimilarities = true;
+	public static boolean nameSimilarities = true;
+	public static boolean linkDisambiguation = true;
+	public static boolean topicalSimilarities = false;
+	
 	/* queries */
 	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
 	public static List<KBPQuery> queriesTrain = null;
