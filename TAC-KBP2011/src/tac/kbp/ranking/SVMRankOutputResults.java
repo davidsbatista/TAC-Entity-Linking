@@ -54,17 +54,22 @@ public class SVMRankOutputResults {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
-			// if in-degree is 0 write NIL
-			else if (q.candidatesRanked.get(0).features.inDegree == 0) {
-				out.println(q.query_id.trim()+"\tNIL");
-			}
-			
+			// if in-degree is 0 write NIL,need to know in-degree count:
+			// possibility 1º: extract from goundtruthFilePath, add code to the else of parse method
+			// 
+			// possibility 2º: 
+			//	rewrite the TestQueries structure, for a Hashtable, so that a query can be accessed using the ID 
+			//  instead of using the List<KBPQuery> queries structure, use the one from the Definitions class to store the rankings and predictions scores
+			//  access each query with the index and perform all operations there instead of using this new structure  
+						
 			else {
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
 			}
 		}
 		out.close();		
 	}
+	
+	
 	
 	public static void parse(String predictionsFilePath, String goundtruthFilePath) throws Exception{
 		
@@ -102,7 +107,7 @@ public class SVMRankOutputResults {
 			else  {
 				String[] data = line.split("\\s");
 				
-				//entity's id in the end of the line #E0554903
+				//entity's id at the end of the line #E0554903
 				String entity_id = data[(data.length)-1].split("#")[1];
 				
 				Candidate c = new Candidate();
