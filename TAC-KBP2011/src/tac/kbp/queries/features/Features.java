@@ -3,6 +3,7 @@ package tac.kbp.queries.features;
 import java.util.HashMap;
 import java.util.Set;
 
+import tac.kbp.bin.Definitions;
 import tac.kbp.bin.Definitions.NERType;
 
 public class Features {
@@ -14,13 +15,7 @@ public class Features {
 	public NERType candidateType;
 	public String eid; 
 	public boolean correct_answer;
-	
-	// to control which features are going to be generated
-	public boolean textualSimilarities;
-	public boolean topicalSimilarities;
-	public boolean nameSimilarities;
-	public boolean linkDisambiguation;
-	
+		
 	/* textual similarities */
 	public double cosine_similarity; 				 	// cosine similarity #1
 	public boolean typeMatch; 						 	// 1 if candidateType and queryType are the same  #2
@@ -72,14 +67,14 @@ public class Features {
 		
 		double[] inputVector = new double[23];
 		
-		if (textualSimilarities) {
+		if (Definitions.textualSimilarities) {
 			
 			// cosine
 			inputVector[0] = this.cosine_similarity;
 			
 			// type match
 			if (this.queryType == candidateType) {
-				inputVector[0] = 1;
+				inputVector[1] = 1;
 			}
 			// named-entities intersection
 			inputVector[1] = namedEntitiesIntersection;
@@ -100,7 +95,7 @@ public class Features {
 			
 		}
 		
-		if (topicalSimilarities) {
+		if (Definitions.topicalSimilarities) {
 			
 			inputVector[5] = this.kldivergence;
 			
@@ -112,7 +107,7 @@ public class Features {
 			
 		}
 		
-		if (nameSimilarities) {
+		if (Definitions.nameSimilarities) {
 			
 			if (this.exactMatch) {
 				inputVector[8] = 1;
@@ -158,7 +153,7 @@ public class Features {
 			
 		}
 		
-		if (linkDisambiguation) {
+		if (Definitions.linkDisambiguation) {
 			inputVector[22] = this.inDegree;
 			inputVector[23] = this.outDegree;			
 		}
