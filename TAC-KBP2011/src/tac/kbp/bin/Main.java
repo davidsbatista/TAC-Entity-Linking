@@ -272,7 +272,7 @@ public class Main {
 			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
 			
 			//free memory for Test queries data
-			Definitions.queriesTest = null;
+			//Definitions.queriesTest = null;
 			
 			//call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
@@ -288,7 +288,6 @@ public class Main {
 	static void svmresults(CommandLine line) throws Exception {
 		
 		String path = line.getOptionValue("dir");
-		
 		String goundtruthFilePath = path+"/svmrank-test.dat";
 		String predictionsFilePath = path+"/svmrank-predictions";		
 		SVMRankOutputResults.results(predictionsFilePath, goundtruthFilePath);
