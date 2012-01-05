@@ -51,8 +51,8 @@ public class Features {
 	 */
 	
 	/* link disambiguation */
-	public int outDegree;	// the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
-	public int inDegree;	// the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24
+	public double outDegree;	// the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
+	public double inDegree;	// the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24
 	
 
 	/* Methods */ 
