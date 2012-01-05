@@ -64,6 +64,7 @@ public class Main {
 			else if (line.hasOption("recall")) recall(line);
 			else if (line.hasOption("baseline")) baseline(line);
 			else if (line.hasOption("svmresults")) svmresults(line);
+			else if (line.hasOption("svmresults")) graph(line);
 			
 			//close indexes
 			if (line.hasOption("train") || line.hasOption("baseline") ) {
@@ -77,6 +78,11 @@ public class Main {
 		
 		tac.kbp.bin.Definitions.loaddRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
 		Train.statisticsRecall();
+	}
+	
+	static void graph(CommandLine line) {
+		//TODO: use in-link and out-link measures to rankcandidates and find out NIL 
+		
 	}
 	
 	static void baseline(CommandLine line) throws Exception {

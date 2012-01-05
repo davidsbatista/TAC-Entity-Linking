@@ -54,23 +54,18 @@ public class SVMRankOutputResults {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
-			// if in-degree is 0 write NIL,need to know in-degree count:
-			// possibility 1º: extract from goundtruthFilePath, add code to the else of parse method
-			// 
-			// possibility 2º: 
-			//	rewrite the TestQueries structure, for a Hashtable, so that a query can be accessed using the ID 
-			//  instead of using the List<KBPQuery> queries structure, use the one from the Definitions class to store the rankings and predictions scores
-			//  access each query with the index and perform all operations there instead of using this new structure  
-						
+			// if inDegree is 0 then return NIL
+			else if (q.candidatesRanked.get(0).features.inDegree == 0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
 			else {
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
 			}
 		}
 		out.close();		
 	}
-	
-	
-	
+
 	public static void parse(String predictionsFilePath, String goundtruthFilePath) throws Exception{
 		
 		BigFile predictionsFile = new BigFile(predictionsFilePath);
@@ -112,6 +107,10 @@ public class SVMRankOutputResults {
 				
 				Candidate c = new Candidate();
 				c.entity.id = entity_id;	//.split("#")[1];
+				
+				c.features.outDegree = Integer.parseInt(data[(data.length)-3].split(":")[1]);
+				c.features.inDegree = Integer.parseInt(data[(data.length)-2].split(":")[1]);
+				
 				c.conditionalProbabilities[1] = predictions.get(i);
 				q.candidates.add(c);
 				
@@ -122,3 +121,4 @@ public class SVMRankOutputResults {
 		queries.add(q);
 	}
 }
+

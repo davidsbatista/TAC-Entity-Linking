@@ -136,7 +136,7 @@ public class Definitions {
 	/* builds a dictionary of entities from the KB */
 	public static void buildDictionary() throws IOException {
     	
-		//TODO: ignore entities lik: ".com", "!!!"
+		//TODO: ignore entities like: ".com", "!!!"
     	System.out.println("Loading dictionary...");
     	
     	BufferedReader input = new BufferedReader( new FileReader(entities) );

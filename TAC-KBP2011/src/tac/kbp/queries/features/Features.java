@@ -65,7 +65,7 @@ public class Features {
 	/* returns a feature vector */
 	public double[] featuresVector(){
 		
-		double[] inputVector = new double[23];
+		double[] inputVector = new double[24];
 		
 		if (Definitions.textualSimilarities) {
 			
