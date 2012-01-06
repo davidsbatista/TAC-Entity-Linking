@@ -314,7 +314,6 @@ public class Train {
 			}
 		}
 		
-		return q.candidates.size();
-		
+		return q.candidates.size();		
 	}
 }
