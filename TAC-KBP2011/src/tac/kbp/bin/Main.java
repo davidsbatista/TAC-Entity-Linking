@@ -12,6 +12,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.lucene.index.CorruptIndexException;
 
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.KBPQuery;
@@ -80,8 +81,40 @@ public class Main {
 		Train.statisticsRecall();
 	}
 	
-	static void graph(CommandLine line) {
-		//TODO: use in-link and out-link measures to rankcandidates and find out NIL 
+	static void graph(CommandLine line) throws CorruptIndexException, IOException {
+		//TODO: use in-link and out-link measures to rank candidates and find out NIL
+		
+		/* Lucene Index */		
+		Definitions.loadKBIndex();
+		
+		/* SpellChecker Index */
+		Definitions.loadSpellCheckerIndex();
+		
+		/* Document Collection */
+		Definitions.loadDocumentCollecion();
+		
+		/* Dictionary of name-entities based on the Knowledge Base */
+		Definitions.buildDictionary();
+		
+		/* Test queries XML file */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("\nLoading queries from: " + queriesTestFile);
+		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
+		}
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
+		
+		
+		
+		
 		
 	}
 	

@@ -35,7 +35,7 @@ import edu.stanford.nlp.ie.crf.CRFClassifier;
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
-	public static int max_candidates = 5;
+	public static int max_candidates = 30;
 	
 	/* named-entities type */
 	public enum NERType {

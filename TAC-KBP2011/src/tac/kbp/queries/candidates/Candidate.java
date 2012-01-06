@@ -44,6 +44,7 @@ public class Candidate {
 		super();
 		this.entity = new Entity();
 		this.conditionalProbabilities = new double[2];
+		this.features = new Features();
 	}
 	
 	public Candidate(org.apache.lucene.document.Document doc, int indexID) {
