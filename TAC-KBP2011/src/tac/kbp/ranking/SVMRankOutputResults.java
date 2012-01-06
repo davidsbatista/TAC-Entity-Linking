@@ -106,25 +106,10 @@ public class SVMRankOutputResults {
 				String entity_id = data[(data.length)-1].split("#")[1];
 				
 				Candidate c = new Candidate();
+				
 				c.entity.id = entity_id;	//.split("#")[1];
-				
-				System.out.println("data.length: " + data.length);
-
-				System.out.println("data[24] :" + data[24]); 
-				System.out.println("data[25] :" + data[25]);
-				
-				System.out.println("data[24].split(\":\")[1] :" + data[24].split(":")[1]); 
-				System.out.println("data[25].split(\":\")[1] :" + data[25].split(":")[1]);
-				
-				
-				try {
-					c.features.outDegree = (double) Double.parseDouble(data[24].split(":")[1]);
-					c.features.inDegree = (double) Double.parseDouble(data[25].split(":")[1]);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
+				c.features.outDegree = (int) Double.parseDouble( data[24].split(":")[1] );
+				c.features.inDegree = (int) Double.parseDouble( data[25].split(":")[1] );
 				c.conditionalProbabilities[1] = predictions.get(i);
 				q.candidates.add(c);
 				
