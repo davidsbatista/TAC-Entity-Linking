@@ -77,7 +77,7 @@ public class Main {
 	
 	static void recall(CommandLine line) throws Exception {
 		
-		tac.kbp.bin.Definitions.loaddRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
+		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
 		Train.statisticsRecall();
 	}
 	

@@ -101,7 +101,7 @@ public class Definitions {
 	public static String SVMRanklLearn = "svm_rank_learn";
 	public static String SVMRanklClassify = "svm_rank_classify";
 	
-	public static void loaddRecall(String queriesFile, String n_candidates) throws CorruptIndexException, IOException {
+	public static void loadRecall(String queriesFile, String n_candidates) throws CorruptIndexException, IOException {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + KB_location);
