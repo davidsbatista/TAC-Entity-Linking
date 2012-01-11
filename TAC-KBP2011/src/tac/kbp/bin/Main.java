@@ -65,7 +65,7 @@ public class Main {
 			else if (line.hasOption("recall")) recall(line);
 			else if (line.hasOption("baseline")) baseline(line);
 			else if (line.hasOption("svmresults")) svmresults(line);
-			else if (line.hasOption("svmresults")) graph(line);
+			else if (line.hasOption("graph")) graph(line);
 			
 			//close indexes
 			if (line.hasOption("train") || line.hasOption("baseline") ) {
@@ -77,7 +77,7 @@ public class Main {
 	
 	static void recall(CommandLine line) throws Exception {
 		
-		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("queries"), line.getOptionValue("candidates"));
+		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("queriesTest"), line.getOptionValue("candidates"));
 		Train.statisticsRecall();
 	}
 	
