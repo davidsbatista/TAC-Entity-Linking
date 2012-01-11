@@ -64,14 +64,14 @@ public class Train {
 		System.out.println();
 	}
 	
-	static void statisticsRecall() throws Exception {
+	static void statisticsRecall(List<KBPQuery> queries) throws Exception {
 		
-		float miss_rate = (float) Train.MISS_queries / ((float) tac.kbp.bin.Definitions.queriesTrain.size()-Train.NIL_queries);
-		float coverage = (float) Train.FOUND_queries / ((float) tac.kbp.bin.Definitions.queriesTrain.size()-Train.NIL_queries);
+		float miss_rate = (float) Train.MISS_queries / ((float) queries.size()-Train.NIL_queries);
+		float coverage = (float) Train.FOUND_queries / ((float) queries.size()-Train.NIL_queries);
 		
 		System.out.println("Documents Retrieved: " + Integer.toString(Train.total_n_docs));
-		System.out.println("Queries: " + Integer.toString(tac.kbp.bin.Definitions.queriesTrain.size()));
-		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) tac.kbp.bin.Definitions.queriesTrain.size()));
+		System.out.println("Queries: " + Integer.toString(queries.size()));
+		System.out.println("Docs p/ query: " + ( (float) Train.total_n_docs / (float) queries.size()));
 		System.out.println("Queries with 0 docs retrieved: " + Integer.toString(Train.n_queries_zero_docs));
 		System.out.println("Queries NIL: " + Train.NIL_queries);
 		System.out.println("Queries Not Found (Miss Rate): " + Train.MISS_queries + " (" + miss_rate * 100 + "%)" );
@@ -111,7 +111,7 @@ public class Train {
 		List<SuggestWord> suggestedwords = queryKB(q);		
 		int n_docs = getCandidates(q,suggestedwords);
 		
-		System.out.println(" " + n_docs + " candidates");				
+		System.out.println(q.query_id + ": \"" + q.name + "\" " + n_docs + " candidates");				
 		
 		total_n_docs += n_docs;		
 		if (n_docs == 0) n_queries_zero_docs++;		

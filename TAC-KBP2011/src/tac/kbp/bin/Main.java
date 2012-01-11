@@ -68,17 +68,42 @@ public class Main {
 			else if (line.hasOption("graph")) graph(line);
 			
 			//close indexes
-			if (line.hasOption("train") || line.hasOption("baseline") ) {
+			if (line.hasOption("train")) {
 				Definitions.searcher.close();
 				Definitions.documents.close();
+			}
+				
+			if (line.hasOption("baseline") ) {
+				Definitions.searcher.close();
 			}
 		}
 	}
 	
 	static void recall(CommandLine line) throws Exception {
 		
-		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("queriesTest"), line.getOptionValue("candidates"));
-		Train.statisticsRecall();
+		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("candidates"));
+		
+		/* Test queries XML file */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("\nLoading queries from: " + queriesTestFile);
+		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
+		}
+		
+		System.out.println("\nProcessing queries:");		
+		Train.process(Definitions.queriesTest, false, false);
+		
+		for (KBPQuery q : Definitions.queriesTest) {
+			Train.retrieveCandidates(q);
+		}
+		
+		Train.statisticsRecall(Definitions.queriesTest);
 	}
 	
 	static void graph(CommandLine line) throws CorruptIndexException, IOException {
@@ -132,28 +157,28 @@ public class Main {
 		System.out.println();
 		
 		/* Queries XML file */
-		String queriesTrainFile = line.getOptionValue("queriesTrain");
-		System.out.println("Loading queries from: " + queriesTrainFile);
-		Definitions.queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("Loading queries from: " + queriesTestFile);
+		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
 		
 		/* Queries answers file */
-		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
+		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTrain) {
-			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}	
 		
 		/* Start processing queries: get alternative names */
 		System.out.println("\n\nProcessing test queries:");
-		Train.process(Definitions.queriesTrain,false,false);
+		Train.process(Definitions.queriesTest,false,false);
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
 		
 		System.out.println("\n\nGetting candidates from Lucene:");
 			
-		for (KBPQuery q: Definitions.queriesTrain) {			
+		for (KBPQuery q: Definitions.queriesTest) {			
 			List<SuggestWord> suggested = Train.queryKB(q);
 			q.suggestedwords = suggested;
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.suggestedwords.size());
@@ -163,7 +188,7 @@ public class Main {
 		String output = "results.txt";
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 			
-		for (KBPQuery q : Definitions.queriesTrain) {
+		for (KBPQuery q : Definitions.queriesTest) {
 			if (q.suggestedwords.size()==0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
@@ -331,8 +356,7 @@ public class Main {
 		String predictionsFilePath = path+"/svmrank-predictions";		
 		SVMRankOutputResults.results(predictionsFilePath, goundtruthFilePath);
 	}
-	
-	
+
 }
 
 

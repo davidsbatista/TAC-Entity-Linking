@@ -101,7 +101,7 @@ public class Definitions {
 	public static String SVMRanklLearn = "svm_rank_learn";
 	public static String SVMRanklClassify = "svm_rank_classify";
 	
-	public static void loadRecall(String queriesFile, String n_candidates) throws CorruptIndexException, IOException {
+	public static void loadRecall(String n_candidates) throws CorruptIndexException, IOException {
 		
 		/* Lucene Index */
 		System.out.println("Knowledge Base index: " + KB_location);
@@ -124,10 +124,6 @@ public class Definitions {
 		//Stop-Words
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
-		
-		//Queries XML file
-		System.out.println("Loading queries from: " + queriesFile);
-		queriesTrain = tac.kbp.queries.xml.ParseQueriesXMLFile.loadQueries(queriesFile);
 		
 		System.out.println("Connecting to REDIS server.. ");
 		binaryjedis = new BinaryJedis(redis_host, redis_port);
