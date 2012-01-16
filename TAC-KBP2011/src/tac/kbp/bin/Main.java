@@ -106,7 +106,8 @@ public class Main {
 		Train.statisticsRecall(Definitions.queriesTest);
 	}
 	
-	static void graph(CommandLine line) throws CorruptIndexException, IOException {
+	static void graph(CommandLine line) throws Exception {
+		
 		//TODO: use in-link and out-link measures to rank candidates and find out NIL
 		
 		/* Lucene Index */		
@@ -137,9 +138,11 @@ public class Main {
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
 		
-		
-		
-		
+		for (KBPQuery q : Definitions.queriesTest) {
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
+			Train.retrieveCandidates(q);
+			//TODO: for each candidate in each query calculate in-degree and out-degree, use the results from the article to output correct candidate			
+		}
 		
 	}
 	
@@ -282,8 +285,7 @@ public class Main {
 		Definitions.determineLDAFile(queriesTestFile);
 		Train.generateFeatures(Definitions.queriesTest);
 		
-		
-				
+						
 		// to train a logistic regression model
 		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
 					
