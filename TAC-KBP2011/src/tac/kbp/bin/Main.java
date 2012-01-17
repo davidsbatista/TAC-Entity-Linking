@@ -1,8 +1,11 @@
 package tac.kbp.bin;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -16,6 +19,10 @@ import org.apache.lucene.index.CorruptIndexException;
 
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.KBPQuery;
+import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.queries.candidates.CandidateComparator;
+import tac.kbp.queries.candidates.CandidateComparatorInDegree;
+import tac.kbp.queries.candidates.CandidateComparatorOutDegree;
 import tac.kbp.queries.xml.ParseQueriesXMLFile;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.SVMRank;
@@ -30,7 +37,7 @@ public class Main {
 
 		// add options
 		options.addOption("train", false, "train a ranking model");
-		options.addOption("test", false,  "test a trained ranking model");
+		options.addOption("graph", false,  "generate results based only on outLinks and inLinks");
 		options.addOption("baseline", false, "only uses Lucene to generate answers");
 		options.addOption("recall", false, "used to tune the recall");
 		options.addOption("svmresults", false, "output results from SVMRank output");		
@@ -108,7 +115,7 @@ public class Main {
 	
 	static void graph(CommandLine line) throws Exception {
 		
-		//TODO: use in-link and out-link measures to rank candidates and find out NIL
+		//use in-link and out-link measures to rank candidates and find out NIL
 		
 		/* Lucene Index */		
 		Definitions.loadKBIndex();
@@ -135,16 +142,39 @@ public class Main {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
+		/* REDIS connection */
+		Definitions.connectionREDIS();
+		
+		Train.process(Definitions.queriesTest, false, true);
+		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
-		
+
+		// retrieve candidates and calculate in- and outDegree
 		for (KBPQuery q : Definitions.queriesTest) {
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			Train.retrieveCandidates(q);
-			//TODO: for each candidate in each query calculate in-degree and out-degree, use the results from the article to output correct candidate			
+			
+			for (Candidate c : q.candidates) {
+				c.linkDisambiguation(q);
+			}
 		}
 		
+		// sort according to inDegree
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
+			Collections.sort(q.candidatesRanked, new CandidateComparatorInDegree());
+		}
+		generateOutput("results-inDegree.txt", Definitions.queriesTest);
+		
+		// sort according to outDegree
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
+			Collections.sort(q.candidatesRanked, new CandidateComparatorOutDegree());
+		}
+		generateOutput("results-outDegree.txt", Definitions.queriesTest);
 	}
+	
 	
 	static void baseline(CommandLine line) throws Exception {
 		
@@ -359,6 +389,27 @@ public class Main {
 		SVMRankOutputResults.results(predictionsFilePath, goundtruthFilePath);
 	}
 
+	static void generateOutput(String output, List<KBPQuery> queries) throws FileNotFoundException {
+		
+		PrintStream out = new PrintStream( new FileOutputStream(output));
+		
+		for (KBPQuery q : queries) {
+			
+			if (q.candidatesRanked.size()==0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
+			// if inDegree is 0 then return NIL
+			else if (q.candidatesRanked.get(0).features.inDegree == 0 || q.candidatesRanked.get(0).features.outDegree == 0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
+			else {
+				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
+			}
+		}
+		out.close();		
+	}
 }
 
 
