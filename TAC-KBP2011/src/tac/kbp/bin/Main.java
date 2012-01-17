@@ -175,7 +175,6 @@ public class Main {
 		generateOutput("results-outDegree.txt", Definitions.queriesTest);
 	}
 	
-	
 	static void baseline(CommandLine line) throws Exception {
 		
 		/* Lucene Index */		
@@ -331,7 +330,6 @@ public class Main {
 			}
 			
 			else trainning.writeModel("linear-regression");
-
 		}
 		
 		
@@ -379,6 +377,11 @@ public class Main {
 			String goundtruthFilePath = "svmrank-test.dat";
 			SVMRankOutputResults.results(predictionsFilePath,goundtruthFilePath);
  		}
+		
+		// LambdaMART
+		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
+			//TODO: add code to use LambdaMART ranking model
+		}
 	}
 
 	static void svmresults(CommandLine line) throws Exception {
