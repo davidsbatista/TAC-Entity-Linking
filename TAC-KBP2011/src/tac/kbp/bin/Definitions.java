@@ -32,6 +32,8 @@ import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 
+import tac.kbp.utils.string.ExtractAbbrev;
+
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
@@ -69,7 +71,7 @@ public class Definitions {
 	/* stopwords */
 	public static String stop_words_location = "/collections/TAC-2011/resources/stopwords.txt";
 	public static Set<String> stop_words = new HashSet<String>();
-	
+
 	/* list of all entities in KB, for link disambiguation */
 	static final double CHUNK_SCORE = 1.0;
 	public static String entities = "/collections/TAC-2011/backup/KnowledgeBase-LCD2009E58/entities.txt";

@@ -1,10 +1,13 @@
 package tac.kbp.queries;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +36,7 @@ import redis.clients.jedis.BinaryJedis;
 import tac.kbp.bin.Definitions;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.utils.string.ExtractAbbrev;
 import edu.stanford.nlp.util.Triple;
 
 public class KBPQuery {
@@ -257,6 +262,13 @@ public class KBPQuery {
 	}
 	
 	public void getAlternativeSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
+		
+		
+		/* Schwartz and Hirst abbreviations and acronyms extractor*/
+		//ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
+		//Vector<String> candidates = extractAbbrv.extractAbbrPairs(this.supportDocument);
+
+		System.out.println();
 		
 		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
 		byte[] queryStringLowbyteArray = this.name.toLowerCase().getBytes("UTF-8");
