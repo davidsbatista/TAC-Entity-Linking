@@ -36,6 +36,7 @@ import redis.clients.jedis.BinaryJedis;
 import tac.kbp.bin.Definitions;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.utils.string.Abbreviations;
 import tac.kbp.utils.string.ExtractAbbrev;
 import edu.stanford.nlp.util.Triple;
 
@@ -265,9 +266,13 @@ public class KBPQuery {
 		
 		
 		/* Schwartz and Hirst abbreviations and acronyms extractor*/
-		//ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
-		//Vector<String> candidates = extractAbbrv.extractAbbrPairs(this.supportDocument);
+		ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
+		Vector<Abbreviations> candidates = extractAbbrv.extractAbbrPairs(this.supportDocument);
 
+		for (Abbreviations abbreviations : candidates) {
+			System.out.println(abbreviations.getShortForm()+'\t'+abbreviations.getLongForm());
+		}
+		
 		System.out.println();
 		
 		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
