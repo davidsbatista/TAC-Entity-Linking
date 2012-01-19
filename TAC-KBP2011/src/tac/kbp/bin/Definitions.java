@@ -37,7 +37,8 @@ import tac.kbp.utils.string.ExtractAbbrev;
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
-	public static int max_candidates = 30;
+	public static int candidates_per_sense = 20;
+	public static int max_candidates = 80;
 	
 	/* named-entities type */
 	public enum NERType {
@@ -120,8 +121,8 @@ public class Definitions {
 		docs_reader = documents.getIndexReader();
 		
 		/* Number of candidates to retrieve per sense */
-		Definitions.max_candidates = Integer.parseInt(n_candidates);
-		System.out.println("Number of candidates to retrieve per sense: " + Definitions.max_candidates);
+		Definitions.candidates_per_sense = Integer.parseInt(n_candidates);
+		System.out.println("Number of candidates to retrieve per sense: " + Definitions.candidates_per_sense);
 		
 		//Stop-Words
 		System.out.println("Loading stopwords from: " + stop_words_location);
@@ -144,14 +145,16 @@ public class Definitions {
 		while ((aux=input.readLine())!=null) {
 			// TODO : remove the two lines below if reading from a proper dictionary
 			if (aux.length()==0)
-				continue;			
+				continue;
+			
 			aux = aux.split("\\s")[2].split("wiki_title:")[1];
 			aux.replaceAll("([A-Z])"," $1").trim();
 			
 			String str = new String(aux.replace("_"," "));
 			String clas = new String(aux);
 	        dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
-		}		
+		}
+		
         chunker = new ExactDictionaryChunker(dictionary,IndoEuropeanTokenizerFactory.INSTANCE,true,true);
         System.out.println("Dictionary contains " + dictionary.size() + " entries.");
     }

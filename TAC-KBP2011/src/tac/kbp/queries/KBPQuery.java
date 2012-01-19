@@ -49,7 +49,8 @@ public class KBPQuery {
 	public String supportDocument = new String();
 	
 	// alternative senses for the string name
-	public HashSet<String> alternative_names;	
+	public HashSet<String> alternative_names;
+	public Vector<Abbreviations> abbreviations;
 	
 	// named-entities in the support document
 	public HashSet<String> persons;
@@ -89,14 +90,14 @@ public class KBPQuery {
 		this.docid = docid;
 		this.gold_answer = null;
 		this.alternative_names = new HashSet<String>();
-		this.candidates = new HashSet<Candidate>();  
+		this.abbreviations = new Vector<Abbreviations>();
+		this.candidates = new HashSet<Candidate>(); 
 		
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 	}
-	
-	
+
 	
 	
 	// Methods
@@ -263,17 +264,8 @@ public class KBPQuery {
 	}
 	
 	public void getAlternativeSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
-		
-		
-		/* Schwartz and Hirst abbreviations and acronyms extractor*/
-		ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
-		Vector<Abbreviations> candidates = extractAbbrv.extractAbbrPairs(this.supportDocument);
-
-		for (Abbreviations abbreviations : candidates) {
-			System.out.println(abbreviations.getShortForm()+'\t'+abbreviations.getLongForm());
-		}
-		
-		System.out.println();
+				
+		/* Consult alternative senses dictionary */
 		
 		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
 		byte[] queryStringLowbyteArray = this.name.toLowerCase().getBytes("UTF-8");

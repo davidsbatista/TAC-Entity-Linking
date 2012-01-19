@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
@@ -21,6 +23,8 @@ import org.apache.lucene.search.TopDocs;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.utils.string.Abbreviations;
+import tac.kbp.utils.string.ExtractAbbrev;
 
 import com.google.common.base.Joiner;
 
@@ -89,7 +93,29 @@ public class Train {
 			}
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
 			q.getAlternativeSenses(Definitions.binaryjedis);			
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());			
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());
+			
+			/* Schwartz and Hirst abbreviations and acronyms extractor*/
+			ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
+			Vector<Abbreviations> abbreviations = extractAbbrv.extractAbbrPairs(q.supportDocument);
+			q.abbreviations = abbreviations;
+			
+			boolean acronym = true;
+			
+			for (int j = 0; j < q.name.length(); j++) {
+				if (Character.isLowerCase(q.name.charAt(j))) {
+					acronym = false;
+				}
+			}			
+			if (acronym) {
+				 for (Abbreviations abbreviation : q.abbreviations) {					
+					if (abbreviation.getShortForm().equalsIgnoreCase(q.name)) {
+						q.alternative_names.add(abbreviation.getLongForm());
+					}
+				}
+			}
+			
+			System.out.print("\t" + q.alternative_names.size());
 		}
 	}
 	
@@ -98,7 +124,7 @@ public class Train {
 		int count = 1;
 		
 		for (KBPQuery q : queries) {
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
+			//System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			retrieveCandidates(q);
 			extractFeatures(q, false);
 			System.out.print("\t(" + count + "/" + queries.size() + ")\n");
@@ -234,7 +260,7 @@ public class Train {
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_candidates);
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -272,7 +298,7 @@ public class Train {
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.max_candidates);
+			List<SuggestWord> list = tac.kbp.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -294,7 +320,7 @@ public class Train {
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
 		
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
-		
+				
 		for (SuggestWord suggestWord : suggestedwordsList) {
 			
 			String queryS = "id:" + suggestWord.eid;
@@ -302,14 +328,19 @@ public class Train {
 			
 			if (docs.totalHits == 0)
 				continue;
+			
 			else {
-				Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 				if (repeated.contains(docs.scoreDocs[0].doc))
 					continue;
 				else {
+					Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
+					
+					if (repeated.size() == Definitions.max_candidates) {
+						break;
+					}
 				}
 			}
 		}

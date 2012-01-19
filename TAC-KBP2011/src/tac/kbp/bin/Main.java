@@ -104,7 +104,7 @@ public class Main {
 		}
 		
 		System.out.println("\nProcessing queries:");		
-		Train.process(Definitions.queriesTest, false, false);
+		Train.process(Definitions.queriesTest, false, true);
 		
 		for (KBPQuery q : Definitions.queriesTest) {
 			Train.retrieveCandidates(q);

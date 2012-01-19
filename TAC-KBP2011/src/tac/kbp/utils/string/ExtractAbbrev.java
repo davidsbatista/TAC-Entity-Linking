@@ -98,14 +98,10 @@ public class ExtractAbbrev {
 		Vector<Abbreviations> candidates = new Vector<Abbreviations>();
 
 		try {
-			BufferedReader fin = new BufferedReader(new FileReader(inFile));
-			//BufferedReader reader = new BufferedReader(new StringReader(supportDocument));			
-			//System.out.println(reader.readLine());
+			//BufferedReader fin = new BufferedReader(new FileReader(inFile));
+			BufferedReader fin = new BufferedReader(new StringReader(inFile));
 			
 			while ((str = fin.readLine()) != null) {
-				
-				System.out.println(str);
-				
 				if (str.length() == 0 || newParagraph
 						&& !Character.isUpperCase(str.charAt(0))) {
 					currSentence = "";
