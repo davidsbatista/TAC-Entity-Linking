@@ -63,14 +63,13 @@ public class LinkDisambiguation {
     	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"name",analyzer);
 		
-    	String query = "wiki_title:" + '"' + pageID.replaceAll("\"", "") + '"';
+    	String query = "wiki_title:" + '"' + pageID.replaceAll("\"", "").replace("&amp;","&") + '"';
     	
-    	    	
 		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
 		Document doc = null;
 		
 		if (docs.totalHits == 0) {
-			System.out.print("Error!");
+			System.out.println("Error!:" + query + "returned 0 documents");
 			return " ";
 		}
 		else {
@@ -86,7 +85,7 @@ public class LinkDisambiguation {
 		
 		int outDegree = 0, inDegree = 0;
 		HashMap<String, Integer> scores = new HashMap<String, Integer>();
-				
+
 		//out-degree
 		for ( String s1 : pagesInCandidateWikiText )			
 			for ( String contextName : pagesInContext ) 

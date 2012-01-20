@@ -298,6 +298,11 @@ public class KBPQuery {
 		}
 	}
 
+	
+	// builds a query to Lucene with:
+	// 	query name string of query: "Cedar Rapids"
+	//	individual tokens part of the query name string: "Cedar" + "Rapids"
+	//  the same thing as above for each alternative name
 	public HashMap<String, HashSet<String>> generateQuery() {
 		
 		HashSet<String> queryStrings = new HashSet<String>(); 		
@@ -317,9 +322,7 @@ public class KBPQuery {
 		for (Iterator<String> iterator = this.alternative_names.iterator(); iterator.hasNext();) {
 			String alternative = (String) iterator.next();
 			
-			String queryParsed = alternative.replaceAll("\\(", "").replaceAll("\\)","").
-										replaceAll("\\]", "").replaceAll("\\[", "").replaceAll("\"", "");
-			
+			String queryParsed = alternative.replaceAll("\\(", "").replaceAll("\\)","").replaceAll("\\]", "").replaceAll("\\[", "").replaceAll("\"", "");			
 			queryStrings.add('"' + queryParsed + '"');
 			
 			String[] tokens = queryParsed.split("\\s");
@@ -329,6 +332,7 @@ public class KBPQuery {
 					queryTokens.add('"' + tokens[i].trim() + '"');
 				}
 			}
+
 		}
 		
 		query.put("strings", queryStrings);

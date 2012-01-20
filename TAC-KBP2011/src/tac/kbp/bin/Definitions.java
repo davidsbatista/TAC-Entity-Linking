@@ -37,8 +37,8 @@ import tac.kbp.utils.string.ExtractAbbrev;
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
-	public static int candidates_per_sense = 20;
-	public static int max_candidates = 80;
+	public static int candidates_per_sense = 30;
+	public static int max_candidates = 250;
 	
 	/* named-entities type */
 	public enum NERType {
@@ -134,8 +134,7 @@ public class Definitions {
 	
 	/* builds a dictionary of entities from the KB */
 	public static void buildDictionary() throws IOException {
-    	
-		//TODO: ignore entities like: ".com", "!!!"
+		
     	System.out.println("Loading dictionary...");
     	
     	BufferedReader input = new BufferedReader( new FileReader(entities) );
@@ -152,7 +151,9 @@ public class Definitions {
 			
 			String str = new String(aux.replace("_"," "));
 			String clas = new String(aux);
-	        dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
+
+			dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
+	        
 		}
 		
         chunker = new ExactDictionaryChunker(dictionary,IndoEuropeanTokenizerFactory.INSTANCE,true,true);

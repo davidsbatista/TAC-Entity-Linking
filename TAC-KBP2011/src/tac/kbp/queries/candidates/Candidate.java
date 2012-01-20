@@ -70,10 +70,10 @@ public class Candidate {
 	public void extractFeatures(KBPQuery q) throws Exception{
 		
 		/* first get named entities and topics distribution */
-		//getNamedEntities();
-		//getTopicsDistribution();
+		getNamedEntities();
+		getTopicsDistribution();
 		
-		//topicalSimilarities(q);
+		topicalSimilarities(q);
 		nameSimilarities(q.name);
 		textualSimilarities(q);
 		linkDisambiguation(q);
@@ -134,7 +134,7 @@ public class Candidate {
 	
 	
 	// Graph Structure
-	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException{
+	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException{		
 		HashMap<String, Integer> scores = LinkDisambiguation.getScore(Definitions.chunker, q.supportDocument, this.entity.wiki_text);
 		this.features.inDegree = scores.get("inDegree");
 		this.features.outDegree = scores.get("outDegree");

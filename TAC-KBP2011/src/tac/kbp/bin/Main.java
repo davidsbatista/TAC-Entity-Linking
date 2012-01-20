@@ -151,13 +151,17 @@ public class Main {
 		Definitions.binaryjedis.disconnect();
 
 		// retrieve candidates and calculate in- and outDegree
+		int count = 0;
+		
 		for (KBPQuery q : Definitions.queriesTest) {
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			Train.retrieveCandidates(q);
 			
 			for (Candidate c : q.candidates) {
 				c.linkDisambiguation(q);
 			}
+			
+			System.out.println("(" + count + "/" + Definitions.queriesTest.size() + ")\n");
+			count++;
 		}
 		
 		// sort according to inDegree
@@ -366,7 +370,7 @@ public class Main {
 			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
 			
 			//free memory for Test queries data
-			//Definitions.queriesTest = null;
+			Definitions.queriesTest = null;
 			
 			//call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);

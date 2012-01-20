@@ -91,9 +91,11 @@ public class Train {
 				q.getSupportDocument();
 				//q.getNamedEntities();
 			}
+			
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
+			
 			q.getAlternativeSenses(Definitions.binaryjedis);			
-			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.alternative_names.size());
+			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			
 			/* Schwartz and Hirst abbreviations and acronyms extractor*/
 			ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
@@ -124,7 +126,6 @@ public class Train {
 		int count = 1;
 		
 		for (KBPQuery q : queries) {
-			//System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			retrieveCandidates(q);
 			extractFeatures(q, false);
 			System.out.print("\t(" + count + "/" + queries.size() + ")\n");
@@ -320,7 +321,7 @@ public class Train {
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
 		
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
-				
+		
 		for (SuggestWord suggestWord : suggestedwordsList) {
 			
 			String queryS = "id:" + suggestWord.eid;
@@ -330,17 +331,20 @@ public class Train {
 				continue;
 			
 			else {
+				
 				if (repeated.contains(docs.scoreDocs[0].doc))
 					continue;
+				
 				else {
 					Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
 					
-					if (repeated.size() == Definitions.max_candidates) {
+					if (q.candidates.size() == Definitions.max_candidates) {
 						break;
 					}
+					
 				}
 			}
 		}
