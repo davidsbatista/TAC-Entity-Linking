@@ -257,7 +257,7 @@ public class Main {
 		Definitions.loadStopWords();
 		
 		/* Stanford NER */
-		Definitions.loadClassifier(Definitions.serializedClassifier);
+		//Definitions.loadClassifier(Definitions.serializedClassifier);
 		
 		/* LDA Knowledge Base */
 		System.out.println("Load KB LDA topics ...");
@@ -286,7 +286,6 @@ public class Main {
 		Train.process(Definitions.queriesTrain, true, true);
 		
 		System.out.println();
-		//TODO: save all extracted features to disk
 		
 		/* Test queries XML file */
 		String queriesTestFile = line.getOptionValue("queriesTest");
@@ -303,6 +302,7 @@ public class Main {
 		
 		/* LDA Test Queries */
 		Definitions.determineLDAFile(queriesTestFile);		
+		
 		System.out.println("\n\nProcessing test queries:");
 		Train.process(Definitions.queriesTest, true, true);
 		
@@ -312,10 +312,10 @@ public class Main {
 		System.out.println("\nGenerating features for training queries:");
 		Train.generateFeatures(Definitions.queriesTrain);
 		
-		System.out.println("\nGenerating features for test queries:");
+		//TODO: save all extracted features of train to disk
 		
-		/* LDA Test Queries */
-		Definitions.determineLDAFile(queriesTestFile);
+		
+		System.out.println("\nGenerating features for test queries:");
 		Train.generateFeatures(Definitions.queriesTest);
 		
 						

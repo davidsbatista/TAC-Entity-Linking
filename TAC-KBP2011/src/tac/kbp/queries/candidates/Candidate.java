@@ -70,7 +70,7 @@ public class Candidate {
 	public void extractFeatures(KBPQuery q) throws Exception{
 		
 		/* first get named entities and topics distribution */
-		getNamedEntities();
+		//getNamedEntities();
 		getTopicsDistribution();
 		
 		topicalSimilarities(q);
@@ -146,11 +146,9 @@ public class Candidate {
 		this.features.cosine_similarity = TextSimilarities.INSTANCE.getSimilarity(q.supportDocument, this.entity.wiki_text);
 		this.features.queryStringInWikiText = queryStringInWikiText(q);
 		this.features.candidateNameInSupportDocument = candidateNameInSupportDocument(q);
-		this.features.candidateType = determineType();
-		this.namedEntitiesIntersection(q);
+		//this.features.candidateType = determineType();
+		//this.namedEntitiesIntersection(q);
 	}
-
-	
 	
 	// Name Similarities
 	public void nameSimilarities(String query) {
