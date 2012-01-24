@@ -46,8 +46,8 @@ public class Definitions {
 	}
 	
 	/* to control which features are going to be generated */
-	public static boolean textualSimilarities = true;
-	public static boolean nameSimilarities = true;
+	public static boolean textualSimilarities = false;
+	public static boolean nameSimilarities = false;
 	public static boolean linkDisambiguation = true;
 	public static boolean topicalSimilarities = false;
 	

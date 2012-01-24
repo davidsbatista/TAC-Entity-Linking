@@ -308,19 +308,71 @@ public class Main {
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();
-				
+		
+		
+		//TRAINING
 		System.out.println("\nGenerating features for training queries:");
 		Train.generateFeatures(Definitions.queriesTrain);
+				
+		SVMRank svmrank = new SVMRank();		
 		
-		//TODO: save all extracted features of train to disk
+		//generate train features for SVMRank
+		System.out.println("Writing extracted features to SVMRank format:");
+		svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
 		
+		//free memory for Train queries data
+		Definitions.queriesTrain = null;
 		
+		//TEST
 		System.out.println("\nGenerating features for test queries:");
 		Train.generateFeatures(Definitions.queriesTest);
 		
-						
+		//generate test features for SVMRank
+		svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
+		
+		//free memory for Test queries data
+		Definitions.queriesTest = null;
+		
+		// SVMRank
+		if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
+			
+			System.out.println();
+			
+			//TODO: catch stdoutput, stderror			
+			Runtime runtime = Runtime.getRuntime();
+			String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
+			String classify_arguments = "svmrank-test.dat svmrank-trained-model.dat svmrank-predictions";
+			
+			//Train a model
+			System.out.println("Training SVMRank model: ");
+			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
+			
+			//call SVMRank
+			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
+			svmLearn.waitFor();
+			
+			//Test the trained model
+			System.out.println("\nTesting SVMRank model: ");
+			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+			
+			//call SVMRank
+			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+			svmClassify.waitFor();
+			
+			//calculate accuracy
+			String predictionsFilePath = "svmrank-predictions";
+			String goundtruthFilePath = "svmrank-test.dat";
+			SVMRankOutputResults.results(predictionsFilePath,goundtruthFilePath);
+ 		}
+		
+		
+		// LambdaMART
+		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
+			//TODO: add code to use LambdaMART ranking model
+		}
+		
 		// to train a logistic regression model
-		if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
+		else if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
 					
 			//training logistic regression model
 			LogisticRegressionLingPipe trainning = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
@@ -334,57 +386,6 @@ public class Main {
 			}
 			
 			else trainning.writeModel("linear-regression");
-		}
-		
-		
-		// SVMRank
-		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
-			
-			System.out.println();
-			
-			//TODO: catch stdoutput, stderror		
-			SVMRank svmrank = new SVMRank();
-			Runtime runtime = Runtime.getRuntime();
-			String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
-			String classify_arguments = "svmrank-test.dat svmrank-trained-model.dat svmrank-predictions";
-			
-			//Train a model
-			System.out.println("Training SVMRank model: ");
-			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
-			
-			//generate train features for SVMRank
-			svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
-			
-			//free memory for Train queries data
-			Definitions.queriesTrain = null;
-			
-			//call SVMRank
-			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
-			svmLearn.waitFor();
-			
-			//Test the trained model
-			System.out.println("\nTesting SVMRank model: ");
-			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
-			
-			//generate test features for SVMRank
-			svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
-			
-			//free memory for Test queries data
-			Definitions.queriesTest = null;
-			
-			//call SVMRank
-			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
-			svmClassify.waitFor();
-			
-			//calculate accuracy
-			String predictionsFilePath = "svmrank-predictions";
-			String goundtruthFilePath = "svmrank-test.dat";
-			SVMRankOutputResults.results(predictionsFilePath,goundtruthFilePath);
- 		}
-		
-		// LambdaMART
-		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
-			//TODO: add code to use LambdaMART ranking model
 		}
 	}
 
