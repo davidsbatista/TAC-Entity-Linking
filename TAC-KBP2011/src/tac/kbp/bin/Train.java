@@ -127,7 +127,7 @@ public class Train {
 		
 		for (KBPQuery q : queries) {
 			retrieveCandidates(q);
-			extractFeatures(q, false);
+			extractFeatures(q, true);
 			System.out.print("\t(" + count + "/" + queries.size() + ")\n");
 			count++;
 		}
