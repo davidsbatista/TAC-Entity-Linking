@@ -21,7 +21,10 @@ public class SVMRankOutputResults {
 	static List<KBPQuery> queries = new LinkedList<KBPQuery>();
 	
 	public static void results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
+		
 		parse(predictionsFilePath,goundtruthFilePath);
+		
+		System.out.println("Number of queries: " + queries.size());
 		
 		float mean_reciprocalRank = 0; 
 		
@@ -34,12 +37,17 @@ public class SVMRankOutputResults {
 			
 			//System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
 			mean_reciprocalRank += reciprocalRank;
+
+			System.out.println(q.query_id+'\t'+q.candidatesRanked.size());
+			
 			/*
 			for (Candidate c : q.candidatesRanked) {
 				System.out.print(c.entity.id + '\t' + c.conditionalProbabilities[1] + "\n");
 			}
 			*/
+
 		}
+		
 		System.out.println("Mean Reciprocal Rank: " + mean_reciprocalRank / queries.size());
 		generateOutput("results-SVMRank.txt");
 	}
@@ -54,13 +62,18 @@ public class SVMRankOutputResults {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
+			/*
 			// if inDegree or OutDegree is 0 then return NIL
 			else if (q.candidatesRanked.get(0).features.inDegree == 0 || q.candidatesRanked.get(0).features.outDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
+			*/
 			
-			else {
+			else {			
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
+				// also outputs ranking score
+				//out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id+'\t'+q.candidatesRanked.get(0).conditionalProbabilities[1]);
+				
 			}
 		}
 		out.close();		
@@ -78,7 +91,8 @@ public class SVMRankOutputResults {
 		}
 		
 		i=0;
-		KBPQuery q = null;			
+		KBPQuery q = null;
+		
 		for (String line: goundtruthFile) {
 			
 			if (line.startsWith("#")) {
