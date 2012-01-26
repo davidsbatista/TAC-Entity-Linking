@@ -260,8 +260,10 @@ public class Main {
 		//Definitions.loadClassifier(Definitions.serializedClassifier);
 		
 		/* LDA Knowledge Base */
-		System.out.println("Load KB LDA topics ...");
-		Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+		if (Definitions.topicalSimilarities) {
+			System.out.println("Load KB LDA topics ...");
+			Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+		}
 		
 		/* Dictionary of name-entities based on the Knowledge Base */
 		Definitions.buildDictionary();
@@ -280,7 +282,9 @@ public class Main {
 		}
 		
 		/* LDA Train Queries */
-		Definitions.determineLDAFile(queriesTrainFile);
+		if (Definitions.topicalSimilarities) {
+			Definitions.determineLDAFile(queriesTrainFile);
+		}
 		
 		System.out.println("\nProcessing training queries:");
 		Train.process(Definitions.queriesTrain, true, true);
@@ -371,7 +375,7 @@ public class Main {
 			//TODO: add code to use LambdaMART ranking model
 		}
 		
-		// to train a logistic regression model
+		//TODO: train a logistic regression model
 		else if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
 					
 			//training logistic regression model
@@ -390,7 +394,7 @@ public class Main {
 	}
 
 	static void svmresults(CommandLine line) throws Exception {
-		
+			
 		String path = line.getOptionValue("dir");
 		String goundtruthFilePath = path+"/svmrank-test.dat";
 		String predictionsFilePath = path+"/svmrank-predictions";		
