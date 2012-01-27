@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -18,6 +19,7 @@ import org.apache.commons.cli.Options;
 import org.apache.lucene.index.CorruptIndexException;
 
 import tac.kbp.kb.index.spellchecker.SuggestWord;
+import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.queries.candidates.CandidateComparator;
@@ -40,14 +42,15 @@ public class Main {
 		options.addOption("graph", false,  "generate results based only on outLinks and inLinks");
 		options.addOption("baseline", false, "only uses Lucene to generate answers");
 		options.addOption("recall", false, "used to tune the recall");
-		options.addOption("svmresults", false, "output results from SVMRank output");		
+		options.addOption("svmresults", false, "output results from SVMRank output");
+		options.addOption("extract", false, "extract features from a queries XML file");
+		options.addOption("svmrankformat", false, "converts extracted features into one file for SVMRank");
 		
 		// add argument options
 		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
 		Option queriesTest = OptionBuilder.withArgName("queriesTest").hasArg().withDescription("XML file containing queries for testing").create( "queriesTest" );
-		//Option vectors = OptionBuilder.withArgName("vectors").hasArg().withDescription("directory with extracted feature vectors").create( "vectors" );
+		Option queries = OptionBuilder.withArgName("queries").hasArg().withDescription("directory with extracted feature").create( "queries" );
 		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("<baseline|svmrank|logistic>").create( "model" );
-		Option modelFile = OptionBuilder.withArgName("filename").hasArg().withDescription("filename to save model").create("modelFilename");
 		Option n_candidates = OptionBuilder.withArgName("candidates").hasArg().withDescription("number of candidates to retrieve per sense").create("candidates");
 		Option directory = OptionBuilder.withArgName("dir").hasArg().withDescription("directory containning: svmrank-test.dat, svmrank-train.dat, svmrank-trained-model.dat").create("dir");
 		
@@ -56,6 +59,7 @@ public class Main {
 		options.addOption(directory);
 		options.addOption(model);
 		options.addOption(n_candidates);
+		options.addOption(queries);
 		
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse( options, args );
@@ -72,7 +76,9 @@ public class Main {
 			else if (line.hasOption("recall")) recall(line);
 			else if (line.hasOption("baseline")) baseline(line);
 			else if (line.hasOption("svmresults")) svmresults(line);
+			else if (line.hasOption("svmrankformat")) svmrankformat(line);
 			else if (line.hasOption("graph")) graph(line);
+			else if (line.hasOption("extract")) extract(line);
 			
 			//close indexes
 			if (line.hasOption("train")) {
@@ -84,6 +90,115 @@ public class Main {
 				Definitions.searcher.close();
 			}
 		}
+	}
+	
+	static void svmrankformat(CommandLine line) throws IOException {
+		
+		// directory with features files
+		// answers files
+		
+		String featuresDir = line.getOptionValue("dir");
+		String queries = line.getOptionValue("queries");
+		SVMRank svmrank = new SVMRank();
+		
+		//generate train features for SVMRank
+		System.out.println("Writing extracted features to SVMRank format:");
+		System.out.println("loading features from: " + featuresDir);
+		System.out.println("loading answers from: " + queries);
+		
+		/* Queries answers file */
+		HashMap<String, GoldQuery> answers = Definitions.loadQueriesAnswers(queries);
+		
+		svmrank.svmRankFormat(featuresDir, answers,"svmrank-train.dat");
+	}
+	
+	static void extract(CommandLine line) throws Exception {
+		
+		/* Lucene Index */		
+		Definitions.loadKBIndex();
+		
+		/* SpellChecker Index */
+		Definitions.loadSpellCheckerIndex();
+		
+		/* Document Collection */
+		Definitions.loadDocumentCollecion();
+		
+		System.out.println();
+		
+		/* REDIS connection */
+		Definitions.connectionREDIS();
+		
+		System.out.println();
+		
+		/* Stop words */
+		Definitions.loadStopWords();
+		
+		/* Stanford NER */
+		//Definitions.loadClassifier(Definitions.serializedClassifier);
+		
+		/* LDA Knowledge Base */
+		if (Definitions.topicalSimilarities) {
+			System.out.println("Load KB LDA topics ...");
+			Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+		}
+		
+		/* Dictionary of name-entities based on the Knowledge Base */
+		Definitions.buildDictionary();
+		
+		
+		/* Train queries XML file */
+		String queriesTrainFile = line.getOptionValue("queriesTrain");
+		
+		if (queriesTrainFile!=null) {
+			
+			System.out.println("Loading queries from: " + queriesTrainFile);
+			Definitions.queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+			
+			/* Queries answers file */
+			Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
+			
+			/* set the answer for queries*/
+			for (KBPQuery q : Definitions.queriesTrain) {
+				q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
+			}
+			
+			/* LDA Train Queries */
+			if (Definitions.topicalSimilarities) {
+				Definitions.determineLDAFile(queriesTrainFile);
+			}
+			
+			System.out.println("\nProcessing training queries:");
+			Train.process(Definitions.queriesTrain, true, true);
+		}
+		
+		System.out.println();
+		
+		/* Test queries XML file */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		
+		if (queriesTrainFile!=null) {
+			System.out.println("\nLoading queries from: " + queriesTestFile);
+			Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+			
+			/* Queries answers file */
+			Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
+			
+			/* set the answer for queries*/
+			for (KBPQuery q : Definitions.queriesTest) {
+				q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
+			}
+			
+			/* LDA Test Queries */
+			Definitions.determineLDAFile(queriesTestFile);		
+			
+			System.out.println("\n\nProcessing test queries:");
+			Train.process(Definitions.queriesTest, true, true);
+			Train.generateFeatures(Definitions.queriesTrain);
+		}
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();		
+		
 	}
 	
 	static void recall(CommandLine line) throws Exception {
@@ -181,7 +296,7 @@ public class Main {
 	
 	static void baseline(CommandLine line) throws Exception {
 		
-		/* Lucene Index */		
+		/* Lucene Index */
 		Definitions.loadKBIndex();
 		
 		/* SpellChecker Index */
@@ -287,7 +402,7 @@ public class Main {
 		}
 		
 		System.out.println("\nProcessing training queries:");
-		Train.process(Definitions.queriesTrain, true, true);
+		Train.process(Definitions.queriesTrain, Definitions.topicalSimilarities, true);
 		
 		System.out.println();
 		
@@ -308,7 +423,7 @@ public class Main {
 		Definitions.determineLDAFile(queriesTestFile);		
 		
 		System.out.println("\n\nProcessing test queries:");
-		Train.process(Definitions.queriesTest, true, true);
+		Train.process(Definitions.queriesTest, Definitions.topicalSimilarities, true);
 		
 		//close REDIS connection
 		Definitions.binaryjedis.disconnect();

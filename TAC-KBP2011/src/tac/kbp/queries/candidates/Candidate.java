@@ -47,6 +47,12 @@ public class Candidate {
 		this.features = new Features();
 	}
 	
+	public Candidate(String id) {
+		super();
+		this.features = new Features();
+	}
+	
+	
 	public Candidate(org.apache.lucene.document.Document doc, int indexID) {
 		
 		entity = new Entity();
@@ -71,12 +77,24 @@ public class Candidate {
 		
 		/* first get named entities and topics distribution */
 		//getNamedEntities();
-		getTopicsDistribution();
 		
-		topicalSimilarities(q);
-		nameSimilarities(q.name);
-		textualSimilarities(q);
-		linkDisambiguation(q);
+		if (Definitions.topicalSimilarities) {
+			getTopicsDistribution();
+			topicalSimilarities(q);
+		}
+		
+		if (Definitions.nameSimilarities) {
+			nameSimilarities(q.name);
+		}
+		
+		if (Definitions.textualSimilarities) {
+			textualSimilarities(q);
+		}
+		
+		if (Definitions.linkDisambiguation) {
+			linkDisambiguation(q);
+		}
+		
 		isCorrect(q);
 	}
 	

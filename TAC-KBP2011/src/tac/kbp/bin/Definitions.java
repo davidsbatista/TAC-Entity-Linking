@@ -275,6 +275,7 @@ public class Definitions {
 		return queriesAnswers;		
 	}
 	
+	
 	public static void determineLDAFile(String queries) throws Exception {
 		
 		String lda_topics = null;

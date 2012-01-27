@@ -15,6 +15,7 @@ public class Features {
 	public NERType candidateType;
 	public String eid; 
 	public boolean correct_answer;
+	public double[] features;
 		
 	/* textual similarities */
 	public double cosine_similarity; 				 	// cosine similarity #1

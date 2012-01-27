@@ -1,18 +1,24 @@
 package tac.kbp.ranking;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import tac.kbp.bin.Definitions;
+import edu.uci.jforests.util.ArraysUtil;
+
 import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.KBPQueryComparator;
 import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.queries.candidates.CandidateComparator;
 
 public class SVMRank {
 	
@@ -59,4 +65,76 @@ public class SVMRank {
 		}
 		out.close();
 	}
+	
+	public void svmRankFormat(String queriesFilesDir, HashMap<String, GoldQuery> queries_answers, String outputfile) throws IOException {
+		
+		File dir = new File(queriesFilesDir);
+		String[] files = dir.list();
+		
+		FileWriter fstream = new FileWriter(outputfile);
+		BufferedWriter out = new BufferedWriter(fstream);
+		
+		if (files == null) {
+		} else {
+			System.out.println("found " + files.length + " files");
+			
+			java.util.Arrays.sort(files);
+			
+		    for (int i=0; i < files.length; i++) {
+		        String filename = files[i];
+		        readFile(filename,queries_answers,out);
+		    }
+		}
+	}
+	
+	public void readFile(String filename,HashMap<String, GoldQuery> queries_answers, BufferedWriter out) throws IOException{
+		
+		//filename = queryID
+		// each line candidate:
+		//	 E0393717:0.1166139856018351,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8763.0,0.0,0
+		
+		String query_id = filename.split("\\.")[0];
+		
+		FileInputStream fstream = new FileInputStream(filename);
+		DataInputStream in = new DataInputStream(fstream);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		String strLine;
+		
+		
+		
+		System.out.println("Processing " + query_id);
+		
+		out.write("#" + query_id + " " +  queries_answers.get(query_id).answer+"\n");
+		
+		while ((strLine = br.readLine()) != null)   {
+			
+			String[] line_parts = strLine.split(":");
+			String candidate_id = line_parts[0];
+			String[] features = line_parts[1].split(",");
+			
+			if (features[features.length-1].equalsIgnoreCase("1"))
+				out.write("1 ");
+			else out.write("0 ");
+			
+			out.write("qid:"+filename.split("EL")[1]+' ');
+						
+			for (int z = 0; z < features.length-1; z++) {
+				out.write((z+1)+":"+features[z]+' ');	
+			}
+			out.write("#"+candidate_id+"\n");
+		}
+		br.close();
+		in.close();
+		fstream.close();
+	}
+	
+	
 }
+
+
+
+
+
+
+
+
