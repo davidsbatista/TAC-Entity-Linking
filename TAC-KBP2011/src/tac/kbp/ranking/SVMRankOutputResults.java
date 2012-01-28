@@ -62,12 +62,10 @@ public class SVMRankOutputResults {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
-			/*
 			// if inDegree or OutDegree is 0 then return NIL
 			else if (q.candidatesRanked.get(0).features.inDegree == 0 || q.candidatesRanked.get(0).features.outDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
-			*/
 			
 			else {			
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
