@@ -51,6 +51,8 @@ public class Features {
 	 * Levenshtein 			#22
 	 */
 	
+	public float average_similarities = 0;				// average of the 5 similarity string measures, to be used for NIL Detector
+	
 	/* link disambiguation */
 	public double outDegree;	// the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
 	public double inDegree;	// the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24

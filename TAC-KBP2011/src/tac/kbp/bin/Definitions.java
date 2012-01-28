@@ -47,9 +47,9 @@ public class Definitions {
 	
 	/* to control which features are going to be generated */
 	public static boolean textualSimilarities = true;
-	public static boolean nameSimilarities = false;
+	public static boolean nameSimilarities = true;
 	public static boolean linkDisambiguation = true;
-	public static boolean topicalSimilarities = false;
+	public static boolean topicalSimilarities = true;
 	
 	/* queries */
 	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";

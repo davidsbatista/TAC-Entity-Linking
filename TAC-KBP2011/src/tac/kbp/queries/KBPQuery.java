@@ -69,9 +69,10 @@ public class KBPQuery {
 	
 	// list of suggested words from query
 	public List<SuggestWord> suggestedwords;
+
 	
 	
-	// Constructors
+	// Constructors	
 	public KBPQuery() {
 		super();
 		this.candidates = new HashSet<Candidate>();
@@ -101,8 +102,7 @@ public class KBPQuery {
 	
 	
 	// Methods
-	
-	//Reciprocal rank
+	// Reciprocal rank
 	public float reciprocalRank(){
 		float reciprocalrank = 0;
 		for (int i = 0; i < candidatesRanked.size(); i++) {

@@ -30,7 +30,7 @@ public class Candidate {
 	public double[] conditionalProbabilities;
 	
 	public Features features;
-	
+
 	
 	// Constructors
 	public Candidate(String eid, Features features) {
@@ -172,7 +172,7 @@ public class Candidate {
 	public void nameSimilarities(String query) {
 		
 		this.features.similarities = tac.kbp.utils.string.StringSimilarities.compareStrings(query,this.entity.name);
-		
+		features.average_similarities = features.average_similarities();		
 		features.exactMatch = query.equalsIgnoreCase(entity.name);
 		features.querySubStringOfCandidate = entity.name.toLowerCase().contains(query.toLowerCase());
 		features.candidateSubStringOfQuery = query.toLowerCase().contains(entity.name.toLowerCase());		
