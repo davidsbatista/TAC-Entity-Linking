@@ -37,8 +37,8 @@ import tac.kbp.utils.string.ExtractAbbrev;
 public class Definitions {
 	
 	/* Settings for Retrieval from Lucene */
-	public static int candidates_per_sense = 30;
-	public static int max_candidates = 250;
+	public static int candidates_per_sense = 5;
+	public static int max_candidates = -1;
 	
 	/* named-entities type */
 	public enum NERType {

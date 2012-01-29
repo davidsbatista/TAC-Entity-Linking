@@ -8,14 +8,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.lang.Math;
 
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.queries.candidates.CandidateComparator;
 import tac.kbp.utils.misc.BigFile;
-
-import com.aliasi.stats.Statistics;
 
 public class SVMRankOutputResults {
 
@@ -51,59 +48,7 @@ public class SVMRankOutputResults {
 		generateOutput("results-SVMRank.txt");
 	}
 	
-	static void calculate_NIL_feature(KBPQuery q) {
-		
-		/* based on score 
-		- ranking score
-		- mean score
-		- difference from mean score
-		- standard deviation
-		- Dixon's Q Test for Outliers
-		- Grubb's Test for Outliers
-		*/
-		
-		/* based on features 
-		- kldivergence
-		- topic_cosine_similarity
-		- average string similarities
-		*/
-		
-		double[] scores = new double[q.candidatesRanked.size()];
-		double[] kldivergence = new double[q.candidatesRanked.size()];
-		double[] textual_cosine_similarity = new double[q.candidatesRanked.size()];
-		double[] average_string_similarities = new double[q.candidatesRanked.size()];
-		
-		for (int i = 0; i < q.candidatesRanked.size(); i++) {
-			scores[i] = q.candidatesRanked.get(i).conditionalProbabilities[1];
-			kldivergence[i] = q.candidatesRanked.get(i).features.kldivergence;
-			textual_cosine_similarity[i] = q.candidatesRanked.get(i).features.cosine_similarity;
-			average_string_similarities[i] = q.candidatesRanked.get(i).features.average_similarities;			
-		}
-		
-		/* ranking scores */
-		double mean_scores = Statistics.mean(scores);
-		double std_dvt_scores = Statistics.standardDeviation(scores);
-		double diff_mean_scores = Math.abs(q.candidatesRanked.get(0).conditionalProbabilities[1]-mean_scores);
-		double dixonTest_scores = (scores[0]-scores[1]) / (scores[0]-scores[scores.length]); 
-		double grubbsTest_scores = (scores[0]-mean_scores) / std_dvt_scores;
-		
-		/*
-		// kl-divergence
-		double mean_kldivergence = Statistics.mean(kldivergence);
-		double std_dvt_kldivergence = Statistics.standardDeviation(kldivergence);
-		double diff_mean_kldivergence = Math.abs(q.candidatesRanked.get(0).features.kldivergence-mean_kldivergence);
-		
-		// cosine sim
-		double mean_textual_cosine_similarity = Statistics.mean(textual_cosine_similarity);
-		double std_dvt_textual_cosine_similarity = Statistics.standardDeviation(textual_cosine_similarity);
-		double diff_mean_textual_cosine_similarity = Math.abs(q.candidatesRanked.get(0).features.cosine_similarity-mean_textual_cosine_similarity);		
-		
-		// avg string sim
-		double mean_average_string_similarities = Statistics.mean(average_string_similarities);		
-		double std_average_string_similarities = Statistics.standardDeviation(average_string_similarities);
-		double diff_mean_string_similarities = Math.abs(q.candidatesRanked.get(0).features.average_similarities-mean_average_string_similarities);
-		*/
-	}
+	
 	
 	static void generateOutput(String output) throws FileNotFoundException {
 		
