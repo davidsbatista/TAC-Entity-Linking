@@ -49,7 +49,7 @@ public class Definitions {
 	public static boolean textualSimilarities = true;
 	public static boolean nameSimilarities = true;
 	public static boolean linkDisambiguation = true;
-	public static boolean topicalSimilarities = true;
+	public static boolean topicalSimilarities = false;
 	
 	/* queries */
 	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
