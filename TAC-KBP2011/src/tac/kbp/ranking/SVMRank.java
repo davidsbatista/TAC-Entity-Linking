@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -97,9 +96,7 @@ public class SVMRank {
 		DataInputStream in = new DataInputStream(fstream);
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		String strLine;
-		
-		
-		
+
 		System.out.println("Processing " + query_id);
 		
 		out.write("#" + query_id + " " +  queries_answers.get(query_id).answer+"\n");
@@ -125,14 +122,5 @@ public class SVMRank {
 		in.close();
 		fstream.close();
 	}
-	
-	
+
 }
-
-
-
-
-
-
-
-

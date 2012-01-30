@@ -47,7 +47,7 @@ public class Definitions {
 	
 	/* to control which features are going to be generated */
 	public static boolean textualSimilarities = true;
-	public static boolean nameSimilarities = true;
+	public static boolean nameSimilarities = false;
 	public static boolean linkDisambiguation = true;
 	public static boolean topicalSimilarities = false;
 	
@@ -103,6 +103,10 @@ public class Definitions {
 	public static String SVMRankPath = "/collections/TAC-2011/SVMRank/";
 	public static String SVMRanklLearn = "svm_rank_learn";
 	public static String SVMRanklClassify = "svm_rank_classify";
+	
+	public static String SVMLightPath = "/collections/TAC-2011/SVMLight/";
+	public static String SVMLightLearn = "svm_learn";
+	public static String SVMLightClassify = "svm_classify";
 	
 	public static void loadRecall(String n_candidates) throws CorruptIndexException, IOException {
 		

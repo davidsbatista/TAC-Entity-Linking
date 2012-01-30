@@ -1,13 +1,9 @@
 package tac.kbp.queries;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,10 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
@@ -30,14 +22,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import redis.clients.jedis.BinaryJedis;
 import tac.kbp.bin.Definitions;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.utils.string.Abbreviations;
-import tac.kbp.utils.string.ExtractAbbrev;
 import edu.stanford.nlp.util.Triple;
 
 public class KBPQuery {
@@ -98,10 +88,9 @@ public class KBPQuery {
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 	}
-
-	
 	
 	// Methods
+	
 	// Reciprocal rank
 	public float reciprocalRank(){
 		float reciprocalrank = 0;
@@ -114,6 +103,19 @@ public class KBPQuery {
 		return reciprocalrank;
 		
 	}
+	
+	
+	public Candidate getCandidate(String id) {
+		Candidate candidate = null;		
+		for (Candidate c : candidates) {
+			if (c.entity.id.equalsIgnoreCase(id)) {
+				candidate = c;
+				break;
+			}
+		}
+		return candidate;
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {

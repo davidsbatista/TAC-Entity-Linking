@@ -16,17 +16,16 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.lucene.index.CorruptIndexException;
 
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
-import tac.kbp.queries.candidates.CandidateComparator;
 import tac.kbp.queries.candidates.CandidateComparatorInDegree;
 import tac.kbp.queries.candidates.CandidateComparatorOutDegree;
 import tac.kbp.queries.xml.ParseQueriesXMLFile;
 import tac.kbp.ranking.LogisticRegressionLingPipe;
+import tac.kbp.ranking.NILDetector;
 import tac.kbp.ranking.SVMRank;
 import tac.kbp.ranking.SVMRankOutputResults;
 
@@ -45,6 +44,7 @@ public class Main {
 		options.addOption("svmresults", false, "output results from SVMRank output");
 		options.addOption("extract", false, "extract features from a queries XML file");
 		options.addOption("svmrankformat", false, "converts extracted features into one file for SVMRank");
+		options.addOption("trainnil", false, "trains a NIL Detector - SVM");
 		
 		// add argument options
 		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
@@ -79,6 +79,7 @@ public class Main {
 			else if (line.hasOption("svmrankformat")) svmrankformat(line);
 			else if (line.hasOption("graph")) graph(line);
 			else if (line.hasOption("extract")) extract(line);
+			else if (line.hasOption("trainnil")) trainNIL(line);
 			
 			//close indexes
 			if (line.hasOption("train")) {
@@ -90,6 +91,164 @@ public class Main {
 				Definitions.searcher.close();
 			}
 		}
+	}
+	
+	static void trainNIL(CommandLine line) throws Exception {
+		
+		// LOAD all queries and extract candidates from KB
+		
+		/* Lucene Index */		
+		Definitions.loadKBIndex();
+		
+		/* SpellChecker Index */
+		Definitions.loadSpellCheckerIndex();
+		
+		/* Document Collection */
+		Definitions.loadDocumentCollecion();
+		
+		System.out.println();
+		
+		/* REDIS connection */
+		Definitions.connectionREDIS();
+		
+		System.out.println();
+		
+		/* Stop words */
+		Definitions.loadStopWords();
+		
+		/* Stanford NER */
+		//Definitions.loadClassifier(Definitions.serializedClassifier);
+		
+		/* LDA Knowledge Base */
+		if (Definitions.topicalSimilarities) {
+			System.out.println("Load KB LDA topics ...");
+			Definitions.loadLDATopics(Definitions.kb_lda_topics, Definitions.kb_topics);
+		}
+		
+		/* Dictionary of name-entities based on the Knowledge Base */
+		Definitions.buildDictionary();
+		
+		/* Train queries XML file */
+		String queriesTrainFile = line.getOptionValue("queriesTrain");
+		System.out.println("Loading queries from: " + queriesTrainFile);
+		Definitions.queriesTrain = ParseQueriesXMLFile.loadQueries(queriesTrainFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTrain) {
+			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
+		}
+		
+		/* LDA Train Queries */
+		if (Definitions.topicalSimilarities) {
+			Definitions.determineLDAFile(queriesTrainFile);
+		}
+		
+		System.out.println("\nProcessing training queries:");
+		Train.process(Definitions.queriesTrain, Definitions.topicalSimilarities, true);
+		
+		System.out.println();
+		
+		
+		/* Test queries XML file */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("\nLoading queries from: " + queriesTestFile);
+		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
+		
+		/* Queries answers file */
+		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
+		
+		/* set the answer for queries*/
+		for (KBPQuery q : Definitions.queriesTest) {
+			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
+		}
+		
+		/* LDA Test Queries */
+		Definitions.determineLDAFile(queriesTestFile);		
+		
+		System.out.println("\n\nProcessing test queries:");
+		Train.process(Definitions.queriesTest, Definitions.topicalSimilarities, true);
+		
+		//close REDIS connection
+		Definitions.binaryjedis.disconnect();
+		
+		//TRAINNING
+		Train.generateFeatures(Definitions.queriesTrain);
+		Train.generateFeatures(Definitions.queriesTest);
+		
+		SVMRank svmrank = new SVMRank();
+		svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
+		svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
+		
+		Runtime runtime = Runtime.getRuntime();
+		String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
+				
+		//Train a model
+		System.out.println("Training SVMRank model: ");
+		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
+		Process svmRankLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
+		svmRankLearn.waitFor();
+		
+		//apply the trained model to the queries in TrainingQueries in order to get ranking scores and used them for training the NIL Detector
+		System.out.println("\nApplying trained model to TrainingQueries to get ranking scores for trainning the NIL Detector");
+		String classify_arguments = "svmrank-train.dat svmrank-trained-model.dat svmrank-predictions_training_set";
+		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+		Process svmRankClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+		svmRankClassify.waitFor();
+		
+		// gather ranking scores from SVMRankOutputResults
+		String predictionsFilePath = "svmrank-predictions_training_set";
+		String goundtruthFilePath = "svmrank-train.dat";
+		SVMRankOutputResults outputresults = new SVMRankOutputResults(); 
+		List<KBPQuery> TrainningQueriesScore = outputresults.results(predictionsFilePath,goundtruthFilePath);
+		
+		for (int i = 0; i < Definitions.queriesTrain.size(); i++) {
+			
+			// check if queries are the same before getting top-ranked candidate
+			if  (TrainningQueriesScore.get(i).query_id.equalsIgnoreCase(Definitions.queriesTrain.get(i).query_id)) {
+				
+				//create ranked list in queriesTrain with the contents from TrainningQueriesScore
+				Definitions.queriesTrain.get(i).candidatesRanked = new ArrayList<Candidate>(TrainningQueriesScore.get(i).candidatesRanked);
+			}
+		}
+		
+		//Train NIL-Detector using the ranking scores
+		NILDetector SVMNILDetector = new NILDetector();
+		SVMNILDetector.train(Definitions.queriesTrain,"NIL_train.dat");
+		
+		
+		
+		//Test the trained Ranking model on the Test queries
+		System.out.println("\nTesting SVMRank model: ");
+		classify_arguments = "svmrank-test.dat svmrank-trained-model.dat svmrank-predictions_test_set";
+		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+		svmRankClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
+		svmRankClassify.waitFor();
+		
+		//gather ranking scores from SVMRankOutputResults
+		predictionsFilePath = "svmrank-predictions_test_set";
+		goundtruthFilePath = "svmrank-test.dat";
+		SVMRankOutputResults outputTestresults = new SVMRankOutputResults();
+		List<KBPQuery> TestQueriesScore = outputTestresults.results(predictionsFilePath,goundtruthFilePath);
+						
+		System.out.println("TestQueriesScore: " + TestQueriesScore.size());		
+		System.out.println("Definitions.queriesTest: " + Definitions.queriesTest.size());
+		
+		for (int i = 0; i < Definitions.queriesTest.size(); i++) {
+			// check if queries are the same before getting top-ranked candidate
+			if  (TestQueriesScore.get(i).query_id.equalsIgnoreCase(Definitions.queriesTest.get(i).query_id)) {
+				
+				System.out.println("found!");
+				
+				//create ranked list in queriesTrain with the contents from TrainningQueriesScore
+				Definitions.queriesTest.get(i).candidatesRanked = new ArrayList<Candidate>(TestQueriesScore.get(i).candidatesRanked);
+			}
+		}
+
+		//Test the trained model
+		SVMNILDetector.classify(Definitions.queriesTest,"NIL_test.dat");
 	}
 	
 	static void svmrankformat(CommandLine line) throws IOException {
@@ -439,7 +598,7 @@ public class Main {
 		System.out.println("Writing extracted features to SVMRank format:");
 		svmrank.svmRankFormat(Definitions.queriesTrain, Definitions.queriesAnswersTrain,"svmrank-train.dat");
 		
-		//free memory for Train queries data
+		//free memory of Train queries data
 		Definitions.queriesTrain = null;
 		
 		//TEST
@@ -449,8 +608,9 @@ public class Main {
 		//generate test features for SVMRank
 		svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
 		
-		//free memory for Test queries data
+		//free memory of Test queries data
 		Definitions.queriesTest = null;
+		
 		
 		// SVMRank
 		if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
@@ -481,7 +641,8 @@ public class Main {
 			//calculate accuracy
 			String predictionsFilePath = "svmrank-predictions";
 			String goundtruthFilePath = "svmrank-test.dat";
-			SVMRankOutputResults.results(predictionsFilePath,goundtruthFilePath);
+			SVMRankOutputResults output = new SVMRankOutputResults();
+			output.results(predictionsFilePath,goundtruthFilePath);
  		}
 		
 		
@@ -512,8 +673,9 @@ public class Main {
 			
 		String path = line.getOptionValue("dir");
 		String goundtruthFilePath = path+"/svmrank-test.dat";
-		String predictionsFilePath = path+"/svmrank-predictions";		
-		SVMRankOutputResults.results(predictionsFilePath, goundtruthFilePath);
+		String predictionsFilePath = path+"/svmrank-predictions";
+		SVMRankOutputResults output = new SVMRankOutputResults();
+		output.results(predictionsFilePath, goundtruthFilePath);
 	}
 
 	static void generateOutput(String output, List<KBPQuery> queries) throws FileNotFoundException {

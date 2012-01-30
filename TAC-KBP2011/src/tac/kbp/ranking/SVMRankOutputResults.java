@@ -16,16 +16,15 @@ import tac.kbp.utils.misc.BigFile;
 
 public class SVMRankOutputResults {
 
-	static HashMap<Integer, Double> predictions = new HashMap<Integer, Double>();
+	HashMap<Integer, Double> predictions = new HashMap<Integer, Double>();
 	
-	static List<KBPQuery> queries = new LinkedList<KBPQuery>();
+	public List<KBPQuery> queries = new LinkedList<KBPQuery>();
 	
-	public static void results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
+	public List<KBPQuery> results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
 		
 		parse(predictionsFilePath,goundtruthFilePath);
 		
-		System.out.println("Number of queries: " + queries.size());
-		
+		System.out.println("Number of queries: " + queries.size());		
 		float mean_reciprocalRank = 0; 
 		
 		//rank candidates according to classification scores
@@ -34,11 +33,8 @@ public class SVMRankOutputResults {
 			Collections.sort(q.candidatesRanked, new CandidateComparator());
 			
 			float reciprocalRank = q.reciprocalRank();
-			
-			System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
+			//System.out.println(q.query_id + "\t\t" + "Answer:" + q.gold_answer + "\t\t" + "reciprocal rank: " +reciprocalRank);
 			mean_reciprocalRank += reciprocalRank;
-
-			System.out.println(q.query_id+'\t'+q.candidatesRanked.size());
 
 		}
 		
@@ -46,11 +42,11 @@ public class SVMRankOutputResults {
 		
 		//TODO: estimate if top-ranked is NIL
 		generateOutput("results-SVMRank.txt");
+		
+		return queries;
 	}
 	
-	
-	
-	static void generateOutput(String output) throws FileNotFoundException {
+	public void generateOutput(String output) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
@@ -72,7 +68,7 @@ public class SVMRankOutputResults {
 		out.close();		
 	}
 
-	public static void parse(String predictionsFilePath, String goundtruthFilePath) throws Exception{
+	public void parse(String predictionsFilePath, String goundtruthFilePath) throws Exception{
 		
 		BigFile predictionsFile = new BigFile(predictionsFilePath);
 		BigFile goundtruthFile = new BigFile(goundtruthFilePath);
@@ -114,6 +110,7 @@ public class SVMRankOutputResults {
 				
 				Candidate c = new Candidate();
 				
+				//TODO: parse features from the line to Candidate object
 				c.entity.id = entity_id;	//.split("#")[1];
 				c.features.outDegree = (int) Double.parseDouble( data[24].split(":")[1] );
 				c.features.inDegree = (int) Double.parseDouble( data[25].split(":")[1] );

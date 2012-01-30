@@ -1,24 +1,42 @@
 package tac.kbp.ranking;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
+
+import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 import com.aliasi.stats.Statistics;
 
 public class NILDetector {
 	
-	public void train(List<KBPQuery> queries) {
+	public void train(List<KBPQuery> queries, String outputfile) throws IOException, InterruptedException {
 		
-		for (KBPQuery q : queries) {			
-			double[] features = extract_features(q);
+		//extract features
+		FileWriter fstream = new FileWriter(outputfile);
+		BufferedWriter out = new BufferedWriter(fstream);
+		
+		for (KBPQuery q : queries) {
 			
-			System.out.print(features[0]);
+			double[] features = extract_features(q);
+			out.write(Double.toString(features[0]));
+			
 			for (int i = 1; i < features.length; i++) {
-				System.out.print(+' '+i+':'+features[0]);
+				out.write(' '+ Integer.toString(i) + ':' + features[i]);
 			}
-			System.out.println("# " + q.docid + q.gold_answer);
-		}		
-		//TODO: write SVMLib format to file		
-		//TODO: train classifier
+			out.write("# " + q.query_id + ' ' + q.gold_answer + '\n');
+		}
+		
+		out.close();
+		
+		//train classifier
+		Runtime runtime = Runtime.getRuntime();
+		String learn_arguments = "NIL_train.dat NIL_detector.dat";
+		System.out.println("Training SVMLight model (NIL Detector): ");
+		System.out.println(Definitions.SVMLightPath+Definitions.SVMLightLearn+' '+learn_arguments);
+		Process svmLearn = runtime.exec(Definitions.SVMLightPath+Definitions.SVMLightLearn+' '+learn_arguments);
+		svmLearn.waitFor();
 	}
 	
 	static double[] extract_features(KBPQuery q) {
@@ -47,29 +65,31 @@ public class NILDetector {
 		
 		for (int i = 0; i < q.candidatesRanked.size(); i++) {
 			scores[i] = q.candidatesRanked.get(i).conditionalProbabilities[1];
-			kldivergence[i] = q.candidatesRanked.get(i).features.kldivergence;
-			textual_cosine_similarity[i] = q.candidatesRanked.get(i).features.cosine_similarity;
-			average_string_similarities[i] = q.candidatesRanked.get(i).features.average_similarities;			
+			
+			//candidatesRanked contains only EID and score, features must be extracted from q.candidates HashSet			
+			kldivergence[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.kldivergence; 
+			textual_cosine_similarity[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.cosine_similarity;
+			average_string_similarities[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.average_similarities;			
 		}
 		
 		/* ranking scores */
 		double mean_scores = Statistics.mean(scores);
 		double std_dvt_scores = Statistics.standardDeviation(scores);
 		double diff_mean_scores = Math.abs(q.candidatesRanked.get(0).conditionalProbabilities[1]-mean_scores);
-		double dixonTest_scores = (scores[0]-scores[1]) / (scores[0]-scores[scores.length]); 
+		double dixonTest_scores = (scores[0]-scores[1]) / (scores[0]-scores[scores.length-1]); 
 		double grubbsTest_scores = (scores[0]-mean_scores) / std_dvt_scores;
-		
 		
 		if (q.gold_answer.startsWith("NIL")) 
 			features[0] = 1;
 		else 
 			features[0] = 0;
-		
+			
 		features[1] = mean_scores;
 		features[2] = std_dvt_scores;
 		features[3] = diff_mean_scores;
 		features[4] = dixonTest_scores;
 		features[5] = grubbsTest_scores;
+
 		
 		return features;
 		
@@ -91,11 +111,31 @@ public class NILDetector {
 		*/
 	}
 	
-	public void classify(){
+	public void classify(List<KBPQuery> queries, String outputfile) throws IOException, InterruptedException{
 		
 		//extract features from top candidate
-		//load trained model
-		//apply
+		FileWriter fstream = new FileWriter(outputfile);
+		BufferedWriter out = new BufferedWriter(fstream);
 		
+		for (KBPQuery q : queries) {
+			
+			double[] features = extract_features(q);
+			out.write(Double.toString(features[0]));
+			
+			for (int i = 1; i < features.length; i++) {
+				out.write(' '+ Integer.toString(i) + ':' + features[i]);
+			}
+			out.write("# " + q.query_id + ' ' + q.gold_answer + '\n');
+		}
+		
+		out.close();
+		
+		//classify
+		Runtime runtime = Runtime.getRuntime();
+		String classify_arguments = " NIL_test.dat NIL_detector.dat NIL_predictions";
+		System.out.println("Testing SVMLight model (NIL Detector): ");
+		System.out.println(Definitions.SVMLightPath+Definitions.SVMLightClassify+' '+classify_arguments);
+		Process SVMLightClassify = runtime.exec(Definitions.SVMLightPath+Definitions.SVMLightClassify+' '+classify_arguments);
+		SVMLightClassify.waitFor();
 	}
 }
