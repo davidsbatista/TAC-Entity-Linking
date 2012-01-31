@@ -39,7 +39,7 @@ public class NILDetector {
 		svmLearn.waitFor();
 	}
 	
-	static double[] extract_features(KBPQuery q) {
+	double[] extract_features(KBPQuery q) {
 		
 		/* based on score 
 		- ranking score

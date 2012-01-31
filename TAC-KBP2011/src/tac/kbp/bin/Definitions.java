@@ -18,21 +18,19 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
+import redis.clients.jedis.BinaryJedis;
+import tac.kbp.kb.index.spellchecker.SpellChecker;
+import tac.kbp.queries.GoldQuery;
+import tac.kbp.queries.KBPQuery;
+import tac.kbp.utils.misc.BigFile;
+
 import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.ExactDictionaryChunker;
 import com.aliasi.dict.MapDictionary;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 
-import redis.clients.jedis.BinaryJedis;
-import tac.kbp.kb.index.spellchecker.SpellChecker;
-import tac.kbp.queries.GoldQuery;
-import tac.kbp.queries.KBPQuery;
-import tac.kbp.queries.xml.ParseQueriesXMLFile;
-import tac.kbp.utils.misc.BigFile;
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
-
-import tac.kbp.utils.string.ExtractAbbrev;
 
 public class Definitions {
 	
@@ -47,9 +45,9 @@ public class Definitions {
 	
 	/* to control which features are going to be generated */
 	public static boolean textualSimilarities = true;
-	public static boolean nameSimilarities = false;
-	public static boolean linkDisambiguation = true;
-	public static boolean topicalSimilarities = false;
+	public static boolean nameSimilarities = true;
+	public static boolean linkDisambiguation = false;
+	public static boolean topicalSimilarities = true;
 	
 	/* queries */
 	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
