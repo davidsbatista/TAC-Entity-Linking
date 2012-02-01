@@ -18,14 +18,15 @@ public class NILDetector {
 		BufferedWriter out = new BufferedWriter(fstream);
 		
 		for (KBPQuery q : queries) {
-			
+
 			double[] features = extract_features(q);
 			out.write(Double.toString(features[0]));
-			
+				
 			for (int i = 1; i < features.length; i++) {
 				out.write(' '+ Integer.toString(i) + ':' + features[i]);
 			}
-			out.write("# " + q.query_id + ' ' + q.gold_answer + '\n');
+			
+			out.write(" # " + q.query_id + ' ' + q.gold_answer + '\n');
 		}
 		
 		out.close();
@@ -58,39 +59,66 @@ public class NILDetector {
 		
 		double[] features = new double[6];
 		
-		double[] scores = new double[q.candidatesRanked.size()];
-		double[] kldivergence = new double[q.candidatesRanked.size()];
-		double[] textual_cosine_similarity = new double[q.candidatesRanked.size()];
-		double[] average_string_similarities = new double[q.candidatesRanked.size()];
+		System.out.println("q.query_id: " + q.name);		
+		System.out.println("number of candiadtes: " + q.candidatesRanked.size());
 		
-		for (int i = 0; i < q.candidatesRanked.size(); i++) {
-			scores[i] = q.candidatesRanked.get(i).conditionalProbabilities[1];
+		if (q.candidatesRanked.size()>1) {
+		
+			double[] scores = new double[q.candidatesRanked.size()];
 			
-			//candidatesRanked contains only EID and score, features must be extracted from q.candidates HashSet			
-			kldivergence[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.kldivergence; 
-			textual_cosine_similarity[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.cosine_similarity;
-			average_string_similarities[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.average_similarities;			
+			/*
+			double[] kldivergence = new double[q.candidatesRanked.size()];
+			double[] textual_cosine_similarity = new double[q.candidatesRanked.size()];
+			double[] average_string_similarities = new double[q.candidatesRanked.size()];
+			*/
+			
+			for (int i = 0; i < q.candidatesRanked.size(); i++) {
+				scores[i] = q.candidatesRanked.get(i).conditionalProbabilities[1];
+				
+				//candidatesRanked contains only EID and score, features must be extracted from q.candidates HashSet			
+				//kldivergence[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.kldivergence; 
+				//textual_cosine_similarity[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.cosine_similarity;
+				//average_string_similarities[i] = q.getCandidate(q.candidatesRanked.get(i).entity.id).features.average_similarities;			
+			}
+			
+			/* ranking scores */
+			double mean_scores = Statistics.mean(scores);
+			double std_dvt_scores = Statistics.standardDeviation(scores);
+			double diff_mean_scores = Math.abs(q.candidatesRanked.get(0).conditionalProbabilities[1]-mean_scores);
+			double dixonTest_scores = (scores[0]-scores[1]) / (scores[0]-scores[scores.length-1]); 
+			double grubbsTest_scores = (scores[0]-mean_scores) / std_dvt_scores;
+			
+			features[1] = mean_scores;
+			features[2] = std_dvt_scores;
+			features[3] = diff_mean_scores;
+			features[4] = dixonTest_scores;
+			features[5] = grubbsTest_scores;
 		}
 		
-		/* ranking scores */
-		double mean_scores = Statistics.mean(scores);
-		double std_dvt_scores = Statistics.standardDeviation(scores);
-		double diff_mean_scores = Math.abs(q.candidatesRanked.get(0).conditionalProbabilities[1]-mean_scores);
-		double dixonTest_scores = (scores[0]-scores[1]) / (scores[0]-scores[scores.length-1]); 
-		double grubbsTest_scores = (scores[0]-mean_scores) / std_dvt_scores;
+		else if (q.candidatesRanked.size()==1) {
+			
+			features[1] = 0;
+			features[2] = q.candidatesRanked.get(0).conditionalProbabilities[1];
+			features[3] = 0;
+			features[4] = 0;
+			features[5] = 0;
+			
+		}
 		
-		if (q.gold_answer.startsWith("NIL")) 
+		else {
+			
+			features[1] = 0;
+			features[2] = 0;
+			features[3] = 0;
+			features[4] = 0;
+			features[5] = 0;
+		}
+		
+		if (q.gold_answer.startsWith("NIL"))
 			features[0] = 1;
 		else 
 			features[0] = 0;
-			
-		features[1] = mean_scores;
-		features[2] = std_dvt_scores;
-		features[3] = diff_mean_scores;
-		features[4] = dixonTest_scores;
-		features[5] = grubbsTest_scores;
 
-		
 		return features;
 		
 		/*
@@ -125,7 +153,7 @@ public class NILDetector {
 			for (int i = 1; i < features.length; i++) {
 				out.write(' '+ Integer.toString(i) + ':' + features[i]);
 			}
-			out.write("# " + q.query_id + ' ' + q.gold_answer + '\n');
+			out.write(" #" + q.query_id + ' ' + q.gold_answer + '\n');
 		}
 		
 		out.close();

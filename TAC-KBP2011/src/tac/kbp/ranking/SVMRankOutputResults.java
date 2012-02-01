@@ -39,10 +39,7 @@ public class SVMRankOutputResults {
 		}
 		
 		System.out.println("Mean Reciprocal Rank: " + mean_reciprocalRank / queries.size());
-		
-		//TODO: estimate if top-ranked is NIL
-		generateOutput("results-SVMRank.txt");
-		
+		generateOutput("results-SVMRank_NO_NIL_DETECTOR.txt");		
 		return queries;
 	}
 	

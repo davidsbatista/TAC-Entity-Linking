@@ -211,6 +211,10 @@ public class KBPQuery {
 		}
 	}
 
+	/*
+	 * 
+	 * Loads named-entities previously extracted from the support documents
+	 * 
 	public void loadNamedEntities() throws IOException{
 		
 		BufferedReader input;
@@ -264,6 +268,7 @@ public class KBPQuery {
 			e1.printStackTrace();    	
 		}
 	}
+	*/
 	
 	public void getAlternativeSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
 				

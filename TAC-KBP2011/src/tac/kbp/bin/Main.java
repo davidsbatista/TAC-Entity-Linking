@@ -28,6 +28,7 @@ import tac.kbp.ranking.LogisticRegressionLingPipe;
 import tac.kbp.ranking.NILDetector;
 import tac.kbp.ranking.SVMRank;
 import tac.kbp.ranking.SVMRankOutputResults;
+import tac.kbp.utils.misc.BigFile;
 
 public class Main {
 	
@@ -53,6 +54,7 @@ public class Main {
 		Option model = OptionBuilder.withArgName("model").hasArg().withDescription("<baseline|svmrank|logistic>").create( "model" );
 		Option n_candidates = OptionBuilder.withArgName("candidates").hasArg().withDescription("number of candidates to retrieve per sense").create("candidates");
 		Option directory = OptionBuilder.withArgName("dir").hasArg().withDescription("directory containning: svmrank-test.dat, svmrank-train.dat, svmrank-trained-model.dat").create("dir");
+		//Option basePath = OptionBuilder.withArgName("basePath").hasArg().withDescription("base directory path").create("basePath");
 		
 		options.addOption(queriesTrain);
 		options.addOption(queriesTest);		
@@ -60,6 +62,7 @@ public class Main {
 		options.addOption(model);
 		options.addOption(n_candidates);
 		options.addOption(queries);
+		//options.addOption(basePath);
 		
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse( options, args );
@@ -71,7 +74,8 @@ public class Main {
 			System.exit(0);
 		}
 		
-		else {			
+		else {
+			
 			if (line.hasOption("train")) train(line);	
 			else if (line.hasOption("recall")) recall(line);
 			else if (line.hasOption("baseline")) baseline(line);
@@ -214,11 +218,11 @@ public class Main {
 			}
 		}
 		
+		System.out.println("extracting features for NIL detector");
+		
 		//Train NIL-Detector using the ranking scores
 		NILDetector SVMNILDetector = new NILDetector();
 		SVMNILDetector.train(Definitions.queriesTrain,"NIL_train.dat");
-		
-		
 		
 		//Test the trained Ranking model on the Test queries
 		System.out.println("\nTesting SVMRank model: ");
@@ -232,23 +236,54 @@ public class Main {
 		goundtruthFilePath = "svmrank-test.dat";
 		SVMRankOutputResults outputTestresults = new SVMRankOutputResults();
 		List<KBPQuery> TestQueriesScore = outputTestresults.results(predictionsFilePath,goundtruthFilePath);
-						
-		System.out.println("TestQueriesScore: " + TestQueriesScore.size());		
-		System.out.println("Definitions.queriesTest: " + Definitions.queriesTest.size());
-		
+
 		for (int i = 0; i < Definitions.queriesTest.size(); i++) {
 			// check if queries are the same before getting top-ranked candidate
-			if  (TestQueriesScore.get(i).query_id.equalsIgnoreCase(Definitions.queriesTest.get(i).query_id)) {
-				
-				System.out.println("found!");
-				
+			if  (TestQueriesScore.get(i).query_id.equalsIgnoreCase(Definitions.queriesTest.get(i).query_id)) {				
 				//create ranked list in queriesTrain with the contents from TrainningQueriesScore
 				Definitions.queriesTest.get(i).candidatesRanked = new ArrayList<Candidate>(TestQueriesScore.get(i).candidatesRanked);
 			}
 		}
+		
+		System.out.println("extracting features for NIL detector");
 
 		//Test the trained model
 		SVMNILDetector.classify(Definitions.queriesTest,"NIL_test.dat");
+		
+		//gather results from NIL_predictions
+		
+		//read "NIL_predictions" line per line
+		HashMap<Integer, Double> NIL_predictions = new HashMap<Integer, Double>();
+		
+		BigFile predictionsFile = new BigFile("NIL_predictions");
+		int i=0;
+		
+		for (String prediction : predictionsFile) {
+			NIL_predictions.put(i, Double.parseDouble(prediction));
+			i++;
+		}
+		
+		//read NIL_test.dat line by line: get last #EL11051 E0081133
+		BigFile queries = new BigFile("NIL_test.dat");
+		i=0;
+		
+		String output = ("results-SVMRank.txt");		
+		PrintStream out = new PrintStream( new FileOutputStream(output));
+		
+		for (String query: queries) {
+			//System.out.print(NIL_predictions.get(i));
+			out.print(query.split("\\#")[1].split("\\s")[0]);
+			if (NIL_predictions.get(i)>=1) {
+				out.println("\tNIL");
+			}
+			else {
+				String answer = query.split("\\#")[1].split("\\s")[1];
+				out.println("\t"+answer);
+			}
+			i++;
+		}
+		
+		out.close();
 	}
 	
 	static void svmrankformat(CommandLine line) throws IOException {
@@ -360,9 +395,13 @@ public class Main {
 		
 	}
 	
+	
 	static void recall(CommandLine line) throws Exception {
 		
 		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("candidates"));
+		
+		Definitions.basePath = line.getOptionValue("basePath");		
+		System.out.println("using as base path: " + Definitions.basePath);
 		
 		/* Test queries XML file */
 		String queriesTestFile = line.getOptionValue("queriesTest");
@@ -386,6 +425,7 @@ public class Main {
 		
 		Train.statisticsRecall(Definitions.queriesTest);
 	}
+	
 	
 	static void graph(CommandLine line) throws Exception {
 		
@@ -443,14 +483,17 @@ public class Main {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparatorInDegree());
 		}
-		generateOutput("results-inDegree.txt", Definitions.queriesTest);
+		generateOutputIn("results-inDegree.txt", Definitions.queriesTest);
+		generateOutputBoth("results-ranked-by-inDegree_-NIL-if_any_Degree_is_0.txt", Definitions.queriesTest);
+		
 		
 		// sort according to outDegree
 		for (KBPQuery q : Definitions.queriesTest) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparatorOutDegree());
 		}
-		generateOutput("results-outDegree.txt", Definitions.queriesTest);
+		generateOutputOut("results-outDegree.txt", Definitions.queriesTest);
+		generateOutputBoth("results-ranked-by-outDegree_-NIL-if_any_Degree_is_0.txt", Definitions.queriesTest);
 	}
 	
 	static void baseline(CommandLine line) throws Exception {
@@ -509,7 +552,11 @@ public class Main {
 		out.close();			
 	}
 	
+	
 	static void train(CommandLine line) throws Exception, IOException {
+		
+		Definitions.basePath = line.getOptionValue("basePath");		
+		System.out.println("using as base path: " + Definitions.basePath);
 		
 		/* Lucene Index */		
 		Definitions.loadKBIndex();
@@ -669,6 +716,7 @@ public class Main {
 		}
 	}
 
+	
 	static void svmresults(CommandLine line) throws Exception {
 			
 		String path = line.getOptionValue("dir");
@@ -678,18 +726,14 @@ public class Main {
 		output.results(predictionsFilePath, goundtruthFilePath);
 	}
 
-	static void generateOutput(String output, List<KBPQuery> queries) throws FileNotFoundException {
+	
+	static void generateOutputIn(String output, List<KBPQuery> queries) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
 		for (KBPQuery q : queries) {
 			
-			if (q.candidatesRanked.size()==0) {
-				out.println(q.query_id.trim()+"\tNIL");
-			}
-			
-			// if inDegree is 0 then return NIL
-			else if (q.candidatesRanked.get(0).features.inDegree == 0 || q.candidatesRanked.get(0).features.outDegree == 0) {
+			if (q.candidatesRanked.size()==0 || q.candidatesRanked.get(0).features.inDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
@@ -699,6 +743,42 @@ public class Main {
 		}
 		out.close();		
 	}
+	
+	static void generateOutputOut(String output, List<KBPQuery> queries) throws FileNotFoundException {
+		
+		PrintStream out = new PrintStream( new FileOutputStream(output));
+		
+		for (KBPQuery q : queries) {
+			
+			if (q.candidatesRanked.size()==0 || q.candidatesRanked.get(0).features.outDegree == 0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
+			else {
+				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
+			}
+		}
+		out.close();		
+	}
+	
+	static void generateOutputBoth(String output, List<KBPQuery> queries) throws FileNotFoundException {
+		
+		PrintStream out = new PrintStream( new FileOutputStream(output));
+		
+		for (KBPQuery q : queries) {
+			
+			if (q.candidatesRanked.size() == 0 || q.candidatesRanked.get(0).features.outDegree == 0 || q.candidatesRanked.get(0).features.inDegree == 0) {
+				out.println(q.query_id.trim()+"\tNIL");
+			}
+			
+			else {
+				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
+			}
+		}
+		out.close();		
+	}
+
+	
 }
 
 

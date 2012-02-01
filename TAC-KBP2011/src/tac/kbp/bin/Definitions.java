@@ -44,13 +44,16 @@ public class Definitions {
 	}
 	
 	/* to control which features are going to be generated */
+	public static boolean linkDisambiguation = true;
 	public static boolean textualSimilarities = true;
-	public static boolean nameSimilarities = true;
-	public static boolean linkDisambiguation = false;
+	public static boolean nameSimilarities = false;
 	public static boolean topicalSimilarities = true;
 	
+	//public static String basePath = "/srv/dsbatista/TAC-2011/";
+	public static String basePath = "/collections/TAC-2011/";
+	
 	/* queries */
-	public static String queriesPath = "/collections/TAC-2011/queries/ivo/";
+	public static String queriesPath = basePath+"queries/ivo/";
 	public static List<KBPQuery> queriesTrain = null;
 	public static List<KBPQuery> queriesTest = null;	
 	public static String test_queries = new String();
@@ -59,26 +62,25 @@ public class Definitions {
 	public static HashMap<String, GoldQuery> queriesAnswersTest = null;
 	
 	/* indexes locations */
-	public static String KB_location = "/collections/TAC-2011/index";
-	public static String SpellChecker_location = "/collections/TAC-2011/spellchecker_index";
-	public static String DocumentCollection_location = "/collections/TAC-2011/document_collection_index";
+	public static String KB_location = basePath+"index";
+	public static String SpellChecker_location = basePath+"spellchecker_index";
+	public static String DocumentCollection_location = basePath+"document_collection_index";
 
 	/* support doc and named-entities recognizer */
-	public static String named_entities_supportDoc = "/collections/TAC-2011/named-entities-Stanford-CRF-XML";
-	public static String serializedClassifier = "/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz";
+	public static String serializedClassifier = basePath+"resources/all.3class.distsim.crf.ser.gz";
 	
 	/* stopwords */
-	public static String stop_words_location = "/collections/TAC-2011/resources/stopwords.txt";
+	public static String stop_words_location = basePath+"resources/stopwords.txt";
 	public static Set<String> stop_words = new HashSet<String>();
 
 	/* list of all entities in KB, for link disambiguation */
 	static final double CHUNK_SCORE = 1.0;
-	public static String entities = "/collections/TAC-2011/backup/KnowledgeBase-LCD2009E58/entities.txt";
+	public static String entities = basePath+"resources/entities.txt";
 	public static ExactDictionaryChunker chunker = null;
 	
 	/* LDA topics */
-	public static String kb_lda_topics = "/collections/TAC-2011/LDA/model/model-final.theta";
-	public static String queries_lda_path = "/collections/TAC-2011/LDA/queries/";
+	public static String kb_lda_topics = basePath+"LDA/model/model-final.theta";
+	public static String queries_lda_path =  basePath+"LDA/queries/";
 	public static HashMap<Integer, String> queries_topics = new HashMap<Integer, String>();
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
 	
@@ -98,11 +100,11 @@ public class Definitions {
 	public static BinaryJedis binaryjedis = null;
 	
 	/* 3rd party software */
-	public static String SVMRankPath = "/collections/TAC-2011/SVMRank/";
+	public static String SVMRankPath =  basePath+"SVMRank/";
 	public static String SVMRanklLearn = "svm_rank_learn";
 	public static String SVMRanklClassify = "svm_rank_classify";
 	
-	public static String SVMLightPath = "/collections/TAC-2011/SVMLight/";
+	public static String SVMLightPath =  basePath+"SVMLight/";
 	public static String SVMLightLearn = "svm_learn";
 	public static String SVMLightClassify = "svm_classify";
 	

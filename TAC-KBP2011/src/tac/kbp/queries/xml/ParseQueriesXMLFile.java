@@ -12,7 +12,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 
 public class ParseQueriesXMLFile {
