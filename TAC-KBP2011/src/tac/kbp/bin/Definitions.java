@@ -53,7 +53,7 @@ public class Definitions {
 	public static String basePath = "/collections/TAC-2011/";
 	
 	/* queries */
-	public static String queriesPath = basePath+"queries/ivo/";
+	public static String queriesPath = basePath+"queries/";
 	public static List<KBPQuery> queriesTrain = null;
 	public static List<KBPQuery> queriesTest = null;	
 	public static String test_queries = new String();
