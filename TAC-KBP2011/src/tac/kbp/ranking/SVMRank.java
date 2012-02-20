@@ -50,7 +50,14 @@ public class SVMRank {
 				
 				else out.write("0"+" ");
 				
-				String[] query_parts = q.query_id.split("EL");			
+				String[] query_parts;
+				
+				if (q.query_id.startsWith("EL_"))
+					query_parts = q.query_id.split("EL_");
+				
+				else
+					query_parts = q.query_id.split("EL");			
+				
 				out.write("qid:"+Integer.parseInt(query_parts[1])+" ");
 				
 				for (int i = 0; i < vector.length; i++) {
