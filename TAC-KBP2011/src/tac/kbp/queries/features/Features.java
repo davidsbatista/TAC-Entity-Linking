@@ -54,8 +54,8 @@ public class Features {
 	public float average_similarities = 0;				// average of the 5 similarity string measures, to be used for NIL Detector
 	
 	/* link disambiguation */
-	public double outDegree;	// the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
-	public double inDegree;	// the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24
+	public double outDegree;  // the out-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf> #23 
+	public double inDegree;	  // the in-degree measure according to <http://aclweb.org/anthology/I/I11/I11-1113.pdf>  #24
 	
 
 	/* Methods */ 
@@ -66,6 +66,7 @@ public class Features {
 	}
 	
 	/* returns a feature vector */
+	//TODO: normalize features to [-1,1]
 	public double[] featuresVector(){
 		
 		double[] inputVector = new double[24];
