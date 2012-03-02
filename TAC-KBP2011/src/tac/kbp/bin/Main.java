@@ -395,7 +395,6 @@ public class Main {
 		
 	}
 	
-	
 	static void recall(CommandLine line) throws Exception {
 		
 		tac.kbp.bin.Definitions.loadRecall(line.getOptionValue("candidates"));
@@ -425,7 +424,6 @@ public class Main {
 		
 		Train.statisticsRecall(Definitions.queriesTest);
 	}
-	
 	
 	static void graph(CommandLine line) throws Exception {
 		
@@ -551,7 +549,6 @@ public class Main {
 		}
 		out.close();			
 	}
-	
 	
 	static void train(CommandLine line) throws Exception, IOException {
 		

@@ -16,6 +16,7 @@ import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.KBPQueryComparator;
 import tac.kbp.queries.candidates.Candidate;
+import tac.kbp.queries.features.Features;
 
 public class SVMRank {
 	
@@ -36,6 +37,25 @@ public class SVMRank {
 		//sort queries according to id  in increasing order
 		Collections.sort(queries, new KBPQueryComparator());
 		
+		//find max for each feature to be used in normalization: simply divide by the max value
+		double[] max = new double[24];
+		
+		for (int i = 0; i < max.length; i++) {
+			max[i] = 0;
+		}
+		
+		for (KBPQuery q : queries) {
+			for (Candidate c : q.candidatesRanked) {
+				Features f = c.features;
+				double[] features = f.featuresVector();
+				for (int i = 0; i < features.length; i++) {
+					if (features[i]>max[i])
+						max[i] = features[i];
+				}
+			}
+		}
+		
+		
 		for (KBPQuery q : queries) {
 			
 			out.write("#" + q.query_id + " " + q.gold_answer + "\n");
@@ -44,24 +64,25 @@ public class SVMRank {
 				
 				double[] vector = c.features.featuresVector();
 				
-				if (queries_answers.get(q.query_id).answer.equalsIgnoreCase(c.entity.id)) {
+				// correct entity (1) or just another candidate (0) 
+				if (queries_answers.get(q.query_id).answer.equalsIgnoreCase(c.entity.id))
 					out.write("1"+" ");
-				}
-				
 				else out.write("0"+" ");
 				
 				String[] query_parts;
 				
+				// query identifier
 				if (q.query_id.startsWith("EL_"))
 					query_parts = q.query_id.split("EL_");
-				
 				else
 					query_parts = q.query_id.split("EL");			
 				
 				out.write("qid:"+Integer.parseInt(query_parts[1])+" ");
 				
 				for (int i = 0; i < vector.length; i++) {
-					out.write((i+1)+":"+vector[i]+" ");
+					if (max[i]==0)
+						out.write((i+1)+":"+vector[i]+" ");
+					else out.write((i+1)+":"+vector[i]/max[i]+" ");
 				}
 				out.write("#" + c.entity.id);
 				out.write("\n");
