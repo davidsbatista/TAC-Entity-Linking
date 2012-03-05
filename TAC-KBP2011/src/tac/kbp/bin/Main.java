@@ -654,7 +654,7 @@ public class Main {
 		
 		//free memory of Test queries data
 		Definitions.queriesTest = null;
-		
+
 		
 		// SVMRank
 		if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {

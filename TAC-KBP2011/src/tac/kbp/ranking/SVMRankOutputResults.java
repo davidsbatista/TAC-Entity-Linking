@@ -17,7 +17,6 @@ import tac.kbp.utils.misc.BigFile;
 public class SVMRankOutputResults {
 
 	HashMap<Integer, Double> predictions = new HashMap<Integer, Double>();
-	
 	public List<KBPQuery> queries = new LinkedList<KBPQuery>();
 	
 	public List<KBPQuery> results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
@@ -48,17 +47,16 @@ public class SVMRankOutputResults {
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
 		for (KBPQuery q : queries) {
-			
 			if (q.candidatesRanked.size()==0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
 			// if inDegree or OutDegree is 0 then return NIL
-			else if (q.candidatesRanked.get(0).features.inDegree == 0 || q.candidatesRanked.get(0).features.outDegree == 0) {
+			else if (q.candidatesRanked.get(0).features.inDegreeNormalized == 0 || q.candidatesRanked.get(0).features.outDegreeNormalized == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
 			
-			else {			
+			else {
 				out.println(q.query_id.trim()+"\t"+q.candidatesRanked.get(0).entity.id);
 			}
 		}
@@ -109,8 +107,10 @@ public class SVMRankOutputResults {
 				
 				//TODO: parse features from the line to Candidate object
 				c.entity.id = entity_id;	//.split("#")[1];
-				c.features.outDegree = (int) Double.parseDouble( data[24].split(":")[1] );
-				c.features.inDegree = (int) Double.parseDouble( data[25].split(":")[1] );
+				
+				c.features.outDegreeNormalized = (double) Double.parseDouble( data[24].split(":")[1] );
+				c.features.inDegreeNormalized = (double) Double.parseDouble( data[25].split(":")[1] );
+				
 				c.conditionalProbabilities[1] = predictions.get(i);
 				q.candidates.add(c);
 				
