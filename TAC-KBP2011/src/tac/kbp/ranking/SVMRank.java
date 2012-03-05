@@ -45,7 +45,7 @@ public class SVMRank {
 		}
 		
 		for (KBPQuery q : queries) {
-			for (Candidate c : q.candidatesRanked) {
+			for (Candidate c : q.candidates) {
 				Features f = c.features;
 				double[] features = f.featuresVector();
 				for (int i = 0; i < features.length; i++) {
