@@ -13,6 +13,7 @@ import org.apache.lucene.index.TermEnum;
 
 import tac.kbp.bin.Definitions;
 
+
 /**
  * 
  * Implements the vector space model for computing the similarity between two documents.

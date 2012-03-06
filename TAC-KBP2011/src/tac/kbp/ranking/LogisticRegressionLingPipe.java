@@ -11,7 +11,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 import tac.kbp.queries.candidates.Candidate;
 import tac.kbp.queries.features.Features;
@@ -22,6 +21,8 @@ import com.aliasi.stats.AnnealingSchedule;
 import com.aliasi.stats.LogisticRegression;
 import com.aliasi.stats.RegressionPrior;
 import com.aliasi.util.AbstractExternalizable;
+
+import tac.kbp.bin.Definitions;
 
 public class LogisticRegressionLingPipe {
 	

@@ -5,9 +5,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import tac.kbp.bin.Definitions;
 import tac.kbp.queries.KBPQuery;
 import com.aliasi.stats.Statistics;
+
+import tac.kbp.bin.Definitions;
 
 public class NILDetector {
 	

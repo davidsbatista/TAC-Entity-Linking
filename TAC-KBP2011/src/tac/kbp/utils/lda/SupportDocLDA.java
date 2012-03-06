@@ -14,6 +14,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.bin.Definitions;
+
 import tac.kbp.queries.KBPQuery;
 
 public class SupportDocLDA {

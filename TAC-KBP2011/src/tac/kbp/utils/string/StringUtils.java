@@ -11,6 +11,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 import tac.kbp.bin.Definitions;
 
+
 public class StringUtils {
 	
 	public static boolean isUpper(String s) {
