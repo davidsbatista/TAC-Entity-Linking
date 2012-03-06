@@ -6,7 +6,6 @@ import java.util.Set;
 import tac.kbp.bin.Definitions;
 import tac.kbp.bin.Definitions.NERType;
 
-
 public class Features {
 	
 	/* other variables to hold values or used in features value's generation */
@@ -241,11 +240,3 @@ public class Features {
 		this.similarities.put("Levenshtein", Float.parseFloat((features[18])));
 	}
 }
-
-
-
-
-
-
-
-

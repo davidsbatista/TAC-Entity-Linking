@@ -60,8 +60,8 @@ public class NILDetector {
 		
 		double[] features = new double[6];
 		
-		System.out.println("q.query_id: " + q.name);		
-		System.out.println("number of candiadtes: " + q.candidatesRanked.size());
+		//System.out.println("q.query_id: " + q.name);		
+		//System.out.println("number of candiadtes: " + q.candidatesRanked.size());
 		
 		if (q.candidatesRanked.size()>1) {
 		

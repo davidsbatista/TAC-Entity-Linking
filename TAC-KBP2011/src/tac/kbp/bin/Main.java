@@ -195,7 +195,8 @@ public class Main {
 		Process svmRankLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 		svmRankLearn.waitFor();
 		
-		//apply the trained model to the queries in TrainingQueries in order to get ranking scores and used them for training the NIL Detector
+		//Apply the trained model to the queries in TrainingQueries in order to get ranking scores 
+		//ranking scores are needed to extract features for training the NIL Detector
 		System.out.println("\nApplying trained model to TrainingQueries to get ranking scores for trainning the NIL Detector");
 		String classify_arguments = "svmrank-train.dat svmrank-trained-model.dat svmrank-predictions_training_set";
 		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
