@@ -118,7 +118,7 @@ public class NILDetector {
 		if (q.gold_answer.startsWith("NIL"))
 			features[0] = 1;
 		else 
-			features[0] = 0;
+			features[0] = -1;
 
 		return features;
 		
