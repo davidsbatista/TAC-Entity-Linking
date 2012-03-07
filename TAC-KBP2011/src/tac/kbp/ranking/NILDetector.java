@@ -154,7 +154,11 @@ public class NILDetector {
 			for (int i = 1; i < features.length; i++) {
 				out.write(' '+ Integer.toString(i) + ':' + features[i]);
 			}
-			out.write(" #" + q.query_id + ' ' + q.gold_answer + '\n');
+			
+			if (q.candidatesRanked.size()>0)
+				out.write(" #" + q.query_id + ' ' + q.candidatesRanked.get(0).entity.id + '\n');
+			else out.write(" #" + q.query_id + ' ' + "no candidates" + '\n');
+				
 		}
 		
 		out.close();

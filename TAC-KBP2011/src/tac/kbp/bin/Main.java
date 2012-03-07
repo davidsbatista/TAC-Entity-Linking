@@ -239,11 +239,23 @@ public class Main {
 		List<KBPQuery> TestQueriesScore = outputTestresults.results(predictionsFilePath,goundtruthFilePath);
 
 		for (int i = 0; i < Definitions.queriesTest.size(); i++) {
+			
 			// check if queries are the same before getting top-ranked candidate
 			if  (TestQueriesScore.get(i).query_id.equalsIgnoreCase(Definitions.queriesTest.get(i).query_id)) {				
 				//create ranked list in queriesTrain with the contents from TrainningQueriesScore
 				Definitions.queriesTest.get(i).candidatesRanked = new ArrayList<Candidate>(TestQueriesScore.get(i).candidatesRanked);
 			}
+
+		}
+		
+		for (KBPQuery kbpQuery : Definitions.queriesTest) {
+			if (kbpQuery.candidatesRanked.size()>0)
+				System.out.println(kbpQuery.candidatesRanked.get(0).entity.id);
+			else {
+				System.out.println(kbpQuery.name + ' ' + kbpQuery.docid + " has 0 candidatesRanked");
+				System.out.println("kbpQuery.candidates.size(): " + kbpQuery.candidates.size());
+				System.out.println("kbpQuery.candidates.size(): " + kbpQuery.candidates);
+			}		
 		}
 		
 		System.out.println("extracting features for NIL detector");
