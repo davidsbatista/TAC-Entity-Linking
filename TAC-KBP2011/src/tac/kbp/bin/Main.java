@@ -7,7 +7,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -248,16 +251,6 @@ public class Main {
 
 		}
 		
-		for (KBPQuery kbpQuery : Definitions.queriesTest) {
-			if (kbpQuery.candidatesRanked.size()>0)
-				System.out.println(kbpQuery.candidatesRanked.get(0).entity.id);
-			else {
-				System.out.println(kbpQuery.name + ' ' + kbpQuery.docid + " has 0 candidatesRanked");
-				System.out.println("kbpQuery.candidates.size(): " + kbpQuery.candidates.size());
-				System.out.println("kbpQuery.candidates.size(): " + kbpQuery.candidates);
-			}		
-		}
-		
 		System.out.println("extracting features for NIL detector");
 
 		//Test the trained model
@@ -280,24 +273,40 @@ public class Main {
 		BigFile queries = new BigFile("NIL_test.dat");
 		i=0;
 		
-		String output = ("results-SVMRank.txt");		
+		String output = ("results-SVMRank-NIL-Detector-no-NIL-clustering.txt");		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
+		Set<String> queries_NIL = new HashSet<String>();
+		Map<String,String> queries_answers = new HashMap<String,String>();
+		
 		for (String query: queries) {
-			//System.out.print(NIL_predictions.get(i));
-			out.print(query.split("\\#")[1].split("\\s")[0]);
+			
+			String query_id = query.split("\\#")[1].split("\\s")[0];
+			String answer = query.split("\\#")[1].split("\\s")[1];
+			
+			queries_answers.put(query_id, answer);			
+			out.print(query_id);
+			
 			if (NIL_predictions.get(i)>=1) {
 				out.println("\tNIL");
+				queries_NIL.add(query_id);
 			}
-			else {
-				String answer = query.split("\\#")[1].split("\\s")[1];
+			else {				
 				out.println("\t"+answer);
 			}
 			i++;
 		}
 		
 		out.close();
+		
+		SVMNILDetector.clusterNILs(queries_NIL, queries_answers);
+		
 	}
+	
+	
+	
+	
+	
 	
 	static void svmrankformat(CommandLine line) throws IOException {
 		
@@ -725,7 +734,6 @@ public class Main {
 			else trainning.writeModel("linear-regression");
 		}
 	}
-
 	
 	static void svmresults(CommandLine line) throws Exception {
 			
@@ -735,7 +743,6 @@ public class Main {
 		SVMRankOutputResults output = new SVMRankOutputResults();
 		output.results(predictionsFilePath, goundtruthFilePath);
 	}
-
 	
 	static void generateOutputIn(String output, List<KBPQuery> queries) throws FileNotFoundException {
 		

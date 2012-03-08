@@ -38,7 +38,7 @@ public class SVMRankOutputResults {
 		}
 		
 		System.out.println("Mean Reciprocal Rank: " + mean_reciprocalRank / queries.size());
-		generateOutput("results-SVMRank_NO_NIL_DETECTOR.txt");		
+		generateOutput("results-SVMRank-no-NIL-Detector-in-and-outLinks.txt");		
 		return queries;
 	}
 	

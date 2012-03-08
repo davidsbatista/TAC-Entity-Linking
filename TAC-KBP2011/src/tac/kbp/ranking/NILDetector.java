@@ -3,7 +3,13 @@ package tac.kbp.ranking;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import tac.kbp.queries.KBPQuery;
 import com.aliasi.stats.Statistics;
@@ -170,5 +176,65 @@ public class NILDetector {
 		System.out.println(Definitions.SVMLightPath+Definitions.SVMLightClassify+' '+classify_arguments);
 		Process SVMLightClassify = runtime.exec(Definitions.SVMLightPath+Definitions.SVMLightClassify+' '+classify_arguments);
 		SVMLightClassify.waitFor();
+	}
+	
+	public void clusterNILs(Set<String> queries_NIL, Map<String,String> queries_answers){
+		
+		Map<String,Set<String>> cluster = new HashMap<String, Set<String>>();
+		
+		int count = 0;
+		
+		for (KBPQuery q1 : Definitions.queriesTest) {
+			
+			// check if its a query whose answer was classified as NIL
+			if (queries_NIL.contains(q1.name)) {
+				
+				String id = "NIL"+String.valueOf(count);
+				Set<String> queries = new HashSet<String>();
+				
+				// gather all other queries that have an equal name-string
+				for (KBPQuery q2 : Definitions.queriesTest) {
+					
+					if (q1 != q2 ) {
+						if (q1.name.equalsIgnoreCase(q2.name)) {
+							queries.add(q2.query_id);
+						}
+					}
+				}
+				queries.add(q1.query_id);
+				cluster.put(id, queries);
+				count++;
+			}			
+		}
+	
+		Set<String> keys = queries_answers.keySet();
+		
+		List<String> sortedKeys = new ArrayList<String>(keys);
+		Collections.sort(sortedKeys);
+		
+		Set<String> clusterKeys = queries_answers.keySet();
+		
+		List<String> clusterSortedKeys = new ArrayList<String>(clusterKeys);
+		Collections.sort(clusterSortedKeys);
+		
+		
+		
+		for (String q : sortedKeys) {
+			if (queries_NIL.contains(q)) {
+				
+				for (String key : clusterSortedKeys) {
+					Set<String> queries = cluster.get(key);
+					if (queries.contains(q)) {
+						System.out.println("clustered:" + q+'\t'+key);
+						break;
+					}
+				}				
+			}
+			
+			else {
+				System.out.println("not clustered:" + q+'\t'+queries_answers.get(q));
+			}
+		}
+
 	}
 }
