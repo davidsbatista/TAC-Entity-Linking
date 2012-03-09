@@ -44,8 +44,8 @@ public class Main {
 		options.addOption("train", false, "train a ranking model");
 		options.addOption("graph", false,  "generate results based only on outLinks and inLinks");
 		options.addOption("baseline", false, "only uses Lucene to generate answers");
-		options.addOption("recall", false, "used to tune the recall");
-		options.addOption("svmresults", false, "output results from SVMRank output");
+		options.addOption("recall", false, "to tune the recall");
+		options.addOption("svmresults", false, "output a run using the results from SVMRank output");
 		options.addOption("extract", false, "extract features from a queries XML file");
 		options.addOption("svmrankformat", false, "converts extracted features into one file for SVMRank");
 		options.addOption("trainnil", false, "trains a NIL Detector - SVM");

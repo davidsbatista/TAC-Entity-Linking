@@ -1,5 +1,11 @@
 package tac.kbp.wikipedia;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,21 +14,22 @@ import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.WikiConstants.Language;
 import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
-import de.tudarmstadt.ukp.wikipedia.api.exception.WikiTitleParsingException;
 
-public class WikiEN {
+public class WikipediaMappings {
 	
 	public static DatabaseConfiguration dbConfig;
 	public static Wikipedia wiki;
 	
-	public static void init() throws WikiApiException {
+	public static Map<String,String> redirectsAndNormalized = new HashMap<String, String>();
+	
+	public static void init(String host, String database, String user, String password) throws WikiApiException {
 		
 		// configure the database connection parameters
 		dbConfig = new DatabaseConfiguration();
-		dbConfig.setHost("");
-		dbConfig.setDatabase("");
-		dbConfig.setUser("");
-		dbConfig.setPassword("");
+		dbConfig.setHost(host);
+		dbConfig.setDatabase(database);
+		dbConfig.setUser(user);
+		dbConfig.setPassword(password);
 		dbConfig.setLanguage(Language.english);
 
 		// Create the Wikipedia object
@@ -90,10 +97,64 @@ public class WikiEN {
 		}
 		*/
 	}
-	
-	public static void main(String args[]) throws WikiApiException {
 		
-		init();
-		getAllPages();		
+	public static void getRedirects() throws WikiApiException, IOException {
+				
+		
+		
+		for (Page page : wiki.getArticles()) {
+			
+		    Set<String> redirects = page.getRedirects();
+		    String normalizedTitle = page.getTitle().getPlainTitle().toLowerCase();
+		    String originalTitle = page.getTitle().getWikiStyleTitle();
+		    
+		    redirectsAndNormalized.put(normalizedTitle, originalTitle);
+		    System.out.println(normalizedTitle + " -> " + originalTitle);
+		    
+		    for (String r : redirects) {
+		    	String normalizedRedirect = r.toLowerCase().replaceAll("_", " ");
+				redirectsAndNormalized.put(normalizedRedirect, originalTitle);
+				System.out.println(normalizedRedirect + " -> " + originalTitle);
+			}		    
+		}
+		
+		FileOutputStream fos = new FileOutputStream("redirectsAndNormalized");
+	    ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    oos.writeObject(redirectsAndNormalized);
+	    oos.close();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void loadRedirects(String filename) throws IOException, ClassNotFoundException {
+		
+	    FileInputStream fis = new FileInputStream(filename);
+	    ObjectInputStream ois = new ObjectInputStream(fis);
+	    redirectsAndNormalized = (Map<String, String>) ois.readObject();
+	    ois.close();
+	
+	}
+    	
+	public static void main(String args[]) throws WikiApiException, IOException {
+		
+		String host = args[0];
+		String database = args[1];
+		String user = args[2];
+		String passwd = args[3];
+		
+		init(host, database, user, passwd);
+		getRedirects();		
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

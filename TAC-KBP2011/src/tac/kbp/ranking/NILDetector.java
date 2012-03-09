@@ -1,8 +1,11 @@
 package tac.kbp.ranking;
 
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -178,7 +181,7 @@ public class NILDetector {
 		SVMLightClassify.waitFor();
 	}
 	
-	public void clusterNILs(Set<String> queries_NIL, Map<String,String> queries_answers){
+	public void clusterNILs(Set<String> queries_NIL, Map<String,String> queries_answers) throws FileNotFoundException{
 		
 		Map<String,Set<String>> cluster = new HashMap<String, Set<String>>();
 		
@@ -187,18 +190,16 @@ public class NILDetector {
 		for (KBPQuery q1 : Definitions.queriesTest) {
 			
 			// check if its a query whose answer was classified as NIL
-			if (queries_NIL.contains(q1.name)) {
+			if (queries_NIL.contains(q1.query_id)) {
 				
 				String id = "NIL"+String.valueOf(count);
 				Set<String> queries = new HashSet<String>();
 				
 				// gather all other queries that have an equal name-string
 				for (KBPQuery q2 : Definitions.queriesTest) {
-					
-					if (q1 != q2 ) {
-						if (q1.name.equalsIgnoreCase(q2.name)) {
-							queries.add(q2.query_id);
-						}
+
+					if (q1.name.equalsIgnoreCase(q2.name)) {
+						queries.add(q2.query_id);
 					}
 				}
 				queries.add(q1.query_id);
@@ -208,33 +209,44 @@ public class NILDetector {
 		}
 	
 		Set<String> keys = queries_answers.keySet();
-		
 		List<String> sortedKeys = new ArrayList<String>(keys);
 		Collections.sort(sortedKeys);
 		
-		Set<String> clusterKeys = queries_answers.keySet();
-		
+		Set<String> clusterKeys = cluster.keySet();		
 		List<String> clusterSortedKeys = new ArrayList<String>(clusterKeys);
 		Collections.sort(clusterSortedKeys);
 		
+		System.out.println("ID Labels:");
+		for (String id_label : clusterSortedKeys) {
+			System.out.println(id_label);
+			Set<String> queries = cluster.get(id_label);
+			for (String q : queries) {
+				System.out.println('\t'+q);
+			}
+		}
 		
+		String output = ("results-SVMRank-NIL-Detector-NIL-clustering.txt");		
+		PrintStream out = new PrintStream( new FileOutputStream(output));		
 		
-		for (String q : sortedKeys) {
+		for (String q : sortedKeys) {			
+			
 			if (queries_NIL.contains(q)) {
 				
-				for (String key : clusterSortedKeys) {
-					Set<String> queries = cluster.get(key);
+				for (String id_label : clusterSortedKeys) {
+					Set<String> queries = cluster.get(id_label);
 					if (queries.contains(q)) {
-						System.out.println("clustered:" + q+'\t'+key);
+						out.println(q+'\t'+id_label);
 						break;
 					}
 				}				
 			}
 			
 			else {
-				System.out.println("not clustered:" + q+'\t'+queries_answers.get(q));
+				out.println(q+'\t'+queries_answers.get(q));
 			}
 		}
+		
+		out.close();
 
 	}
 }
