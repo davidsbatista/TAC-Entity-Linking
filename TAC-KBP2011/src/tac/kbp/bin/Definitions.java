@@ -96,7 +96,6 @@ public class Definitions {
 	
 	/* REDIS server */
 	public static int redis_port = 6379;
-	public static String redis_host = "127.0.0.1";
 	public static BinaryJedis binaryjedis = null;
 	
 	/* 3rd party software */
