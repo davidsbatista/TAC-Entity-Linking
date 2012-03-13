@@ -6,12 +6,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 
 import com.google.common.collect.LinkedHashMultimap;
 
@@ -32,6 +35,7 @@ public class WikipediaMappings {
 	public static Wikipedia wiki;
 	public static Map<String,String> redirectsAndNormalized = new HashMap<String, String>();
 	public static LinkedHashMultimap<String,String> hyperlinks; 
+	public static LinkedHashMultimap<String,String> disambiguation;
 	
 	public static void init(String host, String database, String user, String password) throws WikiApiException {
 		
@@ -112,7 +116,7 @@ public class WikipediaMappings {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void loadArticlesLinks(String filename) throws IOException, ClassNotFoundException {
+	public static LinkedHashMultimap<String, String> loadArticlesLinks(String filename) throws IOException, ClassNotFoundException {
 		
 		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
 		
@@ -121,40 +125,61 @@ public class WikipediaMappings {
 	    hyperlinks = (LinkedHashMultimap<String, String>) ois.readObject();
 	    ois.close();
 	    
+	    return hyperlinks;
 	    
-	    Set<String> keys = hyperlinks.keySet();
-	    
-	    for (String k : keys) {
-			Set<String> links = hyperlinks.get(k);
-			System.out.println(k);
-			for (String l : links) {
-				System.out.println('\t'+l);
-			}
-		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void loadRedirects(String filename) throws IOException, ClassNotFoundException {
+	public static Map<String, String> loadRedirects(String filename) throws IOException, ClassNotFoundException {
 		
 	    FileInputStream fis = new FileInputStream(filename);
 	    ObjectInputStream ois = new ObjectInputStream(fis);
 	    redirectsAndNormalized = (Map<String, String>) ois.readObject();
 	    ois.close();
+	    
+	    return redirectsAndNormalized;
 	
 	}
     
-	public static void getDisambiguations() throws WikiApiException {
+	public static void getDisambiguations() throws WikiApiException, IOException {
 		
 		PageQuery pq = new PageQuery();		
 		pq.setOnlyDisambiguationPages(true);
 		
+		disambiguation = com.google.common.collect.LinkedHashMultimap.create();
+		
 		for (Page p : wiki.getPages(pq)) {
 			for (NestedListContainer list : p.getParsedPage().getNestedLists()) {
 				for (Link link : list.getLinks()) {
-					System.out.println(link);
+					String text = link.getText();
+					String target = link.getTarget(); 
+					if (!text.equalsIgnoreCase(target.replaceAll("_", " ")) && text.length()>0) {
+						//System.out.println(link.getText().toLowerCase().replaceAll("_", " ") + "->" + link.getTarget().replaceAll("#.*", ""));
+						String text_normalized = link.getText().toLowerCase().replaceAll("_", " ");
+						String target_parsed = link.getTarget().replaceAll("#.*", "");
+						disambiguation.put(text_normalized, target_parsed);
+						System.out.println(disambiguation.size());
+					}
 				}
 			}		
 		}
+		
+		FileOutputStream fos = new FileOutputStream("disambiguation");
+	    ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    oos.writeObject(disambiguation);
+	    oos.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static LinkedHashMultimap<String, String> loadDisambiguation(String filename) throws IOException, ClassNotFoundException {
+		
+	    FileInputStream fis = new FileInputStream(filename);
+	    ObjectInputStream ois = new ObjectInputStream(fis);
+	    disambiguation = (LinkedHashMultimap<String, String>) ois.readObject();
+	    ois.close();
+	    
+	    return disambiguation;
+	
 	}
 
 	public static void getEntities() throws WikiApiException, IOException {
@@ -171,6 +196,67 @@ public class WikipediaMappings {
 		out.close();
 	}
 	
+	public static void loadMappings(String disambiguation_file, String redirects_file, String anchors_file) throws IOException, ClassNotFoundException {
+				
+		int redis_port = 6379;
+		String redis_host = "127.0.0.1";
+		Jedis jedis = new Jedis(redis_host, redis_port);
+		
+		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
+		disambiguation = com.google.common.collect.LinkedHashMultimap.create();
+		
+		System.out.println("Loading disambiguation pages mappings file");
+		disambiguation = loadDisambiguation(disambiguation_file);
+		
+		System.out.println("Loading anchor links mappings file");
+		hyperlinks = loadArticlesLinks(anchors_file);
+		
+		System.out.println("Loading redirect pages mappings file");
+		redirectsAndNormalized = loadRedirects(redirects_file);
+		
+		System.out.println("Loading disambiguation pages mappings");
+		
+		Set<String> keys = disambiguation.keySet();
+		int x = 0;
+		for (String k : keys) {
+			Set<String> values = disambiguation.get(k);			
+			for (String v : values)
+				jedis.set(k, v);
+			x++;
+			System.out.println(x+'/'+keys.size());
+		}		
+		disambiguation = null;
+
+		
+		System.out.println("Loading redirect pages mappings");
+		
+		keys = redirectsAndNormalized.keySet();
+		x = 0;
+		for (String k : keys) {
+			jedis.set(k, redirectsAndNormalized.get(k));
+			x++;
+			System.out.println(x+'/'+keys.size());
+		}
+		redirectsAndNormalized = null;
+		
+		
+		System.out.println("Loading anchor links mappings");
+		
+		keys = hyperlinks.keySet();
+		x = 0;
+		for (String k : keys) {
+			Set<String> values = hyperlinks.get(k);
+			for (String v : values) {
+				jedis.set(k, v);
+			}			
+			x++;
+			System.out.println(x+'/'+keys.size());
+		}
+		hyperlinks = null;
+		
+		System.out.println(jedis.info());
+	}	
+	
 	
 	public static void main(String args[]) throws WikiApiException, IOException, ClassNotFoundException {
 		
@@ -179,13 +265,15 @@ public class WikipediaMappings {
 		String user = args[2];
 		String passwd = args[3];
 		
-		init(host, database, user, passwd);
-		//getRedirects();	
-		//loadRedirects(args[4]);
-		getArticlesLink();
-		//loadArticlesLinks(args[4]);
+		//init(host, database, user, passwd);
+		//getRedirects();
+		//getArticlesLink();
 		//getDisambiguations();
+		//loadRedirects(args[4]);
+		//loadArticlesLinks(args[4]);
+		//loadDisambiguation(args[4]);
 		//getEntities();
+		loadMappings(args[4],args[5],args[6]);
 	}
 }
 

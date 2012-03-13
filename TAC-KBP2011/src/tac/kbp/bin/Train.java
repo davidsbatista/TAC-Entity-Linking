@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +16,7 @@ import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
@@ -135,10 +135,24 @@ public class Train {
 	
 	static void retrieveCandidates(KBPQuery q) throws Exception {
 		
-		List<SuggestWord> suggestedwords = queryKB(q);		
-		int n_docs = getCandidates(q,suggestedwords);
+		//TODO: if query-string is an acronym:
+		// look for expansions:
+		//	support-document
+		//	mappings dictionary
+		//  if expansions are found use them only, instead of original name-string
 		
-		System.out.println(q.query_id + ": \"" + q.name + "\" " + n_docs + " candidates");				
+		//name-string AND in wiki_text
+		int n_docs = 0;
+		n_docs += getCandidates(q);
+			
+		
+		
+		/*		
+		List<SuggestWord> suggestedwords = queryKB(q);
+		n_docs += getCandidates(q,suggestedwords);
+		*/
+		
+		System.out.println(q.query_id + ": \"" + q.name + "\" " + n_docs + " candidates");
 		
 		total_n_docs += n_docs;		
 		if (n_docs == 0) n_queries_zero_docs++;		
@@ -233,7 +247,7 @@ public class Train {
 		outputs.add(c.features.output());
 	}
 		
-	static String concatenateEntities(String str1, String str2) {
+	static String concatenateOR(String str1, String str2) {
 		
 		String result = new String();
 		
@@ -347,6 +361,103 @@ public class Train {
 					
 				}
 			}
+		}
+		
+		return q.candidates.size();		
+	}
+	
+	
+	static int getCandidates(KBPQuery q) throws IOException, ParseException {
+		
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
+		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
+		
+		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
+		Joiner orJoiner = Joiner.on(" OR ");
+		Joiner andJoiner = Joiner.on(" AND ");
+		String queryAND = "";
+		
+		if (q.alternative_names.size()>0) {
+			
+			queryAND = andJoiner.join(q.alternative_names);
+			
+			System.out.println("query: " + queryAND);
+			
+			Query query = queryParser.parse("wiki_text: " + queryAND);			
+			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(query, 20);
+			
+			if (docs.totalHits != 0) {
+				for (int i = 0; i < docs.scoreDocs.length; i++) {		
+					
+					Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
+					q.candidates.add(c);
+					repeated.add(docs.scoreDocs[i].doc);
+					
+					if (q.candidates.size() == Definitions.max_candidates) {
+						break;
+					}
+				}
+			}
+
+			
+			for (String w : q.alternative_names) {
+				
+				String queryOR = "";
+				
+				String[] parts = w.split("\\s+");
+				Set<String> valid = new HashSet<String>();
+				
+				for (int i = 0; i < parts.length; i++) {
+					if (Definitions.stop_words.contains(parts[i]) && parts[i].length()< 3 )
+						continue;
+					
+					else  valid.add( '"' + parts[i] + '"');
+						
+				}
+				
+				queryOR += orJoiner.join(valid);
+				
+				query = queryParser.parse("name:" + queryOR);			
+				docs = tac.kbp.bin.Definitions.searcher.search(query, 30);
+				
+				if (docs.totalHits == 0)
+					continue;
+				
+				else {
+					
+					if (repeated.contains(docs.scoreDocs[0].doc))
+						continue;
+					
+					else {
+						Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+						Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
+						q.candidates.add(c);
+						repeated.add(docs.scoreDocs[0].doc);
+						
+						if (q.candidates.size() == Definitions.max_candidates) {
+							break;
+						}
+						
+					}
+				}
+			}
+		}
+		
+		else {
+			
+			Query query = queryParser.parse(q.name);			
+			TopDocs docs = tac.kbp.bin.Definitions.searcher.search(query, 20);
+			if (docs.totalHits != 0) {
+				for (int i = 0; i < docs.scoreDocs.length; i++) {		
+					
+					Document doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
+					q.candidates.add(c);
+					repeated.add(docs.scoreDocs[i].doc);
+				}
+			}
+			
 		}
 		
 		return q.candidates.size();		
