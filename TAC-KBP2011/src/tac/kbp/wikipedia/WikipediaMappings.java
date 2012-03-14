@@ -8,13 +8,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.PipelineBlock;
 
 import com.google.common.collect.LinkedHashMultimap;
 
@@ -35,7 +35,8 @@ public class WikipediaMappings {
 	public static Wikipedia wiki;
 	public static Map<String,String> redirectsAndNormalized = new HashMap<String, String>();
 	public static LinkedHashMultimap<String,String> hyperlinks; 
-	public static LinkedHashMultimap<String,String> disambiguation;
+	public static LinkedHashMultimap<String,String> disambiguation;	
+	public static LinkedHashMultimap<String,String> allMappings;
 	
 	public static void init(String host, String database, String user, String password) throws WikiApiException {
 		
@@ -197,19 +198,16 @@ public class WikipediaMappings {
 	}
 	
 	public static void loadMappings(String disambiguation_file, String redirects_file, String anchors_file) throws IOException, ClassNotFoundException {
-				
-		int redis_port = 6379;
-		String redis_host = "127.0.0.1";
-		Jedis jedis = new Jedis(redis_host, redis_port);
 		
 		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
-		disambiguation = com.google.common.collect.LinkedHashMultimap.create();
+		disambiguation = com.google.common.collect.LinkedHashMultimap.create();		
+		allMappings = com.google.common.collect.LinkedHashMultimap.create();
 		
 		System.out.println("Loading disambiguation pages mappings file");
 		disambiguation = loadDisambiguation(disambiguation_file);
 		
-		System.out.println("Loading anchor links mappings file");
-		hyperlinks = loadArticlesLinks(anchors_file);
+		//System.out.println("Loading anchor links mappings file");
+		//hyperlinks = loadArticlesLinks(anchors_file);
 		
 		System.out.println("Loading redirect pages mappings file");
 		redirectsAndNormalized = loadRedirects(redirects_file);
@@ -217,45 +215,127 @@ public class WikipediaMappings {
 		System.out.println("Loading disambiguation pages mappings");
 		
 		Set<String> keys = disambiguation.keySet();
-		int x = 0;
 		for (String k : keys) {
-			Set<String> values = disambiguation.get(k);			
-			for (String v : values)
-				jedis.set(k, v);
-			x++;
-			System.out.println(x+'/'+keys.size());
+			allMappings.putAll(k, disambiguation.get(k));
 		}		
 		disambiguation = null;
-
+		
+		
+		/*
+		System.out.println("Loading anchor links mappings");
+		
+		keys = hyperlinks.keySet();
+		for (String k : keys) {
+			allMappings.putAll(k, hyperlinks.get(k));			
+		}
+		hyperlinks = null;
+		*/
 		
 		System.out.println("Loading redirect pages mappings");
 		
 		keys = redirectsAndNormalized.keySet();
-		x = 0;
 		for (String k : keys) {
-			jedis.set(k, redirectsAndNormalized.get(k));
-			x++;
-			System.out.println(x+'/'+keys.size());
+			allMappings.put(k, redirectsAndNormalized.get(k));
 		}
 		redirectsAndNormalized = null;
 		
 		
-		System.out.println("Loading anchor links mappings");
-		
-		keys = hyperlinks.keySet();
-		x = 0;
-		for (String k : keys) {
-			Set<String> values = hyperlinks.get(k);
-			for (String v : values) {
-				jedis.set(k, v);
-			}			
-			x++;
-			System.out.println(x+'/'+keys.size());
-		}
-		hyperlinks = null;
-		
-		System.out.println(jedis.info());
+		System.out.println(allMappings.size() + " keys loaded");
+				
+		FileOutputStream fos = new FileOutputStream("allMappings");
+	    ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    oos.writeObject(allMappings);
+	    oos.close();		
 	}	
+	
+	public static void dumpMappings() {
+		
+		System.out.println("Connecting to REDIS server.. ");
+		Jedis j = new Jedis("borat", 6379);
+        j.connect();
+        
+        Set<String> keys = j.keys("a*");
+        
+        for (String k : keys) {
+        	
+			System.out.println(k);
+			
+			System.out.println(j.llen(k));
+			
+			//System.out.println(j.hkeys(k));
+			
+			
+			/*
+			long len = j.llen(k);
+			System.out.println("llen(\"" + k + "\"):" + len);
+			
+			for (; ; ) {
+			String value = j.lpop(k);
+			if (value == null) {
+				break;
+			}
+			System.out.println(("lpop(\"" + k + "\"):"+ value));
+	        }
+	        */
+		}        
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void loadMappingsToREDIS(String filename) throws IOException, ClassNotFoundException {
+		
+		allMappings = com.google.common.collect.LinkedHashMultimap.create();
+		
+		FileInputStream fis = new FileInputStream(filename);
+	    ObjectInputStream ois = new ObjectInputStream(fis);
+	    allMappings = (LinkedHashMultimap<String, String>) ois.readObject();
+	    ois.close();
+	    
+	    Jedis j = new Jedis("borat.inesc-id.pt", 6379);
+        j.connect();
+        
+        Set<String> keys = allMappings.keySet();
+	    
+	    for (String k : keys) {
+	    	
+	    	Set<String> values = allMappings.get(k);
+	    	
+	    	for (String v : values) {
+	    		System.out.println(k + '\t' + v);
+	    		j.sadd(k, v);
+			}
+	    	
+	    	/*
+	    	long len = j.llen(k);
+	    	System.out.println("llen(\"" + k +"\") :" + len);
+	    	
+	    	List<String> keyValues = j.lrange(k, 0, len - 1);
+	    	System.out.println("lrange(\"" + k +"\", 0, len - 1)" + keyValues.size());
+	    	
+	    	for (String kv : keyValues) {
+				System.out.println(kv);
+			}
+	    	
+	    	for (; ; ) {
+	            String value = j.lpop("sequence_steps");
+	            if (value == null) {
+	                break;
+	            }
+
+	            System.out.println("lpop(\"" + k + "\"): " + value);
+	    	}
+	    	*/
+        }
+	}
+	
+	public static void test() {
+		
+		Jedis j = new Jedis("borat.inesc-id.pt", 6379);
+        j.connect();
+        
+        for (String	e: j.smembers("az")) {
+        	System.out.println(e);
+        }
+	}
 	
 	
 	public static void main(String args[]) throws WikiApiException, IOException, ClassNotFoundException {
@@ -274,6 +354,7 @@ public class WikipediaMappings {
 		//loadDisambiguation(args[4]);
 		//getEntities();
 		loadMappings(args[4],args[5],args[6]);
+		loadMappingsToREDIS(args[4]);
 	}
 }
 
