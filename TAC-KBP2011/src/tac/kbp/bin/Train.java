@@ -94,8 +94,13 @@ public class Train {
 			
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
 			
-			q.getAlternativeSenses(Definitions.binaryjedis);			
+			q.getAlternativeSenses();			
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
+			
+			for (String s : q.alternative_names) {
+				System.out.println(s);
+			}
+			
 			
 			/* Schwartz and Hirst abbreviations and acronyms extractor*/
 			ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
@@ -142,15 +147,12 @@ public class Train {
 		//  if expansions are found use them only, instead of original name-string
 		
 		//name-string AND in wiki_text
-		int n_docs = 0;
-		n_docs += getCandidates(q);
-			
+		//int n_docs = 0;
+		//n_docs += getCandidates(q);
 		
 		
-		/*		
 		List<SuggestWord> suggestedwords = queryKB(q);
-		n_docs += getCandidates(q,suggestedwords);
-		*/
+		int n_docs = getCandidates(q,suggestedwords);
 		
 		System.out.println(q.query_id + ": \"" + q.name + "\" " + n_docs + " candidates");
 		

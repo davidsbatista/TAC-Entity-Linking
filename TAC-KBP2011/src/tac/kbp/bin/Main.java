@@ -179,7 +179,7 @@ public class Main {
 		Train.process(Definitions.queriesTest, Definitions.topicalSimilarities, true);
 		
 		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
+		Definitions.jedis.disconnect();
 		
 		//TRAINNING
 		Train.generateFeatures(Definitions.queriesTrain);
@@ -413,7 +413,7 @@ public class Main {
 		}
 		
 		//close REDIS connection
-		Definitions.binaryjedis.disconnect();		
+		Definitions.jedis.disconnect();		
 		
 	}
 	
@@ -482,7 +482,7 @@ public class Main {
 		Train.process(Definitions.queriesTest, false, true);
 		
 		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
+		Definitions.jedis.disconnect();
 
 		// retrieve candidates and calculate in- and outDegree
 		int count = 0;
@@ -547,7 +547,7 @@ public class Main {
 		Train.process(Definitions.queriesTest,false,false);
 		
 		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
+		Definitions.jedis.disconnect();
 		
 		System.out.println("\n\nGetting candidates from Lucene:");
 			
@@ -651,7 +651,7 @@ public class Main {
 		Train.process(Definitions.queriesTest, Definitions.topicalSimilarities, true);
 		
 		//close REDIS connection
-		Definitions.binaryjedis.disconnect();
+		Definitions.jedis.disconnect();
 		
 		
 		//TRAINING
