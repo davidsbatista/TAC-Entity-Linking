@@ -21,6 +21,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 import tac.kbp.bin.Definitions;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.queries.candidates.Candidate;
@@ -267,10 +268,16 @@ public class KBPQuery {
 	}
 	*/
 	
-	public void getAlternativeSenses(BinaryJedis binaryjedis) throws UnsupportedEncodingException {
+	public void getAlternativeSenses() throws UnsupportedEncodingException {
 				
 		/* Consult alternative senses dictionary */
 		
+        for (String	e: Definitions.jedis.smembers(this.name.toLowerCase())) {
+        	this.alternative_names.add(e.toLowerCase());
+        }
+		
+		
+        /*
 		byte[] queryStringbyteArray = this.name.getBytes("UTF-8");
 		byte[] queryStringLowbyteArray = this.name.toLowerCase().getBytes("UTF-8");
 			
@@ -300,6 +307,7 @@ public class KBPQuery {
 				}		
 			}
 		}
+		*/
 	}
 
 	
