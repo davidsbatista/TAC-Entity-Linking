@@ -97,7 +97,7 @@ public class Definitions {
 	
 	/* REDIS server */
 	public static int redis_port = 6379;
-	public static String redis_host = "borat";
+	public static String redis_host = "borat.inesc-id.pt";
 	public static Jedis jedis = null;
 	
 	/* 3rd party software */

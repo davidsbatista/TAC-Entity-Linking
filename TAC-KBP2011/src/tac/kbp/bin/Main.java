@@ -440,6 +440,8 @@ public class Main {
 		System.out.println("\nProcessing queries:");		
 		Train.process(Definitions.queriesTest, false, true);
 		
+		System.out.println();
+		
 		for (KBPQuery q : Definitions.queriesTest) {
 			Train.retrieveCandidates(q);
 		}

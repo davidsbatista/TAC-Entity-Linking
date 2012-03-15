@@ -97,9 +97,11 @@ public class Train {
 			q.getAlternativeSenses();			
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			
+			/*
 			for (String s : q.alternative_names) {
 				System.out.println(s);
 			}
+			*/
 			
 			
 			/* Schwartz and Hirst abbreviations and acronyms extractor*/
