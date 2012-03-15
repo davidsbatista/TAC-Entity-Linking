@@ -19,6 +19,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.queries.GoldQuery;
 import tac.kbp.queries.KBPQuery;
@@ -96,7 +97,8 @@ public class Definitions {
 	
 	/* REDIS server */
 	public static int redis_port = 6379;
-	public static BinaryJedis binaryjedis = null;
+	public static String redis_host = "borat";
+	public static Jedis jedis = null;
 	
 	/* 3rd party software */
 	public static String SVMRankPath =  basePath+"SVMRank/";
@@ -132,7 +134,7 @@ public class Definitions {
 		loadStopWords(stop_words_location);
 		
 		System.out.println("Connecting to REDIS server.. ");
-		binaryjedis = new BinaryJedis(redis_host, redis_port);
+		jedis = new Jedis(redis_host, redis_port);
 	}
 	
 	/* builds a dictionary of entities from the KB */
@@ -198,7 +200,7 @@ public class Definitions {
 
 	public static void connectionREDIS() {
 		System.out.println("Connecting to REDIS server.. ");
-		binaryjedis = new BinaryJedis(redis_host, redis_port);
+		jedis = new Jedis(redis_host, redis_port);
 	}
 
 	/* Stanford NER-CRF Classifier */
