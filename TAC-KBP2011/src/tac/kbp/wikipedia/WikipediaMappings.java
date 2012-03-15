@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 
+import com.aliasi.util.Pair;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 
 import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
@@ -31,7 +34,7 @@ public class WikipediaMappings {
 	public static DatabaseConfiguration dbConfig;
 	public static Wikipedia wiki;
 	public static Map<String,String> redirectsAndNormalized = new HashMap<String, String>();
-	public static LinkedHashMultimap<String,String> hyperlinks; 
+	public static ArrayListMultimap<String,String> hyperlinks; 
 	public static LinkedHashMultimap<String,String> disambiguation;	
 	public static LinkedHashMultimap<String,String> allMappings;
 	
@@ -51,10 +54,45 @@ public class WikipediaMappings {
 		System.out.println(wiki.getWikipediaId());
 	}
 	
+	public static void getArticlesLinkOcc(String file, LinkedHashMultimap<String,String> allMappings) throws IOException, ClassNotFoundException {
+		
+		hyperlinks = com.google.common.collect.ArrayListMultimap.create();
+		HashMap<Pair<String,String>, Integer> countlinks = new HashMap<Pair<String,String>, Integer>();
+		
+		hyperlinks = loadArticlesLinks(file);		
+		Set<String> keys = hyperlinks.keySet();
+
+		for (String k : keys) {
+			
+			List<String> values = hyperlinks.get(k);
+			
+			for (String v : values) {
+				
+				Pair<String,String> p = new Pair<String,String>(k,v);
+										
+				try {
+					
+					int occ = countlinks.get(p);
+					countlinks.put(p, occ+1);
+					
+				} catch (Exception e) {
+					countlinks.put(p, 1);
+				}
+			}
+		}
+		
+		Set<Pair<String,String>> pairs = countlinks.keySet();
+		
+		for (Pair<String, String> p : pairs) {
+			if (countlinks.get(p)>5)
+				allMappings.put(p.a(), p.b());
+		}
+	}
+		
 	public static void getArticlesLink() throws WikiTitleParsingException, IOException {
 		
-		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
-		
+		hyperlinks = com.google.common.collect.ArrayListMultimap.create();
+		int x = 0;
 		for (Page page : wiki.getArticles()) {
 			
 			ParsedPage p;
@@ -63,19 +101,26 @@ public class WikipediaMappings {
 				
 				p = page.getParsedPage();
 				
-				for (Link link : p.getLinks()) { 
+				for (Link link : p.getLinks()) {
 					if (link.getType() == Link.type.INTERNAL) {
+						
 						String text = link.getText();
-						String target = link.getTarget(); 
+						String target = link.getTarget();
+						
 						if (!text.equalsIgnoreCase(target.replaceAll("_", " ")) && text.length()>0) {
+							
 							System.out.println(link.getText().toLowerCase().replaceAll("_", " ") + "->" + link.getTarget().replaceAll("#.*", ""));
+							
 							String text_normalized = link.getText().toLowerCase().replaceAll("_", " ");
 							String target_parsed = link.getTarget().replaceAll("#.*", "");
+							
 							hyperlinks.put(text_normalized, target_parsed);
-							System.out.println(hyperlinks.size());
 						}
 					}
 				}
+				
+				x++;
+				System.out.println("processed: " + String.valueOf(x));
 			
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -103,7 +148,7 @@ public class WikipediaMappings {
 		    for (String r : redirects) {
 		    	String normalizedRedirect = r.toLowerCase().replaceAll("_", " ");
 				redirectsAndNormalized.put(normalizedRedirect, originalTitle);
-				System.out.println(normalizedRedirect + " -> " + originalTitle);
+				//System.out.println(normalizedRedirect + " -> " + originalTitle);
 			}		    
 		}
 		
@@ -114,17 +159,16 @@ public class WikipediaMappings {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static LinkedHashMultimap<String, String> loadArticlesLinks(String filename) throws IOException, ClassNotFoundException {
+	public static ArrayListMultimap<String, String> loadArticlesLinks(String filename) throws IOException, ClassNotFoundException {
 		
-		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
+		hyperlinks = com.google.common.collect.ArrayListMultimap.create();
 		
 	    FileInputStream fis = new FileInputStream(filename);
 	    ObjectInputStream ois = new ObjectInputStream(fis);
-	    hyperlinks = (LinkedHashMultimap<String, String>) ois.readObject();
+	    hyperlinks = (ArrayListMultimap<String, String>) ois.readObject();
 	    ois.close();
 	    
 	    return hyperlinks;
-	    
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -194,17 +238,13 @@ public class WikipediaMappings {
 		out.close();
 	}
 	
-	public static void loadMappings(String disambiguation_file, String redirects_file, String anchors_file) throws IOException, ClassNotFoundException {
+	public static void loadMappings(String disambiguation_file, String redirects_file, String hyperlinks) throws IOException, ClassNotFoundException {
 		
-		hyperlinks = com.google.common.collect.LinkedHashMultimap.create();
 		disambiguation = com.google.common.collect.LinkedHashMultimap.create();		
 		allMappings = com.google.common.collect.LinkedHashMultimap.create();
 		
 		System.out.println("Loading disambiguation pages mappings file");
 		disambiguation = loadDisambiguation(disambiguation_file);
-		
-		//System.out.println("Loading anchor links mappings file");
-		//hyperlinks = loadArticlesLinks(anchors_file);
 		
 		System.out.println("Loading redirect pages mappings file");
 		redirectsAndNormalized = loadRedirects(redirects_file);
@@ -217,17 +257,6 @@ public class WikipediaMappings {
 		}		
 		disambiguation = null;
 		
-		
-		/*
-		System.out.println("Loading anchor links mappings");
-		
-		keys = hyperlinks.keySet();
-		for (String k : keys) {
-			allMappings.putAll(k, hyperlinks.get(k));			
-		}
-		hyperlinks = null;
-		*/
-		
 		System.out.println("Loading redirect pages mappings");
 		
 		keys = redirectsAndNormalized.keySet();
@@ -236,6 +265,7 @@ public class WikipediaMappings {
 		}
 		redirectsAndNormalized = null;
 		
+		getArticlesLinkOcc(hyperlinks,allMappings);
 		
 		System.out.println(allMappings.size() + " keys loaded");
 				
@@ -300,27 +330,6 @@ public class WikipediaMappings {
 	    		System.out.println(k + '\t' + v);
 	    		j.sadd(k, v);
 			}
-	    	
-	    	/*
-	    	long len = j.llen(k);
-	    	System.out.println("llen(\"" + k +"\") :" + len);
-	    	
-	    	List<String> keyValues = j.lrange(k, 0, len - 1);
-	    	System.out.println("lrange(\"" + k +"\", 0, len - 1)" + keyValues.size());
-	    	
-	    	for (String kv : keyValues) {
-				System.out.println(kv);
-			}
-	    	
-	    	for (; ; ) {
-	            String value = j.lpop("sequence_steps");
-	            if (value == null) {
-	                break;
-	            }
-
-	            System.out.println("lpop(\"" + k + "\"): " + value);
-	    	}
-	    	*/
         }
 	}
 	
@@ -334,24 +343,24 @@ public class WikipediaMappings {
         }
 	}
 	
-	
 	public static void main(String args[]) throws WikiApiException, IOException, ClassNotFoundException {
 		
+		/*
 		String host = args[0];
 		String database = args[1];
 		String user = args[2];
-		String passwd = args[3];
+		String passwd = args[3];		
+		init(host, database, user, passwd);
+		*/
 		
-		//init(host, database, user, passwd);
 		//getRedirects();
 		//getArticlesLink();
 		//getDisambiguations();
-		//loadRedirects(args[4]);
 		//loadArticlesLinks(args[4]);
-		//loadDisambiguation(args[4]);
 		//getEntities();
-		loadMappings(args[4],args[5],args[6]);
-		loadMappingsToREDIS(args[4]);
+		
+		//loadMappings(args[4],args[5],args[6]);
+		loadMappingsToREDIS(args[0]);
 	}
 }
 
