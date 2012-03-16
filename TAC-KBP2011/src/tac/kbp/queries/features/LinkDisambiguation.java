@@ -11,9 +11,14 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
+import tac.kbp.bin.Definitions;
+
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.dict.ExactDictionaryChunker;
+
+import de.tudarmstadt.ukp.wikipedia.api.Page;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 
 // Out-Degree
 // N = set of names of entities mentioned in the context g
@@ -78,7 +83,21 @@ public class LinkDisambiguation {
 		}
     }
     
-    public static HashMap<String, Integer> getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateWikiText ) throws IOException, ParseException {
+    public static String getArticleText (String pageTitle) throws IOException, ParseException, WikiApiException {
+    	Page p = null;    	
+		try {
+			
+			p = Definitions.wiki.getPage(pageTitle);			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (p!=null)
+			return p.getParsedPage().getText();
+		else return null;
+    }
+    
+    public static HashMap<String, Integer> getScore ( ExactDictionaryChunker chunker, String queryContext , String candidateWikiText ) throws IOException, ParseException, WikiApiException {
 		
     	String pagesInContext[] = chunk(chunker,queryContext);
 		String pagesInCandidateWikiText[] = chunk(chunker,candidateWikiText);
@@ -93,11 +112,14 @@ public class LinkDisambiguation {
 		
 		//in-degree
 		for ( String queryContextName : pagesInContext ) {
-			String aux[] = chunk(chunker,getWikiText(queryContextName));
-			
-			for ( String s1 : aux ) 
-				for ( String s2 : pagesInContext ) 
-					if ( s2.equals(s1) ) inDegree++;
+			String entity = getArticleText(queryContextName);
+			if (entity!=null) {
+				String aux[] = chunk(chunker,entity);
+				
+				for ( String s1 : aux ) 
+					for ( String s2 : pagesInContext ) 
+						if ( s2.equals(s1) ) inDegree++;
+			}
 		}
 		
 		scores.put("outDegree", outDegree);
