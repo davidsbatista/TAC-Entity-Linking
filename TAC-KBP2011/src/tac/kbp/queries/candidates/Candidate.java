@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.apache.lucene.queryParser.ParseException;
 
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
+
 import tac.kbp.bin.Definitions;
 import tac.kbp.bin.Definitions.NERType;
 import tac.kbp.kb.index.xml.Entity;
@@ -152,7 +154,7 @@ public class Candidate {
 	
 	
 	// Graph Structure
-	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException{		
+	public void linkDisambiguation(KBPQuery q) throws IOException, ParseException, WikiApiException{		
 		HashMap<String, Integer> scores = LinkDisambiguation.getScore(Definitions.chunker, q.supportDocument, this.entity.wiki_text);
 		this.features.inDegree = scores.get("inDegree");
 		this.features.outDegree = scores.get("outDegree");
