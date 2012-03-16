@@ -8,34 +8,22 @@
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
                 <attribute name="Rsrc-Main-Class" value="tac.kbp.bin.Main"/>
                 <attribute name="Class-Path" value="."/>
-                <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar commons-collections.jar servlet-api-2.5.jar commons-logging.jar commons-beanutils.jar commons-codec.jar commons-logging-api.jar commons-logging-adapters.jar commons-httpclient.jar jcaller.jar jtidy.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar junit.jar secondstring-20060615.jar stanford-ner.jar google-collect-1.0-rc2.jar lucene-core-3.0.3.jar lucene-spellchecker-3.0.3.jar lingpipe-4.1.0.jar commons-cli-1.2.jar"/>
+                <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar guava-11.0.2.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar stanford-ner-2011-09-14.jar lucene-core-3.5-SNAPSHOT.jar lingpipe-4.1.0.jar commons-cli-1.2.jar de.tudarmstadt.ukp.wikipedia.api-0.9.1-jar-with-dependencies.jar"/>
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="/home/dsbatista/workspace/EntityLinking/bin"/>
-            <zipfileset dir="/usr/share/java" includes="commons-digester.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-collections.jar"/>
-            <zipfileset dir="/usr/share/java" includes="servlet-api-2.5.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-logging.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-beanutils.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-codec.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-logging-api.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-logging-adapters.jar"/>
-            <zipfileset dir="/usr/share/java" includes="commons-httpclient.jar"/>
-            <zipfileset dir="/usr/share/java" includes="jcaller.jar"/>
-            <zipfileset dir="/usr/share/java" includes="jtidy.jar"/>
-            <zipfileset dir="/usr/share/java" includes="jedis-2.0.0.jar"/>
-            <zipfileset dir="/usr/share/java" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
-            <zipfileset dir="/usr/share/java" includes="junit.jar"/>
-            <zipfileset dir="/home/dsbatista/stanford-ner-2011-09-14" includes="stanford-ner.jar"/>
-            <zipfileset dir="/usr/share/java" includes="google-collect-1.0-rc2.jar"/>
-	    <zipfileset dir="/usr/share/java" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
-            <zipfileset dir="/home/dsbatista/lucene-3.0.3" includes="lucene-core-3.0.3.jar"/>
-            <zipfileset dir="/home/dsbatista/lucene-3.0.3/contrib/spellchecker" includes="lucene-spellchecker-3.0.3.jar"/>
-	    <zipfileset dir="/home/dsbatista/lingpipe-4.1.0/" includes="lingpipe-4.1.0.jar"/>
-	    <zipfileset	dir="/home/dsbatista/commons-cli-1.2" includes="commons-cli-1.2.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="commons-digester-1.8.1.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="guava-11.0.2.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="jedis-2.0.0.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="stanford-ner-2011-09-14.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="lucene-core-3.5-SNAPSHOT.jar"/>
+	    <zipfileset dir="/home/dsbatista/TAC-jars/" includes="lingpipe-4.1.0.jar"/>
+	    <zipfileset	dir="/home/dsbatista/TAC-jars/" includes="commons-cli-1.2.jar"/>
+	    <zipfileset dir="/home/dsbatista/TAC-jars/" includes="de.tudarmstadt.ukp.wikipedia.api-0.9.1-jar-with-dependencies.jar"/>
         </jar>
     </target>
     <target name="send" depends="create_run_jar">
-		<scp file="TAC-EL.jar" todir="dsbatista@agatha.inesc-id.pt:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
+		<scp file="TAC-EL.jar" todir="dsbatista@borat:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
     </target>
 </project>
