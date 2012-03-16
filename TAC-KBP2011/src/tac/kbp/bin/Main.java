@@ -135,6 +135,8 @@ public class Main {
 		/* Dictionary of name-entities based on the Knowledge Base */
 		Definitions.buildDictionary();
 		
+		Definitions.initJWLPWikipedia();
+		
 		/* Train queries XML file */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
 		System.out.println("Loading queries from: " + queriesTrainFile);

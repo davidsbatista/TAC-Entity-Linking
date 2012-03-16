@@ -18,7 +18,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
-import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Jedis;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.queries.GoldQuery;
@@ -29,6 +28,11 @@ import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.ExactDictionaryChunker;
 import com.aliasi.dict.MapDictionary;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
+
+import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
+import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
+import de.tudarmstadt.ukp.wikipedia.api.WikiConstants.Language;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
@@ -50,7 +54,6 @@ public class Definitions {
 	public static boolean nameSimilarities = true;
 	public static boolean topicalSimilarities = true;
 	
-	//public static String basePath = "/srv/dsbatista/TAC-2011/";
 	public static String basePath = "/collections/TAC-2011/";
 	
 	/* queries */
@@ -74,10 +77,14 @@ public class Definitions {
 	public static String stop_words_location = basePath+"resources/stopwords.txt";
 	public static Set<String> stop_words = new HashSet<String>();
 
-	/* list of all entities in KB, for link disambiguation */
+	/* list of all entities in Wikipedia, for link disambiguation */
 	static final double CHUNK_SCORE = 1.0;
 	public static String entities = basePath+"resources/entities.txt";
 	public static ExactDictionaryChunker chunker = null;
+	
+	/* JWLP Wikipedia Interface */
+	public static DatabaseConfiguration dbConfig;
+	public static Wikipedia wiki;
 	
 	/* LDA topics */
 	public static String kb_lda_topics = basePath+"LDA/model/model-final.theta";
@@ -146,18 +153,12 @@ public class Definitions {
     	MapDictionary<String> dictionary = new MapDictionary<String>();	
     	String aux = null;
     	
-		while ((aux=input.readLine())!=null) {
-			// TODO : remove the two lines below if reading from a proper dictionary
+		while ((aux=input.readLine())!=null) {			
 			if (aux.length()==0)
 				continue;
-			
-			aux = aux.split("\\s")[2].split("wiki_title:")[1];
-			aux.replaceAll("([A-Z])"," $1").trim();
-			
-			String str = new String(aux.replace("_"," "));
-			String clas = new String(aux);
 
-			dictionary.addEntry(new DictionaryEntry<String>(str,clas,CHUNK_SCORE));
+			aux.replaceAll("([A-Z])"," $1").trim();			
+			dictionary.addEntry(new DictionaryEntry<String>(aux,aux,CHUNK_SCORE));
 	        
 		}
 		
@@ -278,6 +279,31 @@ public class Definitions {
 			e1.printStackTrace();
 		}
 		return queriesAnswers;		
+	}
+	
+	
+	public static void initJWLPWikipedia() throws WikiApiException {
+		
+		String host = "borat.inesc-id.pt";
+		String database = "JWLPWikiEn";
+		String user = "wiki";
+		String password = "07dqeuedm"; 
+		
+		// configure the database connection parameters
+		dbConfig = new DatabaseConfiguration();
+		dbConfig.setHost(host);
+		dbConfig.setDatabase(database);
+		dbConfig.setUser(user);
+		dbConfig.setPassword(password);
+		dbConfig.setLanguage(Language.english);
+
+		System.out.print("Loading JWLP Wikipedia interface...");
+		
+		// Create the Wikipedia object
+		wiki = new Wikipedia(dbConfig);
+		
+		System.out.println("\t" + wiki.getWikipediaId());
+		 
 	}
 	
 	

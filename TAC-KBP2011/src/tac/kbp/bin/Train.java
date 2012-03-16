@@ -97,25 +97,17 @@ public class Train {
 			q.getAlternativeSenses();			
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"');
 			
-			/*
-			for (String s : q.alternative_names) {
-				System.out.println(s);
-			}
-			*/
-			
-			
 			/* Schwartz and Hirst abbreviations and acronyms extractor*/
 			ExtractAbbrev extractAbbrv =  new ExtractAbbrev();
-			Vector<Abbreviations> abbreviations = extractAbbrv.extractAbbrPairs(q.supportDocument);
-			q.abbreviations = abbreviations;
-			
+			q.abbreviations = extractAbbrv.extractAbbrPairs(q.supportDocument);			
 			boolean acronym = true;
 			
 			for (int j = 0; j < q.name.length(); j++) {
 				if (Character.isLowerCase(q.name.charAt(j))) {
 					acronym = false;
 				}
-			}			
+			}
+			
 			if (acronym) {
 				 for (Abbreviations abbreviation : q.abbreviations) {					
 					if (abbreviation.getShortForm().equalsIgnoreCase(q.name)) {
@@ -146,12 +138,8 @@ public class Train {
 		// look for expansions:
 		//	support-document
 		//	mappings dictionary
-		//  if expansions are found use them only, instead of original name-string
-		
+		//  if expansions are found use them only, instead of original name-string		
 		//name-string AND in wiki_text
-		//int n_docs = 0;
-		//n_docs += getCandidates(q);
-		
 		
 		List<SuggestWord> suggestedwords = queryKB(q);
 		int n_docs = getCandidates(q,suggestedwords);
@@ -313,6 +301,7 @@ public class Train {
 	static List<SuggestWord> queryKB(KBPQuery q) throws IOException, ParseException {
 		
 		HashMap<String, HashSet<String>> query = q.generateQuery();
+		
 		Set<SuggestWord> suggestedwords = new HashSet<SuggestWord>();		
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
@@ -337,7 +326,6 @@ public class Train {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
-		
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
 		for (SuggestWord suggestWord : suggestedwordsList) {
