@@ -232,7 +232,7 @@ public class WikipediaMappings {
 		FileWriter fstream = new FileWriter("entities.txt");
 		BufferedWriter out = new BufferedWriter(fstream);
 		
-		for (Page p : wiki.getPages(pq)) {
+		for (Page p : wiki.getPages(pq)) {		
 			out.write(p.getTitle().getPlainTitle()+'\n');
 		}
 		out.close();
@@ -275,38 +275,6 @@ public class WikipediaMappings {
 	    oos.close();		
 	}	
 	
-	public static void dumpMappings() {
-		
-		System.out.println("Connecting to REDIS server.. ");
-		Jedis j = new Jedis("borat", 6379);
-        j.connect();
-        
-        Set<String> keys = j.keys("a*");
-        
-        for (String k : keys) {
-        	
-			System.out.println(k);
-			
-			System.out.println(j.llen(k));
-			
-			//System.out.println(j.hkeys(k));
-			
-			
-			/*
-			long len = j.llen(k);
-			System.out.println("llen(\"" + k + "\"):" + len);
-			
-			for (; ; ) {
-			String value = j.lpop(k);
-			if (value == null) {
-				break;
-			}
-			System.out.println(("lpop(\"" + k + "\"):"+ value));
-	        }
-	        */
-		}        
-	}
-	
 	@SuppressWarnings("unchecked")
 	public static void loadMappingsToREDIS(String filename) throws IOException, ClassNotFoundException {
 		
@@ -317,7 +285,7 @@ public class WikipediaMappings {
 	    allMappings = (LinkedHashMultimap<String, String>) ois.readObject();
 	    ois.close();
 	    
-	    Jedis j = new Jedis("borat.inesc-id.pt", 6379);
+	    Jedis j = new Jedis("", 6379);
         j.connect();
         
         Set<String> keys = allMappings.keySet();
@@ -335,7 +303,7 @@ public class WikipediaMappings {
 	
 	public static void test() {
 		
-		Jedis j = new Jedis("borat.inesc-id.pt", 6379);
+		Jedis j = new Jedis("", 6379);
         j.connect();
         
         for (String	e: j.smembers("az")) {
@@ -360,7 +328,7 @@ public class WikipediaMappings {
 		//getEntities();
 		
 		//loadMappings(args[4],args[5],args[6]);
-		loadMappingsToREDIS(args[0]);
+		//loadMappingsToREDIS(args[0]);
 	}
 }
 
