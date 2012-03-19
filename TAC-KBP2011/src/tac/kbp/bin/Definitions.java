@@ -16,6 +16,7 @@ import java.util.Set;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.Jedis;
@@ -69,7 +70,8 @@ public class Definitions {
 	public static String KB_location = basePath+"index";
 	public static String SpellChecker_location = basePath+"spellchecker_index";
 	public static String DocumentCollection_location = basePath+"document_collection_index";
-
+	public static String WikipediaIndexEn_location = basePath+"Wikipedia-Index-En";
+	
 	/* support doc and named-entities recognizer */
 	public static String serializedClassifier = basePath+"resources/all.3class.distsim.crf.ser.gz";
 	
@@ -94,8 +96,10 @@ public class Definitions {
 	
 	/* Lucene indexes */
 	public static IndexSearcher searcher = null;
-	public static SpellChecker spellchecker = null;
+	public static IndexSearcher wikipediaEn = null;
 	public static IndexSearcher documents = null;
+	public static SpellChecker spellchecker = null;
+	
 	public static IndexReader docs_reader = null;
 
 	/* StanfordNER CRF classifier */
@@ -118,9 +122,10 @@ public class Definitions {
 	
 	public static void loadRecall(String n_candidates) throws CorruptIndexException, IOException {
 		
-		/* Lucene Index */
+		/* KB Index */
 		System.out.println("Knowledge Base index: " + KB_location);
-		searcher = new IndexSearcher(FSDirectory.open(new File(KB_location)));
+		Directory KBIndexDirectory = FSDirectory.open(new File(KB_location));		
+		searcher = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
 		
 		/* SpellChecker Index */
 		System.out.println("SpellChecker index: " + SpellChecker_location);
@@ -128,9 +133,9 @@ public class Definitions {
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 		
 		/* Document Collection Index */
-		System.out.println("Document Collection (IndexReader): " + DocumentCollection_location);
-		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));
-		docs_reader = documents.getIndexReader();
+		System.out.println("Document Collection (IndexReader): " + DocumentCollection_location);		
+		Directory DocsIndexDirectory = FSDirectory.open(new File(DocumentCollection_location));		
+		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));
 		
 		/* Number of candidates to retrieve per sense */
 		Definitions.candidates_per_sense = Integer.parseInt(n_candidates);
@@ -170,7 +175,8 @@ public class Definitions {
 	public static void loadKBIndex() throws CorruptIndexException, IOException {
 		
 		System.out.println("Knowledge Base index: " + KB_location);
-		searcher = new IndexSearcher(FSDirectory.open(new File(KB_location)));
+		Directory KBIndexDirectory = FSDirectory.open(new File(KB_location));		
+		searcher = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
 		
 	}
 
@@ -185,12 +191,21 @@ public class Definitions {
 	/* Document Collection Index */		
 	public static void loadDocumentCollecion() throws CorruptIndexException, IOException {
 		
-		System.out.println("Document Collection index: " + DocumentCollection_location);
-		documents = new IndexSearcher(FSDirectory.open(new File(DocumentCollection_location)));	
+		System.out.println("Document Collection index: " + DocumentCollection_location);		
+		Directory DocsIndexDirectory = FSDirectory.open(new File(DocumentCollection_location));		
+		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));	
 	}
 
+	/* Document Collection Index */		
+	public static void loadWikipediaIndex() throws CorruptIndexException, IOException {
+		
+		System.out.println("Wikpedia index: " + WikipediaIndexEn_location);		
+		Directory WikiIndexDirectory = FSDirectory.open(new File(WikipediaIndexEn_location));		
+		wikipediaEn = new IndexSearcher((IndexReader.open(WikiIndexDirectory)));	
+	}
+	
+	
 	/* Stop-Words */
-
 	public static void loadStopWords() {
 
 		System.out.println("Loading stopwords from: " + stop_words_location);

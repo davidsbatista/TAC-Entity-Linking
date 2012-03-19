@@ -5,11 +5,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javassist.compiler.ast.Keyword;
+
+import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Version;
 
 import tac.kbp.bin.Definitions;
 
@@ -65,21 +69,22 @@ public class LinkDisambiguation {
     
     public static String getWikiText ( String pageID ) throws IOException, ParseException {
     	
-    	WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"name",analyzer);
+    	KeywordAnalyzer analyzer = new KeywordAnalyzer();
+		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_35,"name",analyzer);
 		
-    	String query = "wiki_title:" + '"' + pageID.replaceAll("\"", "").replace("&amp;","&") + '"';
+    	//String query = "entity:" + '"' + pageID.replaceAll("\"", "").replace("&amp;","&") + '"';
+    	String query = "entity:" + '"' + pageID + '"'; //.replaceAll("\"", "").replace("&amp;","&") + 
     	
-		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
+		TopDocs docs = tac.kbp.bin.Definitions.wikipediaEn.search(queryParser.parse(query), 1);
 		Document doc = null;
 		
 		if (docs.totalHits == 0) {
-			System.out.println("Error!:" + query + "returned 0 documents");
+			System.out.println("Error! " + query + " returned 0 documents");
 			return " ";
 		}
 		else {
-			doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
-			return doc.getField("wiki_text").stringValue();	
+			doc = tac.kbp.bin.Definitions.wikipediaEn.doc(docs.scoreDocs[0].doc);
+			return doc.getFieldable("wiki_text").stringValue();
 		}
     }
     
@@ -112,7 +117,7 @@ public class LinkDisambiguation {
 		
 		//in-degree
 		for ( String queryContextName : pagesInContext ) {
-			String entity = getArticleText(queryContextName);
+			String entity = getWikiText(queryContextName);
 			if (entity!=null) {
 				String aux[] = chunk(chunker,entity);
 				

@@ -113,6 +113,9 @@ public class Main {
 		/* Document Collection */
 		Definitions.loadDocumentCollecion();
 		
+		/* Wikipedia Index */
+		Definitions.loadWikipediaIndex();
+		
 		System.out.println();
 		
 		/* REDIS connection */

@@ -216,6 +216,8 @@ public class NILDetector {
 		List<String> clusterSortedKeys = new ArrayList<String>(clusterKeys);
 		Collections.sort(clusterSortedKeys);
 		
+		/* For debbugging */
+		/*
 		System.out.println("ID Labels:");
 		for (String id_label : clusterSortedKeys) {
 			System.out.println(id_label);
@@ -224,6 +226,7 @@ public class NILDetector {
 				System.out.println('\t'+q);
 			}
 		}
+		*/
 		
 		String output = ("results-SVMRank-NIL-Detector-NIL-clustering.txt");		
 		PrintStream out = new PrintStream( new FileOutputStream(output));		
