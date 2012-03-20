@@ -164,7 +164,7 @@ public class Train {
 	
 	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {
 		
-		System.out.print("Extracting features from candidates");
+		System.out.println("Extracting features from candidates");
 		PrintStream out = null;
 		
 		if (saveToFile) {
