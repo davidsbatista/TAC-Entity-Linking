@@ -1,20 +1,23 @@
 package tac.kbp.slotfilling.queries;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.w3c.dom.*;
-
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException; 
+import org.xml.sax.SAXParseException;
 
 
 public class LoadQueries{
 
-    public static List<SFQuery> loadXML(String file) {
+    public static Map<String, SFQuery> loadXML(String file) {
     	
     	try {
 
@@ -24,7 +27,7 @@ public class LoadQueries{
             
             NodeList queries = doc.getElementsByTagName("query");
             
-            List<SFQuery> squeries = new LinkedList<SFQuery>(); 
+            Map<String,SFQuery> squeries = new HashMap<String,SFQuery>(); 
             
             for (int s=0; s < queries.getLength(); s++){
             	Node query = queries.item(s);
@@ -53,8 +56,7 @@ public class LoadQueries{
                 	SFQuery q = new SFQuery(query_id, name, docid, etype, nodeid);
                 	if (ignore!=null)
                 		q.ignore = ignore;
-                	squeries.add(q);
-                	
+                	squeries.put(query_id,q);                	
                 }                
             }
             
