@@ -13,7 +13,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
-import tac.kbp.entitylinking.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.ELQuery;
 
 
@@ -27,8 +27,8 @@ public class SupportDocLDA {
 		//TODO: this method needs to created this Definitions
 		//tac.kbp.bin.Definitions.loadAll(queries);
 		
-		System.out.println(tac.kbp.entitylinking.bin.Definitions.queriesTrain.size() + " queries loaded");
-		System.out.println(tac.kbp.entitylinking.bin.Definitions.stop_words.size() + " stopwords");
+		System.out.println(tac.kbp.configuration.Definitions.queriesTrain.size() + " queries loaded");
+		System.out.println(tac.kbp.configuration.Definitions.stop_words.size() + " stopwords");
 
 		//use buffering
 		File aFile = new File(outputFile);					
@@ -36,7 +36,7 @@ public class SupportDocLDA {
 		
 		System.out.println("parsing support documents...");
 		
-		for (ELQuery query : tac.kbp.entitylinking.bin.Definitions.queriesTrain) {
+		for (ELQuery query : tac.kbp.configuration.Definitions.queriesTrain) {
 			query.getSupportDocument(query);			
 			String text_parsed = parse(query.supportDocument);
 			output.write( text_parsed + "\n");
@@ -52,7 +52,7 @@ public class SupportDocLDA {
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
-        Document doc = tac.kbp.entitylinking.bin.Definitions.documents.doc(scoredocs[0].doc);        
+        Document doc = tac.kbp.configuration.Definitions.documents.doc(scoredocs[0].doc);        
         q.supportDocument = doc.get("text");
 	}
 	

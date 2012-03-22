@@ -9,7 +9,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
-import tac.kbp.entitylinking.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 
 
 public class StringUtils {
