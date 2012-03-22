@@ -10,9 +10,9 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.entitylinking.bin.Definitions;
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 
-public class SlotFillingQuery {
+public class SFQuery {
 	
 	public String query_id;
 	public String name;
@@ -22,11 +22,11 @@ public class SlotFillingQuery {
 	public String ignore;
 	public String supportDocument;
 
-	public SlotFillingQuery() {
+	public SFQuery() {
 		super();
 	}
 	
-	public SlotFillingQuery(String query_id, String name, String docid, String etype, String nodeid) {
+	public SFQuery(String query_id, String name, String docid, String etype, String nodeid) {
 		
 		super();
 		this.query_id = query_id;

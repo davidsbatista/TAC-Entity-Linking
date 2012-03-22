@@ -14,7 +14,7 @@ import org.xml.sax.SAXParseException;
 
 public class LoadQueries{
 
-    public static List<SlotFillingQuery> loadXML(String file) {
+    public static List<SFQuery> loadXML(String file) {
     	
     	try {
 
@@ -24,7 +24,7 @@ public class LoadQueries{
             
             NodeList queries = doc.getElementsByTagName("query");
             
-            List<SlotFillingQuery> squeries = new LinkedList<SlotFillingQuery>(); 
+            List<SFQuery> squeries = new LinkedList<SFQuery>(); 
             
             for (int s=0; s < queries.getLength(); s++){
             	Node query = queries.item(s);
@@ -50,7 +50,7 @@ public class LoadQueries{
                 	System.out.println("ignore: " + ignore);
                 	System.out.println();
                 	
-                	SlotFillingQuery q = new SlotFillingQuery(query_id, name, docid, etype, nodeid);
+                	SFQuery q = new SFQuery(query_id, name, docid, etype, nodeid);
                 	if (ignore!=null)
                 		q.ignore = ignore;
                 	squeries.add(q);
