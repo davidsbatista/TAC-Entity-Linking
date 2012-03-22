@@ -1,4 +1,4 @@
-package tac.kbp.queries.candidates;
+package tac.kbp.entitylinking.queries.candidates;
 
 import java.util.Comparator;
 
