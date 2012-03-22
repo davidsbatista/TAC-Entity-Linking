@@ -308,11 +308,6 @@ public class Main {
 		
 	}
 	
-	
-	
-	
-	
-	
 	static void svmrankformat(CommandLine line) throws IOException {
 		
 		// directory with features files
