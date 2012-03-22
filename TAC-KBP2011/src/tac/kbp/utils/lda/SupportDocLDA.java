@@ -14,7 +14,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.entitylinking.bin.Definitions;
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 
 
 public class SupportDocLDA {
@@ -36,7 +36,7 @@ public class SupportDocLDA {
 		
 		System.out.println("parsing support documents...");
 		
-		for (KBPQuery query : tac.kbp.entitylinking.bin.Definitions.queriesTrain) {
+		for (ELQuery query : tac.kbp.entitylinking.bin.Definitions.queriesTrain) {
 			query.getSupportDocument(query);			
 			String text_parsed = parse(query.supportDocument);
 			output.write( text_parsed + "\n");
@@ -47,7 +47,7 @@ public class SupportDocLDA {
 		
 	}
 	
-	public void getSupportDocument(KBPQuery q) throws IOException {
+	public void getSupportDocument(ELQuery q) throws IOException {
         Term t = new Term("docid", q.docid); 
         Query query = new TermQuery(t);                 
         TopDocs docs = Definitions.documents.search(query, 1);
