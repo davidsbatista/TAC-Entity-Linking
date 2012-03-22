@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import tac.kbp.entitylinking.queries.GoldQuery;
-import tac.kbp.entitylinking.queries.KBPQuery;
-import tac.kbp.entitylinking.queries.KBPQueryComparator;
+import tac.kbp.entitylinking.queries.ELQuery;
+import tac.kbp.entitylinking.queries.ELQueryComparator;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.features.Features;
 
@@ -28,14 +28,14 @@ public class SVMRank {
 	1 qid:1 1:0 2:0 3:1 4:0.3 5:0
 	*/
 	
-	public void svmRankFormat(List<KBPQuery> queries, HashMap<String, GoldQuery> queries_answers, String outputfile) throws IOException {
+	public void svmRankFormat(List<ELQuery> queries, HashMap<String, GoldQuery> queries_answers, String outputfile) throws IOException {
 		
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
 
 		//to avoid: "ERROR: Query ID's in data file have to be in increasing order" from SVMRank
 		//sort queries according to id  in increasing order
-		Collections.sort(queries, new KBPQueryComparator());
+		Collections.sort(queries, new ELQueryComparator());
 		
 		//find max for each feature to be used in normalization: simply divide by the max value
 		double[] max = new double[24];
@@ -44,7 +44,7 @@ public class SVMRank {
 			max[i] = 0;
 		}
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			for (Candidate c : q.candidates) {
 				Features f = c.features;
 				double[] features = f.featuresVector();
@@ -56,7 +56,7 @@ public class SVMRank {
 		}
 		
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			
 			out.write("#" + q.query_id + " " + q.gold_answer + "\n");
 			

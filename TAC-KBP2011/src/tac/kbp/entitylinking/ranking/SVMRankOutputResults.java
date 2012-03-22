@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.candidates.CandidateComparator;
 import tac.kbp.utils.misc.BigFile;
@@ -17,9 +17,9 @@ import tac.kbp.utils.misc.BigFile;
 public class SVMRankOutputResults {
 
 	HashMap<Integer, Double> predictions = new HashMap<Integer, Double>();
-	public List<KBPQuery> queries = new LinkedList<KBPQuery>();
+	public List<ELQuery> queries = new LinkedList<ELQuery>();
 	
-	public List<KBPQuery> results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
+	public List<ELQuery> results(String predictionsFilePath, String goundtruthFilePath) throws Exception {
 		
 		parse(predictionsFilePath,goundtruthFilePath);
 		
@@ -27,7 +27,7 @@ public class SVMRankOutputResults {
 		float mean_reciprocalRank = 0; 
 		
 		//rank candidates according to classification scores
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparator());
 			
@@ -46,7 +46,7 @@ public class SVMRankOutputResults {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			if (q.candidatesRanked.size()==0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
@@ -75,7 +75,7 @@ public class SVMRankOutputResults {
 		}
 		
 		i=0;
-		KBPQuery q = null;
+		ELQuery q = null;
 		
 		for (String line: goundtruthFile) {
 			
@@ -90,7 +90,7 @@ public class SVMRankOutputResults {
 				String correct_answer = data[1];
 					
 				//Builds new query and fills the query_id and correct answer
-				q = new KBPQuery();
+				q = new ELQuery();
 				q.query_id = query_id;
 				q.gold_answer = correct_answer;
 

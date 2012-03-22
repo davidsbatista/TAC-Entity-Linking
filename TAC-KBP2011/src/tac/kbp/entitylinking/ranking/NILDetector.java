@@ -17,17 +17,17 @@ import java.util.Set;
 import com.aliasi.stats.Statistics;
 
 import tac.kbp.entitylinking.bin.Definitions;
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 
 public class NILDetector {
 	
-	public void train(List<KBPQuery> queries, String outputfile) throws IOException, InterruptedException {
+	public void train(List<ELQuery> queries, String outputfile) throws IOException, InterruptedException {
 		
 		//extract features
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 
 			double[] features = extract_features(q);
 			out.write(Double.toString(features[0]));
@@ -50,7 +50,7 @@ public class NILDetector {
 		svmLearn.waitFor();
 	}
 	
-	double[] extract_features(KBPQuery q) {
+	double[] extract_features(ELQuery q) {
 		
 		/* based on score 
 		- ranking score
@@ -149,13 +149,13 @@ public class NILDetector {
 		*/
 	}
 	
-	public void classify(List<KBPQuery> queries, String outputfile) throws IOException, InterruptedException{
+	public void classify(List<ELQuery> queries, String outputfile) throws IOException, InterruptedException{
 		
 		//extract features from top candidate
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			
 			double[] features = extract_features(q);
 			out.write(Double.toString(features[0]));
@@ -187,7 +187,7 @@ public class NILDetector {
 		
 		int count = 0;
 		
-		for (KBPQuery q1 : Definitions.queriesTest) {
+		for (ELQuery q1 : Definitions.queriesTest) {
 			
 			// check if its a query whose answer was classified as NIL
 			if (queries_NIL.contains(q1.query_id)) {
@@ -196,7 +196,7 @@ public class NILDetector {
 				Set<String> queries = new HashSet<String>();
 				
 				// gather all other queries that have an equal name-string
-				for (KBPQuery q2 : Definitions.queriesTest) {
+				for (ELQuery q2 : Definitions.queriesTest) {
 
 					if (q1.name.equalsIgnoreCase(q2.name)) {
 						queries.add(q2.query_id);

@@ -20,7 +20,7 @@ import com.aliasi.stats.RegressionPrior;
 import com.aliasi.util.AbstractExternalizable;
 
 import tac.kbp.entitylinking.bin.Definitions;
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.features.Features;
 
@@ -68,7 +68,7 @@ public class LogisticRegressionLingPipe {
 	public void parseFile(String file) throws NumberFormatException, IOException{
 		
 		String[] splitted = file.split("\\/");		
-		KBPQuery query = new KBPQuery(splitted[2].split("\\.")[0]);
+		ELQuery query = new ELQuery(splitted[2].split("\\.")[0]);
 		
 		
 		try{
