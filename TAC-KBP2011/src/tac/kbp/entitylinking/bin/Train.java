@@ -20,7 +20,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.configuration.Definitions;
+import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.utils.string.Abbreviations;
@@ -38,7 +39,7 @@ public class Train {
 	public static ArrayList<double[]> inputs = new ArrayList<double[]>();
 	public static ArrayList<Integer> outputs = new ArrayList<Integer>();
 	
-	static void tune(KBPQuery q) throws Exception {
+	static void tune(ELQuery q) throws Exception {
 		
 		//q.getSupportDocument();
 		//q.getSupportDocumentTerms();
@@ -68,7 +69,7 @@ public class Train {
 		System.out.println();
 	}
 	
-	static void statisticsRecall(List<KBPQuery> queries) throws Exception {
+	static void statisticsRecall(List<ELQuery> queries) throws Exception {
 		
 		float miss_rate = (float) Train.MISS_queries / ((float) queries.size()-Train.NIL_queries);
 		float coverage = (float) Train.FOUND_queries / ((float) queries.size()-Train.NIL_queries);
@@ -82,10 +83,10 @@ public class Train {
 		System.out.println("Queries Found (Coverage): " + Train.FOUND_queries + " (" + coverage * 100 + "%)" );
 	}
 	
-	static void process(List<KBPQuery> queries, boolean topics, boolean supportDocument) throws Exception {
+	static void process(List<ELQuery> queries, boolean topics, boolean supportDocument) throws Exception {
 		
 		// Process each query 
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 
 			if (supportDocument) {
 				q.getSupportDocument();
@@ -120,11 +121,11 @@ public class Train {
 		}
 	}
 	
-	static void generateFeatures(List<KBPQuery> queries) throws Exception{
+	static void generateFeatures(List<ELQuery> queries) throws Exception{
 		
 		int count = 1;
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			retrieveCandidates(q);
 			extractFeatures(q, false);
 			System.out.print("\t(" + count + "/" + queries.size() + ")\n");
@@ -132,7 +133,7 @@ public class Train {
 		}
 	}	
 	
-	static void retrieveCandidates(KBPQuery q) throws Exception {
+	static void retrieveCandidates(ELQuery q) throws Exception {
 		
 		//TODO: if query-string is an acronym:
 		// look for expansions:
@@ -162,7 +163,7 @@ public class Train {
 			MISS_queries++;
 	}		
 	
-	static void extractFeatures(KBPQuery q, boolean saveToFile) throws Exception {
+	static void extractFeatures(ELQuery q, boolean saveToFile) throws Exception {
 		
 		System.out.println("Extracting features from candidates");
 		PrintStream out = null;
@@ -194,11 +195,11 @@ public class Train {
 			ScoreDoc[] scoreDocs = null;
 			String queryS = "id:" + q.gold_answer;
 			
-			TopDocs docs = tac.kbp.entitylinking.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);				
+			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;
 			
 			if (docs.totalHits != 0) {
-				Document doc = tac.kbp.entitylinking.bin.Definitions.searcher.doc(scoreDocs[0].doc);				
+				Document doc = tac.kbp.configuration.Definitions.searcher.doc(scoreDocs[0].doc);				
 				
 				Candidate c = new Candidate(doc,scoreDocs[0].doc);
 				
@@ -260,14 +261,14 @@ public class Train {
 		return result;
 	}
 	
-	static int tune_recall(KBPQuery q) throws IOException, ParseException {
+	static int tune_recall(ELQuery q) throws IOException, ParseException {
 		
 		HashMap<String, HashSet<String>> query = q.generateQuery();
 		ArrayList<SuggestWord> suggestedwords = new ArrayList<SuggestWord>();		
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> list = tac.kbp.entitylinking.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
+			List<SuggestWord> list = tac.kbp.configuration.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -298,7 +299,7 @@ public class Train {
 		return suggestedwords.size();
 	}
 	
-	static List<SuggestWord> queryKB(KBPQuery q) throws IOException, ParseException {
+	static List<SuggestWord> queryKB(ELQuery q) throws IOException, ParseException {
 		
 		HashMap<String, HashSet<String>> query = q.generateQuery();
 		
@@ -306,7 +307,7 @@ public class Train {
 		HashSet<String> eid_already_retrieved = new HashSet<String>();
 		
 		for (String sense : query.get("strings")) {
-			List<SuggestWord> list = tac.kbp.entitylinking.bin.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
+			List<SuggestWord> list = tac.kbp.configuration.Definitions.spellchecker.suggestSimilar(sense, Definitions.candidates_per_sense);
 			for (SuggestWord s : list) {
 				if (eid_already_retrieved.contains(s.eid)) continue;
 				else {
@@ -322,7 +323,7 @@ public class Train {
 		return suggestedwordsList;
 	}
 		
-	static int getCandidates(KBPQuery q, List<SuggestWord> suggestedwordsList) throws IOException, ParseException {
+	static int getCandidates(ELQuery q, List<SuggestWord> suggestedwordsList) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
@@ -331,7 +332,7 @@ public class Train {
 		for (SuggestWord suggestWord : suggestedwordsList) {
 			
 			String queryS = "id:" + suggestWord.eid;
-			TopDocs docs = tac.kbp.entitylinking.bin.Definitions.searcher.search(queryParser.parse(queryS), 1);
+			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(queryParser.parse(queryS), 1);
 			
 			if (docs.totalHits == 0)
 				continue;
@@ -342,7 +343,7 @@ public class Train {
 					continue;
 				
 				else {
-					Document doc = tac.kbp.entitylinking.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
@@ -359,7 +360,7 @@ public class Train {
 	}
 	
 	
-	static int getCandidates(KBPQuery q) throws IOException, ParseException {
+	static int getCandidates(ELQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
@@ -376,12 +377,12 @@ public class Train {
 			System.out.println("query: " + queryAND);
 			
 			Query query = queryParser.parse("wiki_text: " + queryAND);			
-			TopDocs docs = tac.kbp.entitylinking.bin.Definitions.searcher.search(query, 20);
+			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(query, 20);
 			
 			if (docs.totalHits != 0) {
 				for (int i = 0; i < docs.scoreDocs.length; i++) {		
 					
-					Document doc = tac.kbp.entitylinking.bin.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[i].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[i].doc);
@@ -411,7 +412,7 @@ public class Train {
 				queryOR += orJoiner.join(valid);
 				
 				query = queryParser.parse("name:" + queryOR);			
-				docs = tac.kbp.entitylinking.bin.Definitions.searcher.search(query, 30);
+				docs = tac.kbp.configuration.Definitions.searcher.search(query, 30);
 				
 				if (docs.totalHits == 0)
 					continue;
@@ -422,7 +423,7 @@ public class Train {
 						continue;
 					
 					else {
-						Document doc = tac.kbp.entitylinking.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+						Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 						Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 						q.candidates.add(c);
 						repeated.add(docs.scoreDocs[0].doc);
@@ -439,11 +440,11 @@ public class Train {
 		else {
 			
 			Query query = queryParser.parse(q.name);			
-			TopDocs docs = tac.kbp.entitylinking.bin.Definitions.searcher.search(query, 20);
+			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(query, 20);
 			if (docs.totalHits != 0) {
 				for (int i = 0; i < docs.scoreDocs.length; i++) {		
 					
-					Document doc = tac.kbp.entitylinking.bin.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[i].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[i].doc);

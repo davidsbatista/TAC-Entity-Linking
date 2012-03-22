@@ -20,8 +20,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.GoldQuery;
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.candidates.CandidateComparatorInDegree;
 import tac.kbp.entitylinking.queries.candidates.CandidateComparatorOutDegree;
@@ -149,7 +150,7 @@ public class Main {
 		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTrain) {
+		for (ELQuery q : Definitions.queriesTrain) {
 			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
 		}
 		
@@ -173,7 +174,7 @@ public class Main {
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
@@ -215,7 +216,7 @@ public class Main {
 		String predictionsFilePath = "svmrank-predictions_training_set";
 		String goundtruthFilePath = "svmrank-train.dat";
 		SVMRankOutputResults outputresults = new SVMRankOutputResults(); 
-		List<KBPQuery> TrainningQueriesScore = outputresults.results(predictionsFilePath,goundtruthFilePath);
+		List<ELQuery> TrainningQueriesScore = outputresults.results(predictionsFilePath,goundtruthFilePath);
 		
 		for (int i = 0; i < Definitions.queriesTrain.size(); i++) {
 			
@@ -244,7 +245,7 @@ public class Main {
 		predictionsFilePath = "svmrank-predictions_test_set";
 		goundtruthFilePath = "svmrank-test.dat";
 		SVMRankOutputResults outputTestresults = new SVMRankOutputResults();
-		List<KBPQuery> TestQueriesScore = outputTestresults.results(predictionsFilePath,goundtruthFilePath);
+		List<ELQuery> TestQueriesScore = outputTestresults.results(predictionsFilePath,goundtruthFilePath);
 
 		for (int i = 0; i < Definitions.queriesTest.size(); i++) {
 			
@@ -374,7 +375,7 @@ public class Main {
 			Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
 			
 			/* set the answer for queries*/
-			for (KBPQuery q : Definitions.queriesTrain) {
+			for (ELQuery q : Definitions.queriesTrain) {
 				q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
 			}
 			
@@ -400,7 +401,7 @@ public class Main {
 			Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 			
 			/* set the answer for queries*/
-			for (KBPQuery q : Definitions.queriesTest) {
+			for (ELQuery q : Definitions.queriesTest) {
 				q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 			}
 			
@@ -419,7 +420,7 @@ public class Main {
 	
 	static void recall(CommandLine line) throws Exception {
 		
-		tac.kbp.entitylinking.bin.Definitions.loadRecall(line.getOptionValue("candidates"));
+		tac.kbp.configuration.Definitions.loadRecall(line.getOptionValue("candidates"));
 		
 		Definitions.basePath = line.getOptionValue("basePath");		
 		System.out.println("using as base path: " + Definitions.basePath);
@@ -433,7 +434,7 @@ public class Main {
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
@@ -442,7 +443,7 @@ public class Main {
 		
 		System.out.println();
 		
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			Train.retrieveCandidates(q);
 		}
 		
@@ -474,7 +475,7 @@ public class Main {
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
@@ -489,7 +490,7 @@ public class Main {
 		// retrieve candidates and calculate in- and outDegree
 		int count = 0;
 		
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			Train.retrieveCandidates(q);
 			
 			for (Candidate c : q.candidates) {
@@ -501,7 +502,7 @@ public class Main {
 		}
 		
 		// sort according to inDegree
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparatorInDegree());
 		}
@@ -510,7 +511,7 @@ public class Main {
 		
 		
 		// sort according to outDegree
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparatorOutDegree());
 		}
@@ -540,7 +541,7 @@ public class Main {
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}	
 		
@@ -553,7 +554,7 @@ public class Main {
 		
 		System.out.println("\n\nGetting candidates from Lucene:");
 			
-		for (KBPQuery q: Definitions.queriesTest) {			
+		for (ELQuery q: Definitions.queriesTest) {			
 			List<SuggestWord> suggested = Train.queryKB(q);
 			q.suggestedwords = suggested;
 			System.out.print("\n"+q.query_id + " \"" + q.name + '"' + "\t" + q.suggestedwords.size());
@@ -563,7 +564,7 @@ public class Main {
 		String output = "results.txt";
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 			
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			if (q.suggestedwords.size()==0) {
 				out.println(q.query_id.trim()+"\tNIL");
 			}
@@ -619,7 +620,7 @@ public class Main {
 		Definitions.queriesAnswersTrain = Definitions.loadQueriesAnswers(queriesTrainFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTrain) {
+		for (ELQuery q : Definitions.queriesTrain) {
 			q.gold_answer = Definitions.queriesAnswersTrain.get(q.query_id).answer;
 		}
 		
@@ -642,7 +643,7 @@ public class Main {
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
 		/* set the answer for queries*/
-		for (KBPQuery q : Definitions.queriesTest) {
+		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
@@ -746,11 +747,11 @@ public class Main {
 		output.results(predictionsFilePath, goundtruthFilePath);
 	}
 	
-	static void generateOutputIn(String output, List<KBPQuery> queries) throws FileNotFoundException {
+	static void generateOutputIn(String output, List<ELQuery> queries) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			
 			if (q.candidatesRanked.size()==0 || q.candidatesRanked.get(0).features.inDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
@@ -763,11 +764,11 @@ public class Main {
 		out.close();		
 	}
 	
-	static void generateOutputOut(String output, List<KBPQuery> queries) throws FileNotFoundException {
+	static void generateOutputOut(String output, List<ELQuery> queries) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			
 			if (q.candidatesRanked.size()==0 || q.candidatesRanked.get(0).features.outDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
@@ -780,11 +781,11 @@ public class Main {
 		out.close();		
 	}
 	
-	static void generateOutputBoth(String output, List<KBPQuery> queries) throws FileNotFoundException {
+	static void generateOutputBoth(String output, List<ELQuery> queries) throws FileNotFoundException {
 		
 		PrintStream out = new PrintStream( new FileOutputStream(output));
 		
-		for (KBPQuery q : queries) {
+		for (ELQuery q : queries) {
 			
 			if (q.candidatesRanked.size() == 0 || q.candidatesRanked.get(0).features.outDegree == 0 || q.candidatesRanked.get(0).features.inDegree == 0) {
 				out.println(q.query_id.trim()+"\tNIL");
