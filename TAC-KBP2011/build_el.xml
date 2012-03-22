@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project TAC-KBP2011 with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="/home/dsbatista/workspace/EntityLinking/TAC-EL.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="tac.kbp.bin.Main"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ commons-digester.jar guava-11.0.2.jar jedis-2.0.0.jar simmetrics_jar_v1_6_2_d07_02_07.jar stanford-ner-2011-09-14.jar lucene-core-3.5-SNAPSHOT.jar lingpipe-4.1.0.jar commons-cli-1.2.jar de.tudarmstadt.ukp.wikipedia.api-0.9.1-jar-with-dependencies.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="/home/dsbatista/workspace/EntityLinking/bin"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="commons-digester-1.8.1.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="guava-11.0.2.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="jedis-2.0.0.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="simmetrics_jar_v1_6_2_d07_02_07.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="stanford-ner-2011-09-14.jar"/>
+            <zipfileset dir="/home/dsbatista/TAC-jars/" includes="lucene-core-3.5-SNAPSHOT.jar"/>
+	    	<zipfileset dir="/home/dsbatista/TAC-jars/" includes="lingpipe-4.1.0.jar"/>
+	    	<zipfileset	dir="/home/dsbatista/TAC-jars/" includes="commons-cli-1.2.jar"/>
+	    	<zipfileset dir="/home/dsbatista/TAC-jars/" includes="de.tudarmstadt.ukp.wikipedia.api-0.9.1-jar-with-dependencies.jar"/>
+        </jar>
+    </target>
+    <target name="send" depends="create_run_jar">
+		<scp file="TAC-EL.jar" todir="dsbatista@borat:/collections/TAC-2011" keyfile="/home/dsbatista/.ssh/id_dsa" trust="true"/>
+    </target>
+</project>
