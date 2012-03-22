@@ -12,13 +12,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.ELQuery;
 
 public class ParseQueriesXMLFile {
 	
-	public static List<KBPQuery> loadQueries(String filename) {
+	public static List<ELQuery> loadQueries(String filename) {
 		
-		List<KBPQuery> queries = new LinkedList<KBPQuery>();
+		List<ELQuery> queries = new LinkedList<ELQuery>();
 		
 		/*
 		 * XML query structure:
@@ -48,7 +48,7 @@ public class ParseQueriesXMLFile {
 					String query_id = eElement.getAttribute("id");
 					String name = getTagValue("name", eElement);
 					String docid = getTagValue("docid", eElement);					
-					KBPQuery query = new KBPQuery(query_id, name, docid);
+					ELQuery query = new ELQuery(query_id, name, docid);
 					queries.add(query);
 
 				}
