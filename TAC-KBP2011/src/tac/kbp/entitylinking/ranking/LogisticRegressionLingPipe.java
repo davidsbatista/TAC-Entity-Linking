@@ -19,7 +19,7 @@ import com.aliasi.stats.LogisticRegression;
 import com.aliasi.stats.RegressionPrior;
 import com.aliasi.util.AbstractExternalizable;
 
-import tac.kbp.entitylinking.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.features.Features;
