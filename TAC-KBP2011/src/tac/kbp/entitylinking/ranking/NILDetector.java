@@ -16,7 +16,7 @@ import java.util.Set;
 
 import com.aliasi.stats.Statistics;
 
-import tac.kbp.entitylinking.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.ELQuery;
 
 public class NILDetector {
