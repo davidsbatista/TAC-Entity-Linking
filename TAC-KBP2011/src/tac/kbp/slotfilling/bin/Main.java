@@ -26,6 +26,8 @@ public class Main {
 			//fetch doc_id where entity occurs
 			q.getSupportDocument();
 			
+			System.out.println(q.supportDocument);
+			
 			// get occurrences + context of entity occurrence		
 			// query alternative senses for entity name		
 			// query document collection
