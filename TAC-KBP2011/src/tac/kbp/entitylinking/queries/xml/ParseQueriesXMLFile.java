@@ -1,4 +1,4 @@
-package tac.kbp.queries.xml;
+package tac.kbp.entitylinking.queries.xml;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -12,7 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import tac.kbp.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.KBPQuery;
 
 public class ParseQueriesXMLFile {
 	
