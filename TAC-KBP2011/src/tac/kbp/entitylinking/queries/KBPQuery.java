@@ -20,8 +20,6 @@ import org.apache.lucene.search.TopDocs;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import redis.clients.jedis.BinaryJedis;
-import redis.clients.jedis.Jedis;
 import tac.kbp.entitylinking.bin.Definitions;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
