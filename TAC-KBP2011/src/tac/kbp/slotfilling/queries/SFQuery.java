@@ -38,6 +38,8 @@ public class SFQuery {
 	public String ignore;
 	public String supportDocument;
 	
+	public Attributes attributes;
+	
 	public Set<String> persons;
 	public Set<String> places;
 	public Set<String> organizations;
@@ -75,6 +77,15 @@ public class SFQuery {
         ScoreDoc[] scoredocs = docs.scoreDocs;
         Document doc = Definitions.documents.doc(scoredocs[0].doc);        
         this.supportDocument = doc.get("text");
+	}
+	
+	public void getKBEntry() throws IOException {        
+		Term t = new Term("id", this.nodeid);         
+		Query query = new TermQuery(t);                 
+        TopDocs docs = Definitions.documents.search(query, 1);
+        ScoreDoc[] scoredocs = docs.scoreDocs;
+        Document doc = Definitions.documents.doc(scoredocs[0].doc);        
+        
 	}
 	
 	public void extractSentences(){

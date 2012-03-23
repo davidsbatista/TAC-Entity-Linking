@@ -56,6 +56,12 @@ public class LoadQueries{
                 	SFQuery q = new SFQuery(query_id, name, docid, etype, nodeid);
                 	if (ignore!=null)
                 		q.ignore = ignore;
+                	
+                	if (etype.equalsIgnoreCase("PER"))
+                		q.attributes = new PER_Attributes();
+                	else if (etype.equalsIgnoreCase("ORG"))
+                		q.attributes = new ORG_Attributes();
+                	
                 	squeries.put(query_id,q);                	
                 }                
             }

@@ -21,7 +21,7 @@ public class Main {
 		
 		Map<String, SFQuery> queries = LoadQueries.loadXML(args[0]);
 		parseQueries(queries);
-		loadQueriesAnswers(args[1],queries);
+		//loadQueriesAnswers(args[1],queries);
 	}
 	
 	public static void parseQueries(Map<String, SFQuery> queries) throws Exception {
@@ -33,11 +33,12 @@ public class Main {
 			SFQuery q = queries.get(k);
 			
 			System.out.println("q_id: " + q.query_id);
-			System.out.println("name: " + q.name);
-			
-			System.out.println("ignore:" + q.ignore);
-			
+			System.out.println("name: " + q.name);			
+			System.out.println("ignore:" + q.ignore);			
 			q.getSupportDocument();
+			
+			//TODO: get extra-information from KB: wiki_text, other attributes fills
+			
 			
 			// get sentences where entity occurs
 			q.extractSentences();
@@ -49,11 +50,10 @@ public class Main {
 			System.out.println("places: " + q.places.size());
 			System.out.println("org: " + q.organizations.size());
 					
-			// get alternative senses for entity name
+			// get alternative senses for entity name and extract acronyms from support doc.
 			q.getAlternativeSenses();
-			
-			System.out.println("senses: " + q.alternative_names);
-			
+			q.extracAcronyms();
+			System.out.println("senses: " + q.alternative_names);			
 			System.out.println("abbreviations: " + q.abbreviations);
 				
 			System.out.println("");
@@ -76,7 +76,19 @@ public class Main {
 			while ((strLine = br.readLine()) != null)   {
 				String[] data = strLine.split("\t");
 				SFQuery q = queries.get(data[1]);
-				
+				/*
+				filler_id
+				sf_id	
+				system_id	
+				slot_name	
+				docid	
+				start_char	
+				end_char		
+				response	
+				norm_response	
+				equiv_class_id	
+				judgment
+				*/
 			}
 				
 			in.close();
@@ -87,19 +99,4 @@ public class Main {
 				System.err.println("Error: " + e.getMessage());
 			}
 		}
-		
-	/*
-		filler_id
-		sf_id	
-		system_id	
-		slot_name	
-		docid	
-		start_char	
-		end_char		
-		response	
-		norm_response	
-		equiv_class_id	
-		judgment
-		*/
-
 }
