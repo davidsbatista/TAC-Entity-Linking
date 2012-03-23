@@ -2,17 +2,24 @@ package tac.kbp.slotfilling.queries;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Version;
 
 import tac.kbp.configuration.Definitions;
 import tac.kbp.utils.string.Abbreviations;
@@ -29,7 +36,8 @@ import com.aliasi.tokenizer.TokenizerFactory;
 import edu.stanford.nlp.util.Triple;
 
 public class SFQuery {
-	
+
+	/* query information */
 	public String query_id;
 	public String name;
 	public String docid;
@@ -37,17 +45,20 @@ public class SFQuery {
 	public String nodeid;
 	public String ignore;
 	public String supportDocument;
-	
 	public Attributes attributes;
 	
+	/* query mined information */
 	public Set<String> persons;
 	public Set<String> places;
 	public Set<String> organizations;
+	public Set<Chunk> sentences;
 	
 	public HashSet<String> alternative_names;
 	public Vector<Abbreviations> abbreviations;
+	public Set<Document> documents;
 	
-	public Set<Chunk> sentences;
+	/* query answers */	
+	public LinkedList<HashMap<String, String>> answers;
 
 	public SFQuery() {
 		super();
@@ -68,6 +79,9 @@ public class SFQuery {
 		this.organizations = new HashSet<String>();
 		
 		this.alternative_names = new HashSet<String>();
+		this.abbreviations = new Vector<Abbreviations>();
+		this.documents = new HashSet<Document>();
+		this.answers = new LinkedList<HashMap<String,String>>();
 	}
 	
 	public void getSupportDocument() throws IOException {
@@ -79,13 +93,13 @@ public class SFQuery {
         this.supportDocument = doc.get("text");
 	}
 	
-	public void getKBEntry() throws IOException {        
+	public Document getKBEntry() throws IOException {        
 		Term t = new Term("id", this.nodeid);         
-		Query query = new TermQuery(t);                 
-        TopDocs docs = Definitions.documents.search(query, 1);
+		Query query = new TermQuery(t);		
+        TopDocs docs = Definitions.knowledge_base.search(query, 1);
         ScoreDoc[] scoredocs = docs.scoreDocs;
-        Document doc = Definitions.documents.doc(scoredocs[0].doc);        
-        
+        Document doc = Definitions.knowledge_base.doc(scoredocs[0].doc);        
+        return doc;
 	}
 	
 	public void extractSentences(){
@@ -169,4 +183,32 @@ public class SFQuery {
 		
 	}
 	
+	public void queryCollection() throws ParseException, IOException {
+		//query document collection
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer(Version.LUCENE_35);
+		QueryParser parser = new QueryParser(Version.LUCENE_35, "text", analyzer);
+		
+		// create the query
+		//Joiner orJoiner = Joiner.on(" OR ");
+		String terms = '"' + name + '"' + " ";
+		
+		//terms += orJoiner.join(q.alternative_names);
+		//terms += orJoiner.join(q.abbreviations);
+		//terms.replaceAll("\\_", " ");
+		
+		Query query = parser.parse(terms);			
+		System.out.println(query);
+		
+	    TopDocs docs = Definitions.documents.search(query, 30);
+	    ScoreDoc[] scoredocs = docs.scoreDocs;
+	    
+	    System.out.println("documents returned: " + docs.totalHits);	        
+	    System.out.println("");
+	    
+	    for (int i = 0; i < scoredocs.length; i++) {
+			Document doc = Definitions.documents.doc(scoredocs[i].doc);
+			documents.add(doc);
+	    }
+	}
+
 }

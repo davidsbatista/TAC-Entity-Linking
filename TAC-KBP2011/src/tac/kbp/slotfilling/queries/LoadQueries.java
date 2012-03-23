@@ -45,14 +45,6 @@ public class LoadQueries{
                 	if (eElement.getElementsByTagName("ignore").getLength()>0)
                 		ignore = getTagValue("ignore", eElement);
                 	
-                	System.out.println("query_id: " + query_id);
-                	System.out.println("name: " + name);
-                	System.out.println("docid: " + docid);
-                	System.out.println("etype: " + etype);
-                	System.out.println("nodeid: " + nodeid);
-                	System.out.println("ignore: " + ignore);
-                	System.out.println();
-                	
                 	SFQuery q = new SFQuery(query_id, name, docid, etype, nodeid);
                 	if (ignore!=null)
                 		q.ignore = ignore;
