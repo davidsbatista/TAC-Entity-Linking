@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
@@ -19,6 +18,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Version;
 
 import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.ELQuery;
@@ -191,15 +191,15 @@ public class Train {
 		//we retrieve answer entity from KB and extract features
 		
 		if (!foundCorrecEntity && !(q.gold_answer.startsWith("NIL")) ) {
-			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", new WhitespaceAnalyzer());
+			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_35,"id", new WhitespaceAnalyzer(Version.LUCENE_35));
 			ScoreDoc[] scoreDocs = null;
 			String queryS = "id:" + q.gold_answer;
 			
-			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(queryParser.parse(queryS), 1);				
+			TopDocs docs = tac.kbp.configuration.Definitions.knowledge_base.search(queryParser.parse(queryS), 1);				
 			scoreDocs = docs.scoreDocs;
 			
 			if (docs.totalHits != 0) {
-				Document doc = tac.kbp.configuration.Definitions.searcher.doc(scoreDocs[0].doc);				
+				Document doc = tac.kbp.configuration.Definitions.knowledge_base.doc(scoreDocs[0].doc);				
 				
 				Candidate c = new Candidate(doc,scoreDocs[0].doc);
 				
@@ -325,14 +325,14 @@ public class Train {
 		
 	static int getCandidates(ELQuery q, List<SuggestWord> suggestedwordsList) throws IOException, ParseException {
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
-		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer(Version.LUCENE_35);
+		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_35,"id", analyzer);
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
 		
 		for (SuggestWord suggestWord : suggestedwordsList) {
 			
 			String queryS = "id:" + suggestWord.eid;
-			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(queryParser.parse(queryS), 1);
+			TopDocs docs = tac.kbp.configuration.Definitions.knowledge_base.search(queryParser.parse(queryS), 1);
 			
 			if (docs.totalHits == 0)
 				continue;
@@ -343,7 +343,7 @@ public class Train {
 					continue;
 				
 				else {
-					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+					Document doc = tac.kbp.configuration.Definitions.knowledge_base.doc(docs.scoreDocs[0].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[0].doc);
@@ -362,7 +362,7 @@ public class Train {
 	
 	static int getCandidates(ELQuery q) throws IOException, ParseException {
 		
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer();
+		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer(Version.LUCENE_35);
 		QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_30,"id", analyzer);
 		
 		List<Integer> repeated = new LinkedList<Integer>(); // to avoid having repeated docs
@@ -377,12 +377,12 @@ public class Train {
 			System.out.println("query: " + queryAND);
 			
 			Query query = queryParser.parse("wiki_text: " + queryAND);			
-			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(query, 20);
+			TopDocs docs = tac.kbp.configuration.Definitions.knowledge_base.search(query, 20);
 			
 			if (docs.totalHits != 0) {
 				for (int i = 0; i < docs.scoreDocs.length; i++) {		
 					
-					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Document doc = tac.kbp.configuration.Definitions.knowledge_base.doc(docs.scoreDocs[i].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[i].doc);
@@ -412,7 +412,7 @@ public class Train {
 				queryOR += orJoiner.join(valid);
 				
 				query = queryParser.parse("name:" + queryOR);			
-				docs = tac.kbp.configuration.Definitions.searcher.search(query, 30);
+				docs = tac.kbp.configuration.Definitions.knowledge_base.search(query, 30);
 				
 				if (docs.totalHits == 0)
 					continue;
@@ -423,7 +423,7 @@ public class Train {
 						continue;
 					
 					else {
-						Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+						Document doc = tac.kbp.configuration.Definitions.knowledge_base.doc(docs.scoreDocs[0].doc);
 						Candidate c = new Candidate(doc,docs.scoreDocs[0].doc); 
 						q.candidates.add(c);
 						repeated.add(docs.scoreDocs[0].doc);
@@ -440,11 +440,11 @@ public class Train {
 		else {
 			
 			Query query = queryParser.parse(q.name);			
-			TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(query, 20);
+			TopDocs docs = tac.kbp.configuration.Definitions.knowledge_base.search(query, 20);
 			if (docs.totalHits != 0) {
 				for (int i = 0; i < docs.scoreDocs.length; i++) {		
 					
-					Document doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[i].doc);
+					Document doc = tac.kbp.configuration.Definitions.knowledge_base.doc(docs.scoreDocs[i].doc);
 					Candidate c = new Candidate(doc,docs.scoreDocs[i].doc); 
 					q.candidates.add(c);
 					repeated.add(docs.scoreDocs[i].doc);

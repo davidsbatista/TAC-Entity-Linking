@@ -91,12 +91,12 @@ public class Main {
 			
 			//close indexes
 			if (line.hasOption("train")) {
-				Definitions.searcher.close();
+				Definitions.knowledge_base.close();
 				Definitions.documents.close();
 			}
 				
 			if (line.hasOption("baseline") ) {
-				Definitions.searcher.close();
+				Definitions.knowledge_base.close();
 			}
 		}
 	}

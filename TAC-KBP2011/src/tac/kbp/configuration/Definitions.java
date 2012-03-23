@@ -95,7 +95,7 @@ public class Definitions {
 	public static HashMap<Integer, String> kb_topics = new HashMap<Integer, String>();
 	
 	/* Lucene indexes */
-	public static IndexSearcher searcher = null;
+	public static IndexSearcher knowledge_base = null;
 	public static IndexSearcher wikipediaEn = null;
 	public static IndexSearcher documents = null;
 	public static SpellChecker spellchecker = null;
@@ -125,7 +125,7 @@ public class Definitions {
 		/* KB Index */
 		System.out.println("Knowledge Base index: " + KB_location);
 		Directory KBIndexDirectory = FSDirectory.open(new File(KB_location));		
-		searcher = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
+		knowledge_base = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
 		
 		/* SpellChecker Index */
 		System.out.println("SpellChecker index: " + SpellChecker_location);
@@ -176,7 +176,7 @@ public class Definitions {
 		
 		System.out.println("Knowledge Base index: " + KB_location);
 		Directory KBIndexDirectory = FSDirectory.open(new File(KB_location));		
-		searcher = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
+		knowledge_base = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
 		
 	}
 
