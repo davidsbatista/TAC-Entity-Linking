@@ -1,37 +1,39 @@
 package tac.kbp.slotfilling.queries;
 
-import java.util.List;
+import java.util.HashMap;
 
-public class PER_Attributes implements Attributes {
+public class PER_Attributes extends Attributes {
 	
-	public List<String> per_alternate_names; 				// name-list
-	public String per_date_of_birth;  						// value-single
-	public String per_age;  								// value-single
-	public String per_country_of_birth;					// name-single
-	public String per_stateorprovince_of_birth; 			// name-single
-	public String per_city_of_birth; 						// name-single
-	public List<String> per_origin;						// name-list
-	public String per_date_of_death;						// value-single
-	public String per_country_of_death;					// name-single
-	public String per_stateorprovince_of_death; 			// name-single
-	public String per_city_of_death;						// name-single
-	public String per_cause_of_death;						// string-single
-	public List<String> per_countries_of_residence;		// name-list
-	public List<String> per_stateorprovinces_of_residence; // name-list
-	public List<String> per_cities_of_residence;  			// name-list
-	public List<String> per_schools_attended;  			// name-list
-	public List<String> per_title;  						// string-list
-	public List<String> per_member_of;  					// name-list
-	public List<String> per_employee_of;  					// name-list
-	public String per_religion;  							// string-single
-	public List<String> per_spouse;  						// name-list
-	public List<String> per_children;  					// name-list
-	public List<String> per_parents; 						// name-list
-	public List<String> per_siblings; 						// name-list
-	public List<String> per_other_family; 					// name-list
-	public List<String> per_charges;						// string-list
-
+	public HashMap<String, Attribute> attributes;
+	
 	public PER_Attributes(){
 		super();
-	}
+		this.attributes = new HashMap<String, Attribute>();
+		this.attributes.put("per_alternate_names", new Attribute());		
+		this.attributes.put("per_date_of_birth", new Attribute());		
+		this.attributes.put("per_age", new Attribute());		
+		this.attributes.put("per_country_of_birth", new Attribute());		
+		this.attributes.put("per_stateorprovince_of_birth", new Attribute());		
+		this.attributes.put("per_city_of_birth", new Attribute());
+		this.attributes.put("per_origin", new Attribute());		
+		this.attributes.put("per_date_of_death", new Attribute());		
+		this.attributes.put("per_country_of_death", new Attribute());		
+		this.attributes.put("per_stateorprovince_of_death", new Attribute());		
+		this.attributes.put("per_city_of_death", new Attribute());
+		this.attributes.put("per_cause_of_death", new Attribute());		
+		this.attributes.put("per_countries_of_residence", new Attribute());
+		this.attributes.put("per_stateorprovinces_of_residence", new Attribute());
+		this.attributes.put("per_cities_of_residence", new Attribute());
+		this.attributes.put("per_schools_attended", new Attribute());		
+		this.attributes.put("per_title", new Attribute());		
+		this.attributes.put("per_member_of", new Attribute());		
+		this.attributes.put("per_employee_of", new Attribute());		
+		this.attributes.put("per_religion", new Attribute());		
+		this.attributes.put("per_spouse", new Attribute());		
+		this.attributes.put("per_children", new Attribute());		
+		this.attributes.put("per_parents", new Attribute());		
+		this.attributes.put("per_siblings", new Attribute());		
+		this.attributes.put("per_other_family", new Attribute());
+		this.attributes.put("per_charges", new Attribute());
+	}		
 }

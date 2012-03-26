@@ -57,8 +57,7 @@ public class LoadQueries{
                 	squeries.put(query_id,q);                	
                 }                
             }
-            
-            System.out.println(squeries.size() + " loaded");            
+                        
             return squeries;
 
         } catch (SAXParseException err) {

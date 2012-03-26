@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -83,6 +82,7 @@ public class SFQuery {
 		this.documents = new HashSet<Document>();
 		this.answers = new LinkedList<HashMap<String,String>>();
 	}
+	
 	
 	public void getSupportDocument() throws IOException {
         Term t = new Term("docid", this.docid); 
@@ -199,10 +199,11 @@ public class SFQuery {
 		Query query = parser.parse(terms);			
 		System.out.println(query);
 		
-	    TopDocs docs = Definitions.documents.search(query, 30);
+	    TopDocs docs = Definitions.documents.search(query, 50);
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
 	    
-	    System.out.println("documents returned: " + docs.totalHits);	        
+	    //System.out.println("documents returned: " + docs.totalHits);	        
+	    //System.out.println("documents searched: " + scoredocs.length);
 	    System.out.println("");
 	    
 	    for (int i = 0; i < scoredocs.length; i++) {
@@ -211,4 +212,15 @@ public class SFQuery {
 	    }
 	}
 
+	/* methods to be used for trainning queries */
+	
+	public void getAnswerDocument() throws IOException {
+        Term t = new Term("docid", this.docid); 
+        Query query = new TermQuery(t);                 
+        TopDocs docs = Definitions.documents.search(query, 1);
+        ScoreDoc[] scoredocs = docs.scoreDocs;
+        Document doc = Definitions.documents.doc(scoredocs[0].doc);        
+        this.supportDocument = doc.get("text");
+	}
+	
 }
