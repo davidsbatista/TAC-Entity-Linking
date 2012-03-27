@@ -20,6 +20,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.configuration.Definitions;
 import tac.kbp.slotfilling.queries.LoadQueries;
@@ -229,7 +234,8 @@ public class Main {
 					q.answers.add(answers);
 				}
 				
-				else {					
+				else {
+					answers = new HashMap<String, String>();
 					answers.put("slot_name", data[3]);
 					answers.put("docid", data[4]);
 					answers.put("start_char", data[5]);
@@ -251,6 +257,15 @@ public class Main {
 		
 		}
 		
+	}
+	
+	public static String getAnswerDocument(String docid) throws IOException {
+        Term t = new Term("docid", docid); 
+        Query query = new TermQuery(t);                 
+        TopDocs docs = Definitions.documents.search(query, 1);
+        ScoreDoc[] scoredocs = docs.scoreDocs;
+        Document doc = Definitions.documents.doc(scoredocs[0].doc);        
+        return doc.get("text");
 	}
 	
 	public static void run(CommandLine line) throws Exception {
@@ -284,48 +299,55 @@ public class Main {
 		
 		for (String q_id : train_queries_keys) {
 			
-			Attribute attr = null;
+			SFQuery q = train_queries.get(q_id);			
+			System.out.println(q.name + '\t' + q.query_id);			
 			
-			SFQuery q = train_queries.get(q_id);
-			
-				for (HashMap<String, String> a : q.answers) {
+			for (HashMap<String, String> a : q.answers) {
+				
+				String slot_name = a.get("slot_name");
+				String response = a.get("response");
+				String doc_id = a.get("docid");
+				
+				System.out.println(slot_name + '\t' + response + '\t' + doc_id);
 					
-					String slot_name = a.get("slot_name");
-					String response = a.get("response");
-					String doc_id = a.get("docid");
-					
-					if (q.etype.equalsIgnoreCase("PER")) {
-						attr = ((PER_Attributes) q.attributes).attributes.get(slot_name);
-					}					
-					else if (q.etype.equalsIgnoreCase("ORG")) {
-						attr = ((ORG_Attributes) q.attributes).attributes.get(slot_name);
-					}
-					
-					attr.slot_name = slot_name;
-					attr.answer.add(response);
-					attr.doc_id = attr.getAnswerDocument(doc_id);
-					
+				if (q.etype.equalsIgnoreCase("PER")) {		
+					((PER_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
+				}					
+				else if (q.etype.equalsIgnoreCase("ORG")) {
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
 				}
+			}
 		}
-			
+		
+		System.out.println();
+		
 		//check that insertions were done correctly
 		for (String s : train_queries_keys) {			
 			
 			SFQuery q = train_queries.get(s);
 				
 			if (q.etype.equalsIgnoreCase("PER")) {
+				
 				HashMap<String,Attribute> a = ((PER_Attributes) q.attributes).attributes;
 				Set<String> keys = a.keySet();
 				
 				System.out.println(q.name + '\t' + q.query_id);
 				System.out.println("attributes: " + keys.size());				
 				for (String k : keys) {
-					System.out.println(k + '\t' + a.get(k).slot_name);
-					System.out.println(k + '\t' + a.get(k).supportDocument);
-					System.out.println(k + '\t' + a.get(k).answer);
-				}
+					
+					if (a.get(k).answer_doc!=null) {
+						System.out.println(k);
+						System.out.println('\t' + a.get(k).answer.get(0));
+						//System.out.println('\t' + a.get(k).answer_doc);						
+						//System.out.println('\t' + a.get(k).answer.size());
+					}
+				}				
+				System.out.println();
 			}
 			
+			/*
 			else if (q.etype.equalsIgnoreCase("ORG")) {
 				HashMap<String,Attribute> a = ((ORG_Attributes) q.attributes).attributes;
 				Set<String> keys = a.keySet();
@@ -338,9 +360,9 @@ public class Main {
 					System.out.println(k + '\t' + a.get(k).answer);
 				}
 			}
-			
+			*/
 			System.out.println();
-		}	
+		}
 	}
 		//parseQueries(test_queries);
 		//parseQueries(train_queries);
