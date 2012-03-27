@@ -30,7 +30,6 @@ import tac.kbp.configuration.Definitions;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
 import tac.kbp.slotfilling.queries.attributes.Attribute;
-import tac.kbp.slotfilling.queries.attributes.Attributes;
 import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
 import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
 
@@ -42,8 +41,7 @@ public class Main {
 		Options options = new Options();
 
 		// add options		
-		options.addOption("run", false, "complete run");		
-		
+		options.addOption("run", false, "complete run");
 		
 		// add argument options
 		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
@@ -160,15 +158,13 @@ public class Main {
 			System.out.println(s + '\t' + answers_found.get(s).size());
 		}
 		
-		//for (String a : answers_keys)
-		//	System.out.println(a);
 		
-		/*
+		// queries that did not had any document retrieved
 		for (String a : answers_keys) {
 			if (answers_found.get(a).size()>0)
 				System.out.println("documents found for " + a + ':' + answers_found.get(a).size());
 		}
-		*/
+
 		
 		//TODO: para cada query mostrar: lista de attributos em que o doc com resposta foi encontrado e os que nao foi
 		
@@ -295,6 +291,7 @@ public class Main {
 		 * 		get sentence with answer; 
 		 * 		get answer/normalized answer
 		 */
+		
 		Set<String> train_queries_keys = train_queries.keySet();
 		
 		for (String q_id : train_queries_keys) {
@@ -307,22 +304,30 @@ public class Main {
 				String slot_name = a.get("slot_name");
 				String response = a.get("response");
 				String doc_id = a.get("docid");
+				String start_char = a.get("start_char");
+				String end_char = a.get("end_char");
 				
 				System.out.println(slot_name + '\t' + response + '\t' + doc_id);
 					
 				if (q.etype.equalsIgnoreCase("PER")) {		
 					((PER_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).slot_name = (slot_name);					
 					((PER_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).start_char = Integer.parseInt(start_char);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).end_char = Integer.parseInt(end_char);
 				}					
 				else if (q.etype.equalsIgnoreCase("ORG")) {
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).slot_name = (slot_name);
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).start_char = Integer.parseInt(start_char);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).end_char = Integer.parseInt(end_char);
 				}
 			}
 		}
 		
 		System.out.println();
-		
+
 		//check that insertions were done correctly
 		for (String s : train_queries_keys) {			
 			
@@ -338,16 +343,15 @@ public class Main {
 				for (String k : keys) {
 					
 					if (a.get(k).answer_doc!=null) {
-						System.out.println(k);
-						System.out.println('\t' + a.get(k).answer.get(0));
+						//System.out.println(k);
+						//System.out.println('\t' + a.get(k).answer.get(0));
+						a.get(k).extractSentences();
 						//System.out.println('\t' + a.get(k).answer_doc);						
 						//System.out.println('\t' + a.get(k).answer.size());
 					}
-				}				
-				System.out.println();
+				}
 			}
 			
-			/*
 			else if (q.etype.equalsIgnoreCase("ORG")) {
 				HashMap<String,Attribute> a = ((ORG_Attributes) q.attributes).attributes;
 				Set<String> keys = a.keySet();
@@ -355,14 +359,19 @@ public class Main {
 				System.out.println(q.name + '\t' + q.query_id);
 				System.out.println("attributes: " + keys.size());
 				for (String k : keys) {
-					System.out.println(k + '\t' + a.get(k).slot_name);
-					System.out.println(k + '\t' + a.get(k).supportDocument);
-					System.out.println(k + '\t' + a.get(k).answer);
+					if (a.get(k).answer_doc!=null) {
+						//System.out.println(k);
+						//System.out.println('\t' + a.get(k).answer.get(0));
+						a.get(k).extractSentences();
+						//System.out.println('\t' + a.get(k).answer_doc);						
+						//System.out.println('\t' + a.get(k).answer.size());
+					}
 				}
 			}
-			*/
+			
 			System.out.println();
 		}
+
 	}
 		//parseQueries(test_queries);
 		//parseQueries(train_queries);
