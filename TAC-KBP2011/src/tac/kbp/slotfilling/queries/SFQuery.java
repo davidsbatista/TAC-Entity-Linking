@@ -21,6 +21,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 
 import tac.kbp.configuration.Definitions;
+import tac.kbp.slotfilling.queries.attributes.Attributes;
 import tac.kbp.utils.string.Abbreviations;
 import tac.kbp.utils.string.ExtractAbbrev;
 

@@ -14,6 +14,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
+import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
+
 
 public class LoadQueries{
 

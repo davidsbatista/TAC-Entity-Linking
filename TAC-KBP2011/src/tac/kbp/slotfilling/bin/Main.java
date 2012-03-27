@@ -22,12 +22,12 @@ import org.apache.commons.cli.Options;
 import org.apache.lucene.document.Document;
 
 import tac.kbp.configuration.Definitions;
-import tac.kbp.slotfilling.queries.Attribute;
 import tac.kbp.slotfilling.queries.LoadQueries;
-import tac.kbp.slotfilling.queries.Attributes;
-import tac.kbp.slotfilling.queries.PER_Attributes;
-import tac.kbp.slotfilling.queries.ORG_Attributes;
 import tac.kbp.slotfilling.queries.SFQuery;
+import tac.kbp.slotfilling.queries.attributes.Attribute;
+import tac.kbp.slotfilling.queries.attributes.Attributes;
+import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
+import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
 
 public class Main {
 	
@@ -260,68 +260,93 @@ public class Main {
 		Definitions.connectionREDIS();
 		Definitions.loadKBIndex();
 		
+		/* Load Test Queries + answers */
 		String queriesTestFile = line.getOptionValue("queriesTest");
 		System.out.println("\nLoading test queries from: " + queriesTestFile);
 		Map<String, SFQuery> test_queries = LoadQueries.loadXML(queriesTestFile);		
 		String queriesTestAnswers = line.getOptionValue("queriesTestAnswers");
 		loadQueriesAnswers(queriesTestAnswers,test_queries);
 		
-		
+		/* Load Train Queries + answers */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
 		System.out.println("\nLoading train queries from: " + queriesTrainFile);
-		Map<String, SFQuery> train_queries = LoadQueries.loadXML(queriesTrainFile);
-		
+		Map<String, SFQuery> train_queries = LoadQueries.loadXML(queriesTrainFile);		
 		String queriesTrainAnswers = line.getOptionValue("queriesTrainAnswers");
 		loadQueriesAnswers(queriesTrainAnswers,train_queries);
 		
+		
+		/* For the Test Queries: 
+		 * 		get document answer for each attribute;
+		 * 		get sentence with answer; 
+		 * 		get answer/normalized answer
+		 */
 		Set<String> train_queries_keys = train_queries.keySet();
 		
 		for (String q_id : train_queries_keys) {
-							
+			
+			Attribute attr = null;
+			
 			SFQuery q = train_queries.get(q_id);
 			
-			System.out.println("qid: " + q.query_id);
-			System.out.println("attributes answers:");
-			
-			for (HashMap<String, String> a : q.answers) {
-				Set<String> keys = a.keySet();
-				for (String k : keys) {
-					System.out.println(k + '\t' + a.get(k));
+				for (HashMap<String, String> a : q.answers) {
+					
+					String slot_name = a.get("slot_name");
+					String response = a.get("response");
+					String doc_id = a.get("docid");
+					
+					if (q.etype.equalsIgnoreCase("PER")) {
+						attr = ((PER_Attributes) q.attributes).attributes.get(slot_name);
+					}					
+					else if (q.etype.equalsIgnoreCase("ORG")) {
+						attr = ((ORG_Attributes) q.attributes).attributes.get(slot_name);
+					}
+					
+					attr.slot_name = slot_name;
+					attr.answer.add(response);
+					attr.doc_id = attr.getAnswerDocument(doc_id);
+					
 				}
-				System.out.println();
+		}
+			
+		//check that insertions were done correctly
+		for (String s : train_queries_keys) {			
+			
+			SFQuery q = train_queries.get(s);
+				
+			if (q.etype.equalsIgnoreCase("PER")) {
+				HashMap<String,Attribute> a = ((PER_Attributes) q.attributes).attributes;
+				Set<String> keys = a.keySet();
+				
+				System.out.println(q.name + '\t' + q.query_id);
+				System.out.println("attributes: " + keys.size());				
+				for (String k : keys) {
+					System.out.println(k + '\t' + a.get(k).slot_name);
+					System.out.println(k + '\t' + a.get(k).supportDocument);
+					System.out.println(k + '\t' + a.get(k).answer);
+				}
+			}
+			
+			else if (q.etype.equalsIgnoreCase("ORG")) {
+				HashMap<String,Attribute> a = ((ORG_Attributes) q.attributes).attributes;
+				Set<String> keys = a.keySet();
+				
+				System.out.println(q.name + '\t' + q.query_id);
+				System.out.println("attributes: " + keys.size());
+				for (String k : keys) {
+					System.out.println(k + '\t' + a.get(k).slot_name);
+					System.out.println(k + '\t' + a.get(k).supportDocument);
+					System.out.println(k + '\t' + a.get(k).answer);
+				}
 			}
 			
 			System.out.println();
-			
-			//TODO: para cada atributo:
-			//TODO: 	- ir buscar o documento com a resposta
-			//TODO:		- ir buscar a frase(s) com a resposta
-			//TODO:		- ir buscar a resposta/resposta normalizada
-
-			//Attributes attributes = null;
-			/*
-			if (q.etype.equalsIgnoreCase("PER")) {
-				PER_Attributes attributes = (PER_Attributes) q.attributes;				
-				Set<String> keys = attributes.attributes.keySet();
-				
-				for (String s : keys) {
-					Attribute a = (Attribute) attributes.attributes.get(s);					
-				}
-				
-				
-			}
-			else if (q.etype.equalsIgnoreCase("ORG")) {
-				ORG_Attributes attributes = (ORG_Attributes) q.attributes;
-			}
-			*/
-		
+		}	
+	}
 		//parseQueries(test_queries);
 		//parseQueries(train_queries);
-				
 		//recall(test_queries);
-		}		
-	}
-}
+}		
+
 
 	
 	
