@@ -1,10 +1,17 @@
 package tac.kbp.collection.index;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 
 import tac.kbp.utils.misc.BigFile;
 
@@ -29,6 +36,15 @@ public class Main {
 		
 	}
 	
+	public static IndexWriter createIndex(String index) throws IOException {
+		
+		System.out.println("Writing to index: " + index);
+		
+		IndexWriterConfig indexCfg = new IndexWriterConfig(Version.LUCENE_35, new WhitespaceAnalyzer(Version.LUCENE_35));
+		Directory indexDirectory = FSDirectory.open(new File(index));
+		return new IndexWriter(indexDirectory,indexCfg);
+	}
+	
 	public static void main(String[] args) throws Exception{
 				
 		long start = new Date().getTime();
@@ -41,7 +57,7 @@ public class Main {
 		System.out.println("Lucene index will be written to: " + args[1]);
 			
 		//creates a Lucene index
-		IndexWriter indexDir = Index.createIndex(args[1]);
+		IndexWriter indexW = createIndex(args[1]);
 						
 		//starts indexing the documents
 		Set<String> keys = docslocations.keySet();
@@ -49,10 +65,11 @@ public class Main {
 		for (String file : keys) {
 			System.out.print("\nProcessing " + file);
 			Article a = new Article(file);
-			Index.indexEntities(indexDir,a);
+			indexW.addDocument(a.luceneDoc());
 			}
 		
-		indexDir.close();
+		indexW.commit();
+		indexW.close();
 			
 		long end = new Date().getTime();		
 		float secs = (end - start) / 1000;

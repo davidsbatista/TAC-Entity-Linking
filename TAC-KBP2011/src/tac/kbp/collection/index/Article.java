@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.CorruptIndexException;
+
 public class Article {
 	
 	public String text = null;
@@ -16,8 +20,7 @@ public class Article {
 		String filename = Main.docslocations.get(file).trim()+"/"+file+".sgm";
 		this.doc_id = file;
 
-		String article = readFileAsString(filename);
-		this.text = tac.kbp.utils.string.StringUtils.removeTags(article);
+		this.text = readFileAsString(filename);
 		
 		/* 
 		document genre:		
@@ -44,7 +47,8 @@ public class Article {
 			this.genre = "weblog text";			
 	}
 	
-	private static String readFileAsString(String filePath) throws java.io.IOException{
+	private String readFileAsString(String filePath) throws java.io.IOException{
+		
 	    byte[] buffer = new byte[(int) new File(filePath).length()];
 	    BufferedInputStream f = null;
 	    try {
@@ -59,15 +63,12 @@ public class Article {
 	    return new String(buffer);
 	}
 
-	public String getText() {
-		return text;
-	}
-
-	public String getGenre() {
-		return genre;
-	}
-
-	public String getDoc_id() {
-		return this.doc_id;
+	public Document luceneDoc() throws CorruptIndexException, IOException{
+		
+		Document doc = new Document();		
+		doc.add(new Field("docid", doc_id, Field.Store.YES, Field.Index.ANALYZED));	
+		doc.add(new Field("genre", genre, Field.Store.YES, Field.Index.NOT_ANALYZED));
+		doc.add(new Field("text", text, Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.YES));		
+		return doc;
 	}
 }
