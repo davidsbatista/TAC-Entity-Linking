@@ -26,12 +26,16 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
-import tac.kbp.configuration.Definitions;
+import tac.kbp.slotfilling.configuration.Definitions;
+import tac.kbp.slotfilling.patternmatching.Pattern;
+import tac.kbp.slotfilling.patternmatching.PatternMatching;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
 import tac.kbp.slotfilling.queries.attributes.Attribute;
 import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
 import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
+
+import com.google.common.collect.Multimap;
 
 public class Main {
 	
@@ -158,7 +162,6 @@ public class Main {
 			System.out.println(s + '\t' + answers_found.get(s).size());
 		}
 		
-		
 		// queries that did not had any document retrieved
 		for (String a : answers_keys) {
 			if (answers_found.get(a).size()>0)
@@ -243,14 +246,12 @@ public class Main {
 					q.answers.add(answers);
 				}
 			}
-				
 			in.close();
 		}
 		
 		catch (Exception e)	{
 				//Catch exception if any			
 				System.err.println("Error: " + e.getMessage());
-		
 		}
 		
 	}
@@ -297,36 +298,41 @@ public class Main {
 		for (String q_id : train_queries_keys) {
 			
 			SFQuery q = train_queries.get(q_id);			
-			System.out.println(q.name + '\t' + q.query_id);			
+			//System.out.println(q.name + '\t' + q.query_id);			
 			
 			for (HashMap<String, String> a : q.answers) {
 				
 				String slot_name = a.get("slot_name");
 				String response = a.get("response");
+				String norm_response = a.get("norm_response");
 				String doc_id = a.get("docid");
 				String start_char = a.get("start_char");
 				String end_char = a.get("end_char");
+				String judgment = a.get("judgment");
 				
-				System.out.println(slot_name + '\t' + response + '\t' + doc_id);
+				//System.out.println(slot_name + '\t' + response + '\t' + doc_id);
 					
 				if (q.etype.equalsIgnoreCase("PER")) {		
-					((PER_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).response.add(response);
+					((PER_Attributes) q.attributes).attributes.get(slot_name).response_normalized.add(norm_response);
 					((PER_Attributes) q.attributes).attributes.get(slot_name).slot_name = (slot_name);					
 					((PER_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
 					((PER_Attributes) q.attributes).attributes.get(slot_name).start_char = Integer.parseInt(start_char);
 					((PER_Attributes) q.attributes).attributes.get(slot_name).end_char = Integer.parseInt(end_char);
-				}					
+					((PER_Attributes) q.attributes).attributes.get(slot_name).judgment = Integer.parseInt(judgment);
+				}
+				
 				else if (q.etype.equalsIgnoreCase("ORG")) {
-					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer.add(response);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).response.add(response);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).response_normalized.add(norm_response);
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).slot_name = (slot_name);
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).answer_doc = getAnswerDocument(doc_id);
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).start_char = Integer.parseInt(start_char);
 					((ORG_Attributes) q.attributes).attributes.get(slot_name).end_char = Integer.parseInt(end_char);
+					((ORG_Attributes) q.attributes).attributes.get(slot_name).judgment = Integer.parseInt(judgment);
 				}
 			}
 		}
-		
-		System.out.println();
 
 		//check that insertions were done correctly
 		for (String s : train_queries_keys) {			
@@ -338,11 +344,14 @@ public class Main {
 				HashMap<String,Attribute> a = ((PER_Attributes) q.attributes).attributes;
 				Set<String> keys = a.keySet();
 				
+				/*
 				System.out.println(q.name + '\t' + q.query_id);
-				System.out.println("attributes: " + keys.size());				
+				System.out.println("attributes: " + keys.size());
+				*/				
+				
 				for (String k : keys) {
 					
-					if (a.get(k).answer_doc!=null) {
+					if (a.get(k).answer_doc!=null && a.get(k).judgment==1) {
 						//System.out.println(k);
 						//System.out.println('\t' + a.get(k).answer.get(0));
 						a.get(k).extractSentences();
@@ -356,26 +365,29 @@ public class Main {
 				HashMap<String,Attribute> a = ((ORG_Attributes) q.attributes).attributes;
 				Set<String> keys = a.keySet();
 				
+				/*
 				System.out.println(q.name + '\t' + q.query_id);
 				System.out.println("attributes: " + keys.size());
+				*/
 				for (String k : keys) {
-					if (a.get(k).answer_doc!=null) {
+					if (a.get(k).answer_doc!=null && a.get(k).judgment==1) {
 						//System.out.println(k);
-						//System.out.println('\t' + a.get(k).answer.get(0));
+						//System.out.println('\t' + a.get(k).answer.get(0));				
 						a.get(k).extractSentences();
 						//System.out.println('\t' + a.get(k).answer_doc);						
 						//System.out.println('\t' + a.get(k).answer.size());
 					}
 				}
 			}
-			
-			System.out.println();
 		}
 
+		Multimap<String, Pattern> patterns = PatternMatching.qaPairs(train_queries);
+		PatternMatching.parsePatterns(patterns);
 	}
-		//parseQueries(test_queries);
-		//parseQueries(train_queries);
-		//recall(test_queries);
+	
+	//parseQueries(test_queries);
+	//parseQueries(train_queries);
+	//recall(test_queries);	
 }		
 
 
