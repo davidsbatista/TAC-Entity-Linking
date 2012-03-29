@@ -134,7 +134,8 @@ public class PatternMatching {
 				String str2 = 	StringUtils.replace(str1, pattern.query_name.trim(), "TARGET");
 				
 				System.out.println(str2);
-				*/							
+				*/
+				
 				System.out.println();
 				System.out.println("===================================");
 			}		
