@@ -82,9 +82,11 @@ public class Main {
 			
 			SFQuery q = queries.get(k);
 			
+			/*
 			System.out.println("q_id: " + q.query_id);
 			System.out.println("name: " + q.name);	
-			System.out.println("ignore:" + q.ignore);			
+			System.out.println("ignore:" + q.ignore);
+			*/			
 			q.getSupportDocument();
 			
 			// get nodeid from KB: wiki_text, other attributes
@@ -93,29 +95,32 @@ public class Main {
 			
 			// get sentences where entity occurs
 			q.extractSentences();
-			System.out.println("sentences: " + q.sentences.size());
+			//System.out.println("sentences: " + q.sentences.size());
 			
+			/*
 			// extract other entities in the support document
 			q.getNamedEntities();			
 			System.out.println("persons: " + q.persons.size());
 			System.out.println("places: " + q.places.size());
 			System.out.println("org: " + q.organizations.size());
+			
 					
 			// get alternative senses for entity name and extract acronyms from support doc.
 			q.getAlternativeSenses();
 			q.extracAcronyms();
 			System.out.println("senses: " + q.alternative_names);			
 			System.out.println("abbreviations: " + q.abbreviations);
+			*/
 
-			System.out.println("attributes to be filled:");
+			//System.out.println("attributes to be filled:");
 			if (q.etype.equalsIgnoreCase("PER")) {
 				PER_Attributes attributes = (PER_Attributes) q.attributes;
-				System.out.println(attributes.toString());
+				//System.out.println(attributes.toString());
 				
 			}
 			else if (q.etype.equalsIgnoreCase("ORG")) {
 				ORG_Attributes attributes = (ORG_Attributes) q.attributes;
-				System.out.println(attributes.toString());
+				//System.out.println(attributes.toString());
 			}
 			
 			q.queryCollection();
@@ -130,30 +135,43 @@ public class Main {
 		Set<SFQuery> queries_with_zero_docs = new HashSet<SFQuery>();
 		
 		Set<String> keys = queries.keySet();
+		int answer_doc_founded;
+		int answer_doc_not_founded;
 		
 		for (String k : keys) {
 			SFQuery q = queries.get(k);
+			System.out.println("\n");
+			System.out.println(q.query_id + '\t' + q.name);
+			answer_doc_founded = 0;
+			answer_doc_not_founded = 0;
 			
 			if (q.documents.size()==0) {
 				queries_with_zero_docs.add(q);
 				continue;
 			}
 			
-			for (Document d : q.documents) {
-				String docid = d.get("docid");				
-				for (HashMap<String, String> answer : q.answers) {
-					if (docid.equalsIgnoreCase(answer.get("answer_doc"))) {
-						
-						List<SFQuery> list = answers_found.get(answer.get("slot_name"));
-												
-						if (list==null)
-							list = new LinkedList<SFQuery>();
-						
-						list.add(q);						
-						answers_found.put(answer.get("slot_name"), list);
+			for (HashMap<String, String> answer : q.answers) {
+				
+				System.out.print(answer.get("slot_name") + '\t' + answer.get("docid"));
+				boolean found = false;
+				
+				for (Document d : q.documents) {
+					if (d.get("docid").equalsIgnoreCase(answer.get("docid"))) {
+						System.out.println("\tfound");
+						found = true;
+						answer_doc_founded++;
+						break;
 					}
 				}
+				
+				if (!found) {
+					System.out.println("\tnot found");
+					answer_doc_not_founded++;
+				}					
 			}
+			System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));
+			System.out.println("coverage: " + Float.toString( ( (float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded)) ) );
+			System.out.println("number of docs retrieved: " + q.documents.size());
 		}
 		
 		Set<String> answers_keys = answers_found.keySet();
@@ -167,21 +185,17 @@ public class Main {
 			if (answers_found.get(a).size()>0)
 				System.out.println("documents found for " + a + ':' + answers_found.get(a).size());
 		}
-
-		
-		//TODO: para cada query mostrar: lista de attributos em que o doc com resposta foi encontrado e os que nao foi
-		
-		/*
-		for (String string : answers_keys) {
-			
-		}
-		*/
 		
 		System.out.println("\nQueries with 0 docs retrieved: " + queries_with_zero_docs.size());
 		
 		for (SFQuery q : queries_with_zero_docs) {
 			System.out.println(q.query_id + '\t' + q.name);
 		}
+		
+		//System.out.println("\nQueries for which all answers documents were retrieved: ") + queries_with_zero_docs.size());
+		
+		
+		
 		
 	}
 		
@@ -268,16 +282,9 @@ public class Main {
 	public static void run(CommandLine line) throws Exception {
 		
 		Definitions.loadDocumentCollecion();
-		Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
-		Definitions.connectionREDIS();
+		//Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
+		//Definitions.connectionREDIS();
 		Definitions.loadKBIndex();
-		
-		/* Load Test Queries + answers */
-		String queriesTestFile = line.getOptionValue("queriesTest");
-		System.out.println("\nLoading test queries from: " + queriesTestFile);
-		Map<String, SFQuery> test_queries = LoadQueries.loadXML(queriesTestFile);		
-		String queriesTestAnswers = line.getOptionValue("queriesTestAnswers");
-		loadQueriesAnswers(queriesTestAnswers,test_queries);
 		
 		/* Load Train Queries + answers */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
@@ -286,10 +293,20 @@ public class Main {
 		String queriesTrainAnswers = line.getOptionValue("queriesTrainAnswers");
 		loadQueriesAnswers(queriesTrainAnswers,train_queries);
 		
+		System.out.println("Loaded: " + train_queries.size() + " train queries");
 		
-		/* For the Test Queries: 
+		/* Load Test Queries + answers */
+		String queriesTestFile = line.getOptionValue("queriesTest");
+		System.out.println("\nLoading test queries from: " + queriesTestFile);
+		Map<String, SFQuery> test_queries = LoadQueries.loadXML(queriesTestFile);		
+		String queriesTestAnswers = line.getOptionValue("queriesTestAnswers");
+		loadQueriesAnswers(queriesTestAnswers,test_queries);
+		
+		System.out.println("Loaded: " + test_queries.size() + " test queries");
+		
+		/* For the Train Queries: 
 		 * 		get document answer for each attribute;
-		 * 		get sentence with answer; 
+		 * 		get sentence with answer;
 		 * 		get answer/normalized answer
 		 */
 		
@@ -298,7 +315,7 @@ public class Main {
 		for (String q_id : train_queries_keys) {
 			
 			SFQuery q = train_queries.get(q_id);			
-			//System.out.println(q.name + '\t' + q.query_id);			
+			//System.out.println(q.name + '\t' + q.query_id);	
 			
 			for (HashMap<String, String> a : q.answers) {
 				
@@ -333,6 +350,7 @@ public class Main {
 				}
 			}
 		}
+		
 
 		//check that insertions were done correctly
 		for (String s : train_queries_keys) {			
@@ -381,23 +399,21 @@ public class Main {
 			}
 		}
 
+		/*
+		System.out.println("train queries");
+		
 		Multimap<String, Pattern> patterns = PatternMatching.qaPairs(train_queries);
 		PatternMatching.parsePatterns(patterns);
+		*/
+		
+		parseQueries(test_queries);		
+		parseQueries(train_queries);		
+		recall(test_queries);
+		recall(train_queries);
 	}
-	
-	//parseQueries(test_queries);
-	//parseQueries(train_queries);
-	//recall(test_queries);	
-}		
+}
 
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
