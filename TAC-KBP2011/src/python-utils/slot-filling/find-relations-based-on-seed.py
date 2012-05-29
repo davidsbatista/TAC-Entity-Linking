@@ -49,6 +49,8 @@ def find_relations_based_on_args(cursor,arg1,arg2,output):
     f = open(output,'a')
     
     for r in rows:
+        if r[3] == 0:
+            continue 
         f.write(r[0].encode("utf8")+'\t'+r[1].encode("utf8")+'\t'+r[2].encode("utf8")+'\t'+str(r[3])+'\n')
     
     f.close();
