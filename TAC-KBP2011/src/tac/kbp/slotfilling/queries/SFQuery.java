@@ -20,7 +20,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 
-import tac.kbp.configuration.Definitions;
+import tac.kbp.slotfilling.configuration.Definitions;
 import tac.kbp.slotfilling.queries.attributes.Attributes;
 import tac.kbp.utils.string.Abbreviations;
 import tac.kbp.utils.string.ExtractAbbrev;
@@ -55,7 +55,7 @@ public class SFQuery {
 	
 	public HashSet<String> alternative_names;
 	public Vector<Abbreviations> abbreviations;
-	public Set<Document> documents;
+	public Set<Document> documents; 				/* documents retrived, which hold the answers to the slots */
 	
 	/* query answers */	
 	public LinkedList<HashMap<String, String>> answers;
@@ -87,8 +87,8 @@ public class SFQuery {
 	
 	public void getSupportDocument() throws IOException {
         Term t = new Term("docid", this.docid); 
-        Query query = new TermQuery(t);                 
-        TopDocs docs = Definitions.documents.search(query, 1);
+        Query query = new TermQuery(t);
+        TopDocs docs = Definitions.documents.search(query, 1);        
         ScoreDoc[] scoredocs = docs.scoreDocs;
         Document doc = Definitions.documents.doc(scoredocs[0].doc);        
         this.supportDocument = doc.get("text");
@@ -198,14 +198,14 @@ public class SFQuery {
 		//terms.replaceAll("\\_", " ");
 		
 		Query query = parser.parse(terms);			
-		System.out.println(query);
+		//System.out.println(query);
 		
 	    TopDocs docs = Definitions.documents.search(query, 50);
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
 	    
 	    //System.out.println("documents returned: " + docs.totalHits);	        
 	    //System.out.println("documents searched: " + scoredocs.length);
-	    System.out.println("");
+	    //System.out.println("");
 	    
 	    for (int i = 0; i < scoredocs.length; i++) {
 			Document doc = Definitions.documents.doc(scoredocs[i].doc);
