@@ -90,7 +90,7 @@ public class Train {
 
 			if (supportDocument) {
 				q.getSupportDocument();
-				//q.getNamedEntities();
+				q.getNamedEntities();
 			}
 			
 			if (topics) q.getTopicsDistribution(queries.indexOf(q));
