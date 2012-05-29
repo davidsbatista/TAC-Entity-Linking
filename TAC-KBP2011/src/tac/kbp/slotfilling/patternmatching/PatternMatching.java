@@ -30,7 +30,7 @@ public class PatternMatching {
 	static SentenceChunker SENTENCE_CHUNKER = new SentenceChunker(TOKENIZER_FACTORY, SENTENCE_MODEL);
 	
 	//collect query-answers pairs from the training queries
-	//and gather sentences from the document collection  where query and answer co-occur
+	//and gather sentences from the document collection  where query and answer co-occur or answers occurs
 	public static Multimap<String, Pattern> qaPairs(Map<String, SFQuery> train_queries) {
 		
 		Multimap<String, Pattern> patterns = HashMultimap.create();
