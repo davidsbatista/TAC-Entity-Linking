@@ -116,7 +116,7 @@ public class Definitions {
 		
 		System.out.println("Document Collection index: " + DocumentCollection_location);		
 		Directory DocsIndexDirectory = FSDirectory.open(new File(DocumentCollection_location));		
-		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));	
+		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));		
 	}
 
 	/* Wikipedia Index */		
