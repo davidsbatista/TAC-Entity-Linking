@@ -32,6 +32,7 @@ import com.aliasi.sentences.SentenceChunker;
 import com.aliasi.sentences.SentenceModel;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import com.aliasi.tokenizer.TokenizerFactory;
+import com.google.common.base.Joiner;
 
 import edu.stanford.nlp.util.Triple;
 
@@ -190,7 +191,7 @@ public class SFQuery {
 		QueryParser parser = new QueryParser(Version.LUCENE_35, "text", analyzer);
 		
 		// create the query
-		//Joiner orJoiner = Joiner.on(" OR ");
+		Joiner orJoiner = Joiner.on(" OR ");
 		String terms = '"' + name + '"' + " ";
 		
 		//terms += orJoiner.join(q.alternative_names);

@@ -135,8 +135,10 @@ public class Main {
 		Set<SFQuery> queries_with_zero_docs = new HashSet<SFQuery>();
 		
 		Set<String> keys = queries.keySet();
-		int answer_doc_founded;
-		int answer_doc_not_founded;
+		int answer_doc_founded = 0;
+		int answer_doc_not_founded = 0;
+		int total_answer_doc_founded = 0;
+		int total_answer_doc_not_founded = 0;
 		
 		for (String k : keys) {
 			SFQuery q = queries.get(k);
@@ -160,6 +162,7 @@ public class Main {
 						System.out.println("\tfound");
 						found = true;
 						answer_doc_founded++;
+						total_answer_doc_founded++;
 						break;
 					}
 				}
@@ -167,10 +170,13 @@ public class Main {
 				if (!found) {
 					System.out.println("\tnot found");
 					answer_doc_not_founded++;
+					total_answer_doc_not_founded++;
 				}					
 			}
-			System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));
-			System.out.println("coverage: " + Float.toString( ( (float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded)) ) );
+			System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));			
+			float coverage = ((float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded));
+			
+			System.out.println("coverage: " + coverage );
 			System.out.println("number of docs retrieved: " + q.documents.size());
 		}
 		
@@ -192,11 +198,7 @@ public class Main {
 			System.out.println(q.query_id + '\t' + q.name);
 		}
 		
-		//System.out.println("\nQueries for which all answers documents were retrieved: ") + queries_with_zero_docs.size());
-		
-		
-		
-		
+		System.out.println("Coverage: " + ( (float) total_answer_doc_founded / (float) (total_answer_doc_founded + total_answer_doc_not_founded)) );		
 	}
 		
 	public static void loadQueriesAnswers(String filename, Map<String, SFQuery> queries) throws IOException {
