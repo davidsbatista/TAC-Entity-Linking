@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +26,11 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.slotfilling.configuration.Definitions;
-import tac.kbp.slotfilling.patternmatching.Pattern;
-import tac.kbp.slotfilling.patternmatching.PatternMatching;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
 import tac.kbp.slotfilling.queries.attributes.Attribute;
 import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
 import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
-
-import com.google.common.collect.Multimap;
 
 public class Main {
 	
@@ -103,14 +98,13 @@ public class Main {
 			System.out.println("persons: " + q.persons.size());
 			System.out.println("places: " + q.places.size());
 			System.out.println("org: " + q.organizations.size());
-			
+			*/
 					
 			// get alternative senses for entity name and extract acronyms from support doc.
 			q.getAlternativeSenses();
-			q.extracAcronyms();
-			System.out.println("senses: " + q.alternative_names);			
-			System.out.println("abbreviations: " + q.abbreviations);
-			*/
+			//q.extracAcronyms();
+			//System.out.println("senses: " + q.alternative_names);			
+			//System.out.println("abbreviations: " + q.abbreviations);
 
 			//System.out.println("attributes to be filled:");
 			if (q.etype.equalsIgnoreCase("PER")) {
@@ -141,47 +135,57 @@ public class Main {
 		int total_answer_doc_not_founded = 0;
 		
 		for (String k : keys) {
-			SFQuery q = queries.get(k);
-			System.out.println("\n");
-			System.out.println(q.query_id + '\t' + q.name);
+			
+			SFQuery q = queries.get(k);			
+			//System.out.print(q.query_id + '\t' + q.name);
 			answer_doc_founded = 0;
 			answer_doc_not_founded = 0;
 			
 			if (q.documents.size()==0) {
 				queries_with_zero_docs.add(q);
+				for (HashMap<String, String> answer : q.answers) {
+					answer_doc_not_founded++;
+					total_answer_doc_not_founded++;
+					q.answer_doc_not_founded.add(answer.get("slot_name"));
+				}
+				float coverage = ((float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded));
+				q.coverage = coverage;
+				//System.out.println("\t\tcoverage: " + coverage );				
 				continue;
 			}
 			
 			for (HashMap<String, String> answer : q.answers) {
 				
-				System.out.print(answer.get("slot_name") + '\t' + answer.get("docid"));
+				//System.out.print(answer.get("slot_name") + '\t' + answer.get("docid"));
 				boolean found = false;
 				
 				for (Document d : q.documents) {
 					if (d.get("docid").equalsIgnoreCase(answer.get("docid"))) {
-						System.out.println("\tfound");
+						//System.out.println("\tfound");
 						found = true;
 						answer_doc_founded++;
 						total_answer_doc_founded++;
+						q.answer_doc_founded.add(answer.get("slot_name"));
 						break;
 					}
 				}
 				
 				if (!found) {
-					System.out.println("\tnot found");
+					//System.out.println("\tnot found");
 					answer_doc_not_founded++;
 					total_answer_doc_not_founded++;
 				}					
 			}
-			System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));			
+			//System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));			
 			float coverage = ((float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded));
-			
-			System.out.println("coverage: " + coverage );
-			System.out.println("number of docs retrieved: " + q.documents.size());
+			q.coverage = coverage;
+			//System.out.println("\t\tcoverage: " + coverage );			
+			//System.out.println("number of docs retrieved: " + q.documents.size());
 		}
 		
 		Set<String> answers_keys = answers_found.keySet();
 		
+		/*
 		for (String s : answers_keys) {
 			System.out.println(s + '\t' + answers_found.get(s).size());
 		}
@@ -191,14 +195,17 @@ public class Main {
 			if (answers_found.get(a).size()>0)
 				System.out.println("documents found for " + a + ':' + answers_found.get(a).size());
 		}
+		*/
 		
 		System.out.println("\nQueries with 0 docs retrieved: " + queries_with_zero_docs.size());
 		
+		/*
 		for (SFQuery q : queries_with_zero_docs) {
 			System.out.println(q.query_id + '\t' + q.name);
 		}
+		*/
 		
-		System.out.println("Coverage: " + ( (float) total_answer_doc_founded / (float) (total_answer_doc_founded + total_answer_doc_not_founded)) );		
+		System.out.println("average coverage: " + ( (float) total_answer_doc_founded / (float) (total_answer_doc_founded + total_answer_doc_not_founded)) );		
 	}
 		
 	public static void loadQueriesAnswers(String filename, Map<String, SFQuery> queries) throws IOException {
@@ -285,7 +292,10 @@ public class Main {
 		
 		Definitions.loadDocumentCollecion();
 		//Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
-		//Definitions.connectionREDIS();
+		Definitions.connectionREDIS();
+		
+		System.out.println(Definitions.jedis);
+		
 		Definitions.loadKBIndex();
 		
 		/* Load Train Queries + answers */
@@ -409,13 +419,35 @@ public class Main {
 		*/
 		
 		parseQueries(test_queries);		
-		parseQueries(train_queries);		
-		recall(test_queries);
+		parseQueries(train_queries);
+		
+		System.out.println("\n\n2010 queries");
 		recall(train_queries);
+		
+		System.out.println("\n\n2011 queries");
+		recall(test_queries);
+		
+		//printResults(test_queries);		
+		//printResults(train_queries);
+		
+	}
+	
+	public static void extractRelations() {
+		
+		/* Retrieve all relations extracted by ReVerb for all the documents retrieved */
+		
+		/* Extract relations based on the slots that have to be filled, using the patterns mappings */
+		
+	}
+	
+	
+	public static void printResults(Map<String, SFQuery> queries) throws Exception {
+		Set<String> keys = queries.keySet();		
+		for (String k : keys) {
+			SFQuery q = queries.get(k);
+			System.out.println(q.name + '\t' + q.documents.size() + '\t' + q.coverage);			
+		}		
 	}
 }
-
-
-
 
 

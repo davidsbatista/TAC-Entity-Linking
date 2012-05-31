@@ -9,15 +9,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import javassist.compiler.ast.Keyword;
+
+import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.util.Version;
 
 import tac.kbp.slotfilling.configuration.Definitions;
@@ -56,7 +64,11 @@ public class SFQuery {
 	
 	public HashSet<String> alternative_names;
 	public Vector<Abbreviations> abbreviations;
-	public Set<Document> documents; 				/* documents retrived, which hold the answers to the slots */
+	public Set<Document> documents; 	/* documents retrieved, which hold the answers to the slots */	
+	public float coverage; 				/* number of slots for which the document holding the answer was found divided by the total number of slots to be filled */	
+	public Set<String> answer_doc_founded;
+	public Set<String> answer_doc_not_founded;	
+
 	
 	/* query answers */	
 	public LinkedList<HashMap<String, String>> answers;
@@ -83,8 +95,9 @@ public class SFQuery {
 		this.abbreviations = new Vector<Abbreviations>();
 		this.documents = new HashSet<Document>();
 		this.answers = new LinkedList<HashMap<String,String>>();
+		this.answer_doc_founded = new HashSet<String>();
+		this.answer_doc_not_founded = new HashSet<String>();
 	}
-	
 	
 	public void getSupportDocument() throws IOException {
         Term t = new Term("docid", this.docid); 
@@ -157,7 +170,8 @@ public class SFQuery {
 	public void getAlternativeSenses() throws UnsupportedEncodingException {
 		
 		for (String	e: Definitions.jedis.smembers(this.name.toLowerCase())) {
-	    	this.alternative_names.add(e.toLowerCase());
+			
+	    	this.alternative_names.add("'"+e.toLowerCase()+"'");
 	    }		
 	}
 	
@@ -186,25 +200,29 @@ public class SFQuery {
 	}
 	
 	public void queryCollection() throws ParseException, IOException {
-		//query document collection
-		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer(Version.LUCENE_35);
-		QueryParser parser = new QueryParser(Version.LUCENE_35, "text", analyzer);
-		
+				
 		// create the query
-		Joiner orJoiner = Joiner.on(" OR ");
-		String terms = '"' + name + '"' + " ";
+		String[] name_parts = name.split(" ");
+		Query query = new BooleanQuery();
 		
-		//terms += orJoiner.join(q.alternative_names);
-		//terms += orJoiner.join(q.abbreviations);
-		//terms.replaceAll("\\_", " ");
+		for (int i = 0; i < name_parts.length; i++) {			
+			((BooleanQuery) query).add( new BooleanClause(new TermQuery(new Term("text", name_parts[i])), BooleanClause.Occur.SHOULD));			
+		}
+				
+		if (this.alternative_names.size()>0) {
+			for (String s : this.alternative_names) {
+				name_parts = s.split(" ");
+				s = s.replaceAll("_", " ").replaceAll("\\(", "").replaceAll("\\)", "");
+				((BooleanQuery) query).add( new BooleanClause(new TermQuery(new Term("text", s)), BooleanClause.Occur.SHOULD));
+			}
+		}
 		
-		Query query = parser.parse(terms);			
-		//System.out.println(query);
-		
-	    TopDocs docs = Definitions.documents.search(query, 50);
+				
+	    TopDocs docs = Definitions.documents.search(query, 500);	    
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
+	    System.out.println("query: " + this.name + '\t' + scoredocs.length);
 	    
-	    //System.out.println("documents returned: " + docs.totalHits);	        
+	    //System.out.println("documents returned: " + docs.totalHits);
 	    //System.out.println("documents searched: " + scoredocs.length);
 	    //System.out.println("");
 	    
@@ -213,8 +231,6 @@ public class SFQuery {
 			documents.add(doc);
 	    }
 	}
-
-	/* methods to be used for trainning queries */
 	
 	public void getAnswerDocument() throws IOException {
         Term t = new Term("docid", this.docid); 

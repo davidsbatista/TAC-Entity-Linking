@@ -77,7 +77,7 @@ public class Definitions {
 	
 	/* REDIS server */
 	public static int redis_port = 6379;
-	public static String redis_host = "borat.inesc-id.pt";
+	public static String redis_host = "agatha.inesc-id.pt";
 	public static Jedis jedis = null;
 	
 	/* builds a dictionary of entities from the KB */
