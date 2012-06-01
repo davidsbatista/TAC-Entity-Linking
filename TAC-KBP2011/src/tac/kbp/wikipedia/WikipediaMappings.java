@@ -328,7 +328,7 @@ public class WikipediaMappings {
 		//getEntities();
 		
 		//loadMappings(args[4],args[5],args[6]);
-		//loadMappingsToREDIS(args[0]);
+		loadMappingsToREDIS(args[1]);
 	}
 }
 

@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import redis.clients.jedis.Jedis;
 import tac.kbp.entitylinking.queries.GoldQuery;
 import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
+import tac.kbp.slotfilling.db.MySQLConnection;
 import tac.kbp.utils.misc.BigFile;
 
 import com.aliasi.dict.DictionaryEntry;
@@ -80,6 +82,21 @@ public class Definitions {
 	public static String redis_host = "agatha.inesc-id.pt";
 	public static Jedis jedis = null;
 	
+	/* MySQL Connections */
+	public static Connection connection = null;
+	
+	
+	
+	public static void getDBConnection() throws Exception{
+		connection = MySQLConnection.getConnection("root", "agatha", "jdbc:mysql://agatha/extractions");
+	}
+	
+	
+	public static void closeDBConnection() throws Exception{
+		connection.close();
+	}
+	
+		
 	/* builds a dictionary of entities from the KB */
 	public static void buildDictionary() throws IOException {
 		

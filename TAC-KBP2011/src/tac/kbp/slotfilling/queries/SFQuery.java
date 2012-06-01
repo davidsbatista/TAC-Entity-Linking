@@ -218,7 +218,7 @@ public class SFQuery {
 		}
 		
 				
-	    TopDocs docs = Definitions.documents.search(query, 500);	    
+	    TopDocs docs = Definitions.documents.search(query, 50);	    
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
 	    System.out.println("query: " + this.name + '\t' + scoredocs.length);
 	    

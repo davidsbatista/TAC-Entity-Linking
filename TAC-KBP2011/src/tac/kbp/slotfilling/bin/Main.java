@@ -5,6 +5,10 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +29,11 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
+import com.mysql.jdbc.PreparedStatement;
+
+import tac.kbp.slotfilling.db.MySQLConnection;
 import tac.kbp.slotfilling.configuration.Definitions;
+import tac.kbp.slotfilling.patterns.slots.PERSlots;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
 import tac.kbp.slotfilling.queries.attributes.Attribute;
@@ -105,17 +113,6 @@ public class Main {
 			//q.extracAcronyms();
 			//System.out.println("senses: " + q.alternative_names);			
 			//System.out.println("abbreviations: " + q.abbreviations);
-
-			//System.out.println("attributes to be filled:");
-			if (q.etype.equalsIgnoreCase("PER")) {
-				PER_Attributes attributes = (PER_Attributes) q.attributes;
-				//System.out.println(attributes.toString());
-				
-			}
-			else if (q.etype.equalsIgnoreCase("ORG")) {
-				ORG_Attributes attributes = (ORG_Attributes) q.attributes;
-				//System.out.println(attributes.toString());
-			}
 			
 			q.queryCollection();
 			
@@ -125,9 +122,7 @@ public class Main {
 	
 	public static void recall(Map<String, SFQuery> queries) {
 				
-		Map<String, List<SFQuery>> answers_found = new HashMap<String, List<SFQuery>>();
-		Set<SFQuery> queries_with_zero_docs = new HashSet<SFQuery>();
-		
+		Set<SFQuery> queries_with_zero_docs = new HashSet<SFQuery>();		
 		Set<String> keys = queries.keySet();
 		int answer_doc_founded = 0;
 		int answer_doc_not_founded = 0;
@@ -137,7 +132,6 @@ public class Main {
 		for (String k : keys) {
 			
 			SFQuery q = queries.get(k);			
-			//System.out.print(q.query_id + '\t' + q.name);
 			answer_doc_founded = 0;
 			answer_doc_not_founded = 0;
 			
@@ -149,19 +143,16 @@ public class Main {
 					q.answer_doc_not_founded.add(answer.get("slot_name"));
 				}
 				float coverage = ((float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded));
-				q.coverage = coverage;
-				//System.out.println("\t\tcoverage: " + coverage );				
+				q.coverage = coverage;				
 				continue;
 			}
 			
 			for (HashMap<String, String> answer : q.answers) {
 				
-				//System.out.print(answer.get("slot_name") + '\t' + answer.get("docid"));
 				boolean found = false;
 				
-				for (Document d : q.documents) {
+				for (Document d : q.documents) {					
 					if (d.get("docid").equalsIgnoreCase(answer.get("docid"))) {
-						//System.out.println("\tfound");
 						found = true;
 						answer_doc_founded++;
 						total_answer_doc_founded++;
@@ -171,40 +162,15 @@ public class Main {
 				}
 				
 				if (!found) {
-					//System.out.println("\tnot found");
 					answer_doc_not_founded++;
 					total_answer_doc_not_founded++;
 				}					
 			}
-			//System.out.println("number of answers: " + Integer.toString(answer_doc_founded + answer_doc_not_founded));			
 			float coverage = ((float) answer_doc_founded / (float) (answer_doc_founded + answer_doc_not_founded));
 			q.coverage = coverage;
-			//System.out.println("\t\tcoverage: " + coverage );			
-			//System.out.println("number of docs retrieved: " + q.documents.size());
 		}
-		
-		Set<String> answers_keys = answers_found.keySet();
-		
-		/*
-		for (String s : answers_keys) {
-			System.out.println(s + '\t' + answers_found.get(s).size());
-		}
-		
-		// queries that did not had any document retrieved
-		for (String a : answers_keys) {
-			if (answers_found.get(a).size()>0)
-				System.out.println("documents found for " + a + ':' + answers_found.get(a).size());
-		}
-		*/
 		
 		System.out.println("\nQueries with 0 docs retrieved: " + queries_with_zero_docs.size());
-		
-		/*
-		for (SFQuery q : queries_with_zero_docs) {
-			System.out.println(q.query_id + '\t' + q.name);
-		}
-		*/
-		
 		System.out.println("average coverage: " + ( (float) total_answer_doc_founded / (float) (total_answer_doc_founded + total_answer_doc_not_founded)) );		
 	}
 		
@@ -293,10 +259,8 @@ public class Main {
 		Definitions.loadDocumentCollecion();
 		//Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
 		Definitions.connectionREDIS();
-		
-		System.out.println(Definitions.jedis);
-		
 		Definitions.loadKBIndex();
+		Definitions.getDBConnection();
 		
 		/* Load Train Queries + answers */
 		String queriesTrainFile = line.getOptionValue("queriesTrain");
@@ -410,16 +374,9 @@ public class Main {
 				}
 			}
 		}
-
-		/*
-		System.out.println("train queries");
 		
-		Multimap<String, Pattern> patterns = PatternMatching.qaPairs(train_queries);
-		PatternMatching.parsePatterns(patterns);
-		*/
-		
-		parseQueries(test_queries);		
 		parseQueries(train_queries);
+		parseQueries(test_queries);
 		
 		System.out.println("\n\n2010 queries");
 		recall(train_queries);
@@ -428,26 +385,67 @@ public class Main {
 		recall(test_queries);
 		
 		//printResults(test_queries);		
-		//printResults(train_queries);
+		//printResults(train_queries);		
+		extractRelations(train_queries);
+		
 		
 	}
 	
-	public static void extractRelations() {
+	public static void getExtractions(String docid) throws SQLException {
 		
-		/* Retrieve all relations extracted by ReVerb for all the documents retrieved */
+		PreparedStatement stm = (PreparedStatement) Definitions.connection.prepareStatement(
+				
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION"
+			);
 		
-		/* Extract relations based on the slots that have to be filled, using the patterns mappings */
+		stm.setString(1, '%'+docid);
+		stm.setString(2, '%'+docid);
+		stm.setString(3, '%'+docid);
+		stm.setString(4, '%'+docid);
+		stm.setString(5, '%'+docid);
+		stm.setString(6, '%'+docid);
+		stm.setString(7, '%'+docid);
+		stm.setString(8, '%'+docid);
 		
+		ResultSet resultSet = stm.executeQuery();		
+		System.out.println("docid: " + '\t' + docid);
+		
+		while (resultSet.next()) {
+			System.out.println( resultSet.getString(0) + '\t' + resultSet.getString(1) + '\t' + resultSet.getString(2) + '\t' + resultSet.getFloat(3) + '\t' + resultSet.getString(4) );
+		}
 	}
 	
+	public static void extractRelations(Map<String, SFQuery> queries) throws SQLException {
+		
+		Set<String> keys = queries.keySet();		
+		
+		for (String keyQ : keys) {			
+			SFQuery q = queries.get(keyQ);
+			
+			/* Retrieve all relations extracted by ReVerb for each document retrieved and
+			/* extract relations based on the slots that have to be filled, using the patterns mappings */
+			for (Document d : q.documents) {
+				getExtractions(d.get("docid"));
+			}
+			
+					
+			/*
+			System.out.println("slots to be filled: ");			
+			for (HashMap<String, String> answer : q.answers) {
+				System.out.println(answer.get("slot_name"));		
+			}
+			*/
+		}
+	}
 	
 	public static void printResults(Map<String, SFQuery> queries) throws Exception {
-		Set<String> keys = queries.keySet();		
-		for (String k : keys) {
-			SFQuery q = queries.get(k);
-			System.out.println(q.name + '\t' + q.documents.size() + '\t' + q.coverage);			
-		}		
+		//TODO: for which slots were the documents with the answer retrieved and for which slots were not
 	}
 }
-
-
