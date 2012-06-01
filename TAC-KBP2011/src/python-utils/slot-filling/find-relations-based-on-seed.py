@@ -9,35 +9,35 @@ import fileinput
 def find_relations_based_on_args(cursor,arg1,arg2,output):
        
     SQL = """
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction1 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction2 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction3 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction4 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction5 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction6 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction7 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             UNION
-            SELECT arg1, rel, arg2, count(*) AS occurrences 
+            SELECT arg1, rel, arg2, confidence, count(*) AS occurrences 
             FROM extraction8 
             WHERE (arg1 = '%s' AND arg2 = '%s')
             GROUP BY arg1,rel,arg2 ORDER BY occurrences DESC;
@@ -51,7 +51,7 @@ def find_relations_based_on_args(cursor,arg1,arg2,output):
     for r in rows:
         if r[3] == 0:
             continue 
-        f.write(r[0].encode("utf8")+'\t'+r[1].encode("utf8")+'\t'+r[2].encode("utf8")+'\t'+str(r[3])+'\n')
+        f.write(r[0].encode("utf8")+'\t'+r[1].encode("utf8")+'\t'+r[2].encode("utf8")+'\t'+str([3])+'\n')
     
     f.close();
 
@@ -71,35 +71,35 @@ def find_relations_seed(cursor,seed,output):
     SQL = """
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction1 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')            
+            WHERE (rel LIKE '%s')            
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction2 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction3 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction4 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction5 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction6 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences
             FROM extraction7 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             UNION
             SELECT arg1, rel, arg2, count(*) AS occurrences 
             FROM extraction8 
-            WHERE (rel LIKE '%s' AND arg1 REGEXP BINARY '^[A-Z][a-z]+$' AND arg2 REGEXP BINARY '^[A-Z][a-z]+$')
+            WHERE (rel LIKE '%s')
             GROUP BY arg1, rel, arg2
             ORDER by occurrences DESC;
            """ % (seed,seed,seed,seed,seed,seed,seed,seed)
@@ -114,6 +114,8 @@ def find_relations_seed(cursor,seed,output):
     f.write("relation:\t"+seed+'\n')
     
     for r in rows:
+        if r[3] == 0:
+            continue 
         f.write(r[0].encode("utf8")+'\t'+r[1].encode("utf8")+'\t'+r[2].encode("utf8")+'\t'+str(r[3])+'\n')
         results.append((r[0],r[1],r[2]))
     
