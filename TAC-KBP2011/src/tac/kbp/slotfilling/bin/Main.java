@@ -39,6 +39,7 @@ import tac.kbp.slotfilling.queries.SFQuery;
 import tac.kbp.slotfilling.queries.attributes.Attribute;
 import tac.kbp.slotfilling.queries.attributes.ORG_Attributes;
 import tac.kbp.slotfilling.queries.attributes.PER_Attributes;
+import tac.kbp.utils.SHA1;
 
 public class Main {
 	
@@ -391,38 +392,42 @@ public class Main {
 		
 	}
 	
-	public static void getExtractions(String docid) throws SQLException {
+	public static void getExtractions(String docid) throws Exception {
+		
+		String filename_sha1 = SHA1.digest(docid);
 		
 		PreparedStatement stm = (PreparedStatement) Definitions.connection.prepareStatement(
 				
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION" +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE filename LIKE ? UNION"
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction2 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction3 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction4 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction5 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction6 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction7 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction8 WHERE file_name_sha1 = ? "
 			);
 		
-		stm.setString(1, '%'+docid);
-		stm.setString(2, '%'+docid);
-		stm.setString(3, '%'+docid);
-		stm.setString(4, '%'+docid);
-		stm.setString(5, '%'+docid);
-		stm.setString(6, '%'+docid);
-		stm.setString(7, '%'+docid);
-		stm.setString(8, '%'+docid);
+		stm.setString(1, filename_sha1);
+		stm.setString(2, filename_sha1);
+		stm.setString(3, filename_sha1);
+		stm.setString(4, filename_sha1);
+		stm.setString(5, filename_sha1);
+		stm.setString(6, filename_sha1);
+		stm.setString(7, filename_sha1);
+		stm.setString(8, filename_sha1);
+		
+		System.out.println(stm);
 		
 		ResultSet resultSet = stm.executeQuery();		
 		System.out.println("docid: " + '\t' + docid);
 		
 		while (resultSet.next()) {
-			System.out.println( resultSet.getString(0) + '\t' + resultSet.getString(1) + '\t' + resultSet.getString(2) + '\t' + resultSet.getFloat(3) + '\t' + resultSet.getString(4) );
+			System.out.println( resultSet.getString(1) + '\t' + resultSet.getString(2) + '\t' + resultSet.getString(3) + '\t' + resultSet.getFloat(4) + '\t' + resultSet.getString(5) );
 		}
 	}
 	
-	public static void extractRelations(Map<String, SFQuery> queries) throws SQLException {
+	public static void extractRelations(Map<String, SFQuery> queries) throws Exception {
 		
 		Set<String> keys = queries.keySet();		
 		

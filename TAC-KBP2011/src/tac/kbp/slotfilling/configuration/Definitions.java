@@ -88,7 +88,7 @@ public class Definitions {
 	
 	
 	public static void getDBConnection() throws Exception{
-		connection = MySQLConnection.getConnection("root", "agatha", "jdbc:mysql://agatha/extractions");
+		connection = MySQLConnection.getConnection("root", "07dqeuedm", "jdbc:mysql://borat/reverb-extractions");
 	}
 	
 	

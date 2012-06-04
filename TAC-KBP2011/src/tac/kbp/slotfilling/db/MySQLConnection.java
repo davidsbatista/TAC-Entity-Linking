@@ -13,9 +13,7 @@ public class MySQLConnection {
 			
 			// This will load the MySQL driver, each DB has its own driver
 			Class.forName("com.mysql.jdbc.Driver");
-			url = "jdbc:mysql://agatha/extractions";
-			//url = "jdbc:mysql://reactionvm01/news-entities";
-
+			
 			// Setup the connection with the DB
 			connect = DriverManager.getConnection(url, username, password);			
 		}
