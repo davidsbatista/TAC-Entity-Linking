@@ -5,13 +5,9 @@ import java.util.LinkedList;
 
 public class PERSlots {
 	
-	public static HashMap<String, LinkedList<String>> slots_patterns;
+	public static HashMap<String, LinkedList<String>> slots_patterns = new HashMap<String, LinkedList<String>>();
 	
-	public PERSlots() {
-		PERSlots.slots_patterns = new HashMap<String, LinkedList<String>>();
-	}
-	
-	public void load_patterns() {
+	public static void load_patterns() {
 		
 		/* per:country_of_birth
 		 * per:stateorprovince_of_birth
@@ -51,7 +47,7 @@ public class PERSlots {
 		patterns.add("contract with");
 		patterns.add("had signed with");
 		patterns.add("worked for");
-		this.slots_patterns.put("per:member_of", patterns);
+		PERSlots.slots_patterns.put("per:member_of", patterns);
 		
 		
 		/* per:marriage */
@@ -59,7 +55,7 @@ public class PERSlots {
 		patterns.add("married to");
 		patterns.add("marrying");
 		patterns.add("a divorce from");
-		this.slots_patterns.put("per:marriage", patterns);
+		slots_patterns.put("per:marriage", patterns);
 		
 		
 		/* per:employ_of */
@@ -73,7 +69,7 @@ public class PERSlots {
 		patterns.add("signed");
 		patterns.add("signed with");
 		patterns.add("paid by");
-		this.slots_patterns.put("per:employ_of", patterns);
+		slots_patterns.put("per:employee_of", patterns);
 		
 		
 		/* per:date_of_death */
@@ -82,7 +78,7 @@ public class PERSlots {
 		patterns.add("killed in");
 		patterns.add("was buried in");
 		patterns.add("passed away in");		
-		this.slots_patterns.put("per:date_of_death", patterns);
+		slots_patterns.put("per:date_of_death", patterns);
 		
 
 		/* per:children */
@@ -90,7 +86,7 @@ public class PERSlots {
 		patterns.add("has \\% children");
 		patterns.add("have \\% children");
 		patterns.add("filled for custody of");
-		this.slots_patterns.put("per:children", patterns);
+		slots_patterns.put("per:children", patterns);
 		
 		
 		/* per:charges */
@@ -108,14 +104,14 @@ public class PERSlots {
 		patterns.add("caught");
 		patterns.add("sued for");
 		patterns.add("in prison for");
-		this.slots_patterns.put("per:charges", patterns);
+		slots_patterns.put("per:charges", patterns);
 		
 		
 		/* per:cause_of_death */
 		patterns = new LinkedList<String>();
 		patterns.add("died from");
 		patterns.add("died of");
-		this.slots_patterns.put("per:cause_of_death", patterns);
+		slots_patterns.put("per:cause_of_death", patterns);
 
 		
 		/* 
@@ -134,26 +130,26 @@ public class PERSlots {
 		patterns.add("assinated \\% at");
 		patterns.add("died \\% in");
 		patterns.add("died \\% at");
-		this.slots_patterns.put("per:place_of_death", patterns);
+		slots_patterns.put("per:place_of_death", patterns);
 		
 		
 		/* per:alternate_names */
 		patterns = new LinkedList<String>();
 		patterns.add("nicknamed");
 		patterns.add("also called");
-		this.slots_patterns.put("per:alternate_names", patterns);
+		slots_patterns.put("per:alternate_names", patterns);
 		
 		
 		/* per:age */
 		patterns = new LinkedList<String>();
 		patterns.add("turns in");
-		this.slots_patterns.put("per:age", patterns);
+		slots_patterns.put("per:age", patterns);
 		
 		
 		/* per:date_of_birth */
 		patterns = new LinkedList<String>();
 		patterns.add("born in");
-		this.slots_patterns.put("per:date_of_birth", patterns);
+		slots_patterns.put("per:date_of_birth", patterns);
 		
 		
 		/* per:origin */
@@ -161,7 +157,7 @@ public class PERSlots {
 		patterns.add("from");
 		patterns.add("have \\% nationality");
 		patterns.add("has % nationality");
-		this.slots_patterns.put("per:origin", patterns);
+		slots_patterns.put("per:origin", patterns);
 		
 		
 		/*
@@ -170,31 +166,31 @@ public class PERSlots {
 		 * per:cities_of_residence  
 		 * */
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:place_of_residence", patterns);
+		slots_patterns.put("per:place_of_residence", patterns);
 				
 		/* per:religion */
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:religion", patterns);
+		slots_patterns.put("per:religion", patterns);
 		
 		/* per:title */
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:title", patterns);
+		slots_patterns.put("per:title", patterns);
 		
 		/* per:alternate_names */
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:alternate_names", patterns);
+		slots_patterns.put("per:alternate_names", patterns);
 		
 		/* per:spouse*/
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:spouse", patterns);
+		slots_patterns.put("per:spouse", patterns);
 		
 		/* per:parents*/
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:parents", patterns);
+		slots_patterns.put("per:parents", patterns);
 		
 		/* per:other_family*/
 		patterns = new LinkedList<String>();
-		this.slots_patterns.put("per:other_family", patterns);
+		slots_patterns.put("per:other_family", patterns);
 
 	}
 }

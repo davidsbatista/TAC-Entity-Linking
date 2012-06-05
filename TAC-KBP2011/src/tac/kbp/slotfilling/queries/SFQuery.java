@@ -21,6 +21,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
@@ -42,6 +43,7 @@ import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import com.aliasi.tokenizer.TokenizerFactory;
 import com.google.common.base.Joiner;
 
+import edu.stanford.nlp.trees.EnglishGrammaticalRelations.PhrasalVerbParticleGRAnnotation;
 import edu.stanford.nlp.util.Triple;
 
 public class SFQuery {
@@ -69,9 +71,11 @@ public class SFQuery {
 	public Set<String> answer_doc_founded;
 	public Set<String> answer_doc_not_founded;	
 
+	/* query correct answers */	
+	public LinkedList<HashMap<String, String>> correct_answers;
 	
-	/* query answers */	
-	public LinkedList<HashMap<String, String>> answers;
+	/* query system answers */
+	public LinkedList<HashMap<String, String>> system_answers;
 
 	public SFQuery() {
 		super();
@@ -94,9 +98,10 @@ public class SFQuery {
 		this.alternative_names = new HashSet<String>();
 		this.abbreviations = new Vector<Abbreviations>();
 		this.documents = new HashSet<Document>();
-		this.answers = new LinkedList<HashMap<String,String>>();
+		this.correct_answers = new LinkedList<HashMap<String,String>>();
 		this.answer_doc_founded = new HashSet<String>();
 		this.answer_doc_not_founded = new HashSet<String>();
+		this.system_answers = new LinkedList<HashMap<String,String>>(); 
 	}
 	
 	public void getSupportDocument() throws IOException {
@@ -202,6 +207,7 @@ public class SFQuery {
 	public void queryCollection() throws ParseException, IOException {
 				
 		// create the query
+		/*
 		String[] name_parts = name.split(" ");
 		Query query = new BooleanQuery();
 		
@@ -216,6 +222,16 @@ public class SFQuery {
 				((BooleanQuery) query).add( new BooleanClause(new TermQuery(new Term("text", s)), BooleanClause.Occur.SHOULD));
 			}
 		}
+		*/
+		
+		Query query = new org.apache.lucene.search.PhraseQuery();
+		String[] name_parts = name.split(" ");
+		
+		for (int i = 0; i < name_parts.length; i++) {			
+			((PhraseQuery) query).add(new Term("text", name_parts[i]) );
+		}
+		
+		System.out.println("query: " + query);
 		
 				
 	    TopDocs docs = Definitions.documents.search(query, 50);	    

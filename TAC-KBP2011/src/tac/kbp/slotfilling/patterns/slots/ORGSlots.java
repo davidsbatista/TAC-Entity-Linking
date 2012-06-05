@@ -5,13 +5,9 @@ import java.util.LinkedList;
 
 public class ORGSlots {
 	
-	public static HashMap<String, LinkedList<String>> slots_patterns;
+	public static HashMap<String, LinkedList<String>> slots_patterns = new HashMap<String, LinkedList<String>>();
 	
-	public ORGSlots() {
-		ORGSlots.slots_patterns = new HashMap<String, LinkedList<String>>();
-	}
-	
-	public void load_patterns() {
+	public static void load_patterns() {
 		
 		/* org:alternate_names*/		
 		LinkedList<String> patterns = new LinkedList<String>();
