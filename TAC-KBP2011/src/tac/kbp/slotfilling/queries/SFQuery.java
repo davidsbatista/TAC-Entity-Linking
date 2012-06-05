@@ -42,6 +42,7 @@ import com.aliasi.sentences.SentenceModel;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import com.aliasi.tokenizer.TokenizerFactory;
 import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
 
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations.PhrasalVerbParticleGRAnnotation;
 import edu.stanford.nlp.util.Triple;
@@ -72,11 +73,21 @@ public class SFQuery {
 	public Set<String> answer_doc_not_founded;	
 
 	/* query correct answers */	
+	
+	//TODO: to delete
 	public LinkedList<HashMap<String, String>> correct_answers;
 	
+	public HashMultimap<String,AnswerGoldenStandard> golden_answers;
+	
 	/* query system answers */
+	
+	//TODO: to delete
 	public LinkedList<HashMap<String, String>> system_answers;
+	
+	public HashMultimap<String,SystemAnswer> system_answers_new;
 
+	
+	
 	public SFQuery() {
 		super();
 	}
@@ -101,7 +112,8 @@ public class SFQuery {
 		this.correct_answers = new LinkedList<HashMap<String,String>>();
 		this.answer_doc_founded = new HashSet<String>();
 		this.answer_doc_not_founded = new HashSet<String>();
-		this.system_answers = new LinkedList<HashMap<String,String>>(); 
+		this.system_answers = new LinkedList<HashMap<String,String>>(); 		
+		
 	}
 	
 	public void getSupportDocument() throws IOException {
@@ -230,13 +242,10 @@ public class SFQuery {
 		for (int i = 0; i < name_parts.length; i++) {			
 			((PhraseQuery) query).add(new Term("text", name_parts[i]) );
 		}
-		
-		System.out.println("query: " + query);
-		
-				
+						
 	    TopDocs docs = Definitions.documents.search(query, 50);	    
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
-	    System.out.println("query: " + this.name + '\t' + scoredocs.length);
+	    System.out.println(this.query_id + '\t' + this.name + '\t' + scoredocs.length);
 	    
 	    //System.out.println("documents returned: " + docs.totalHits);
 	    //System.out.println("documents searched: " + scoredocs.length);
