@@ -49,8 +49,13 @@ public class LoadQueries{
                 		ignore = getTagValue("ignore", eElement);
                 	
                 	SFQuery q = new SFQuery(query_id, name, docid, etype, nodeid);
-                	if (ignore!=null)
-                		q.ignore = ignore;
+                	if (ignore!=null) {
+                		String[] slots_ignore = ignore.split(" ");
+    					
+    					for (int i = 0; i < slots_ignore.length; i++) {
+    						q.ignore.add(slots_ignore[i]);
+    					}
+                	}                		
                 	
                 	if (etype.equalsIgnoreCase("PER"))
                 		q.attributes = new PER_Attributes();

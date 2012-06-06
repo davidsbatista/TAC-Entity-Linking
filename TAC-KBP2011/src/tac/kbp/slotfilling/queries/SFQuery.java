@@ -4,30 +4,18 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-import javassist.compiler.ast.Keyword;
-
-import org.apache.lucene.analysis.KeywordAnalyzer;
-import org.apache.lucene.analysis.WhitespaceAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.util.Version;
 
 import tac.kbp.slotfilling.configuration.Definitions;
 import tac.kbp.slotfilling.queries.attributes.Attributes;
@@ -41,10 +29,8 @@ import com.aliasi.sentences.SentenceChunker;
 import com.aliasi.sentences.SentenceModel;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import com.aliasi.tokenizer.TokenizerFactory;
-import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 
-import edu.stanford.nlp.trees.EnglishGrammaticalRelations.PhrasalVerbParticleGRAnnotation;
 import edu.stanford.nlp.util.Triple;
 
 public class SFQuery {
@@ -55,7 +41,7 @@ public class SFQuery {
 	public String docid;
 	public String etype;
 	public String nodeid;
-	public String ignore;
+	public Set<String> ignore;
 	public String supportDocument;
 	public Attributes attributes;
 	
@@ -69,22 +55,16 @@ public class SFQuery {
 	public Vector<Abbreviations> abbreviations;
 	public Set<Document> documents; 	/* documents retrieved, which hold the answers to the slots */	
 	public float coverage; 				/* number of slots for which the document holding the answer was found divided by the total number of slots to be filled */	
-	public Set<String> answer_doc_founded;
-	public Set<String> answer_doc_not_founded;	
+	public HashMap<String,Set<String>> answer_doc_founded;
+	public HashMap<String,Set<String>> answer_doc_not_founded;
+	
+	public HashMap<String,Float> coverages;
 
-	/* query correct answers */	
-	
-	//TODO: to delete
-	public LinkedList<HashMap<String, String>> correct_answers;
-	
-	public HashMultimap<String,AnswerGoldenStandard> golden_answers;
+	/* query correct answers */		
+	public HashMultimap<String,AnswerGoldenStandard> correct_answers;
 	
 	/* query system answers */
-	
-	//TODO: to delete
-	public LinkedList<HashMap<String, String>> system_answers;
-	
-	public HashMultimap<String,SystemAnswer> system_answers_new;
+	public HashMultimap<String,SystemAnswer> system_answers;
 
 	
 	
@@ -106,13 +86,24 @@ public class SFQuery {
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
 		
+		/* entity alternative names and abbreviations or expansions */
 		this.alternative_names = new HashSet<String>();
+		
+		/* documents retrieved for this query from the Lucene Index */
 		this.abbreviations = new Vector<Abbreviations>();
 		this.documents = new HashSet<Document>();
-		this.correct_answers = new LinkedList<HashMap<String,String>>();
-		this.answer_doc_founded = new HashSet<String>();
-		this.answer_doc_not_founded = new HashSet<String>();
-		this.system_answers = new LinkedList<HashMap<String,String>>(); 		
+		
+		/* for statistics */
+		this.answer_doc_founded = new HashMap<String,Set<String>>();
+		this.answer_doc_not_founded = new HashMap<String,Set<String>>();
+		this.coverages = new HashMap<String, Float>();
+		
+		/* correct answers and system answers */
+		this.correct_answers = HashMultimap.create();
+		this.system_answers = HashMultimap.create();
+		
+		/* slots to be ignored */
+		this.ignore = new HashSet<String>();
 		
 	}
 	
