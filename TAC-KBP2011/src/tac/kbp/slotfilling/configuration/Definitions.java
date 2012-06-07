@@ -50,7 +50,7 @@ public class Definitions {
 	public static String WikipediaIndexEn_location = basePath+"Wikipedia-Index-En";
 	
 	/* support doc and named-entities recognizer */
-	public static String serializedClassifier = basePath+"resources/all.3class.distsim.crf.ser.gz";
+	public static String serializedClassifier = basePath+"resources/english.muc.7class.distsim.crf.ser.gz";
 	
 	/* stopwords */
 	public static String stop_words_location = basePath+"resources/stopwords.txt";
@@ -61,10 +61,7 @@ public class Definitions {
 	public static String entities = basePath+"resources/entities.txt";
 	public static ExactDictionaryChunker chunker = null;
 	
-	/* JWLP Wikipedia Interface */
-	public static DatabaseConfiguration dbConfig;
-	public static Wikipedia wiki;
-	
+
 	/* Lucene indexes */
 	public static IndexSearcher knowledge_base = null;
 	public static IndexSearcher wikipediaEn = null;
@@ -176,29 +173,4 @@ public class Definitions {
 				System.err.println("Error: " + e.getMessage());
 			}
 	}
-	
-	public static void initJWLPWikipedia() throws WikiApiException {
-		
-		String host = "borat.inesc-id.pt";
-		String database = "JWLPWikiEn";
-		String user = "wiki";
-		String password = "07dqeuedm"; 
-		
-		// configure the database connection parameters
-		dbConfig = new DatabaseConfiguration();
-		dbConfig.setHost(host);
-		dbConfig.setDatabase(database);
-		dbConfig.setUser(user);
-		dbConfig.setPassword(password);
-		dbConfig.setLanguage(Language.english);
-
-		System.out.print("Loading JWLP Wikipedia interface...");
-		
-		// Create the Wikipedia object
-		wiki = new Wikipedia(dbConfig);
-		
-		System.out.println("\t" + wiki.getWikipediaId());
-		 
-	}
-	
 }

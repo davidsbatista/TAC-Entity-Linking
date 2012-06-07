@@ -1,5 +1,7 @@
 package tac.kbp.slotfilling.queries;
 
+import tac.kbp.slotfilling.relations.ReverbRelation;
+
 public class SystemAnswer {
 	
 	public String slot_name;
@@ -10,4 +12,6 @@ public class SystemAnswer {
 	public int start_offset_justification;
 	public int end_offset_justification;
 	public Float confidence_score;	
+	
+	public ReverbRelation relation;
 }

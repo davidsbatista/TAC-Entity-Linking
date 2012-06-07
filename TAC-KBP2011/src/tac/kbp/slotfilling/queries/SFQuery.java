@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -19,6 +20,8 @@ import org.apache.lucene.search.TopDocs;
 
 import tac.kbp.slotfilling.configuration.Definitions;
 import tac.kbp.slotfilling.queries.attributes.Attributes;
+import tac.kbp.slotfilling.relations.DocumentRelations;
+import tac.kbp.slotfilling.relations.ReverbRelation;
 import tac.kbp.utils.string.Abbreviations;
 import tac.kbp.utils.string.ExtractAbbrev;
 
@@ -65,7 +68,9 @@ public class SFQuery {
 	
 	/* query system answers */
 	public HashMultimap<String,SystemAnswer> system_answers;
-
+	
+	/* query document's relations */
+	public LinkedList<DocumentRelations> relations;
 	
 	
 	public SFQuery() {
@@ -101,6 +106,9 @@ public class SFQuery {
 		/* correct answers and system answers */
 		this.correct_answers = HashMultimap.create();
 		this.system_answers = HashMultimap.create();
+
+		/* retrieved document's relations */
+		this.relations = new LinkedList<DocumentRelations>(); 
 		
 		/* slots to be ignored */
 		this.ignore = new HashSet<String>();

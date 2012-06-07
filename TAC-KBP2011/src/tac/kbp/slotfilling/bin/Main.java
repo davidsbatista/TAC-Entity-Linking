@@ -129,7 +129,7 @@ public class Main {
 		for (String k : keys) {			
 			SFQuery q = queries.get(k);
 			
-			System.out.println('\n' + q.query_id + '\t' + q.name + '\t' + q.documents.size());
+			//System.out.println('\n' + q.query_id + '\t' + q.name + '\t' + q.documents.size());
 			
 			if (q.documents.size()==0) {
 				queries_with_zero_docs.add(q);
@@ -176,14 +176,9 @@ public class Main {
 						}					
 					}
 					q.coverages.put(slot_name, (float) docs_found.size() / (float) docs_hold_answers.size());
-					System.out.println(slot_name + '\t' + q.coverages.get(slot_name));					
+					//System.out.println(slot_name + '\t' + q.coverages.get(slot_name));					
 				}				
 			}
-			
-			if (q.query_id.equalsIgnoreCase("SF42")) {
-				System.out.println();
-			}
-			
 		}
 		
 		System.out.println("\nQueries with 0 docs retrieved: " + queries_with_zero_docs.size());
@@ -290,7 +285,6 @@ public class Main {
 		
 	}
 	
-	
 	public static String getAnswerDocument(String docid) throws IOException {
         Term t = new Term("docid", docid); 
         Query query = new TermQuery(t);                 
@@ -299,8 +293,7 @@ public class Main {
         Document doc = Definitions.documents.doc(scoredocs[0].doc);        
         return doc.get("text");
 	}
-	
-	
+		
 	public static void loadAttributes() {
 		
 		PER_attributes.add("per:alternate_names");
@@ -347,11 +340,10 @@ public class Main {
 		ORG_attributes.add("org:website");	
 	}
 	
-	
 	public static void run(CommandLine line) throws Exception {
 		
 		Definitions.loadDocumentCollecion();
-		//Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
+		Definitions.loadClassifier("/collections/TAC-2011/resources/all.3class.distsim.crf.ser.gz");
 		Definitions.connectionREDIS();
 		Definitions.loadKBIndex();
 		Definitions.getDBConnection();
@@ -466,19 +458,14 @@ public class Main {
 		}
 		*/
 		
-		parseQueries(train_queries);
-		
-		//System.out.println("\n\n2010 queries");
-		//recall(train_queries);
-		//System.out.println();
-		
-		selectExtractions(train_queries);		
-		evaluation(train_queries);
-		
+		parseQueries(train_queries);		
+		recall(train_queries);
+		getExtractions(train_queries);
+		//selectExtractions(train_queries);
+		evaluation(train_queries);		
 		//outputresults(train_queries);
 		Definitions.closeDBConnection();
 	}
-	
 	
 	public static DocumentRelations getExtractions(String docid, SFQuery q) throws Exception {
 		
@@ -515,7 +502,7 @@ public class Main {
 			String arg2 = resultSet.getString(3);
 			Float confidence = resultSet.getFloat(4);
 			String sentence = resultSet.getString(5);			
-			ReverbRelation relation = new ReverbRelation(docid, arg1, rel, arg2, sentence, confidence);		
+			ReverbRelation relation = new ReverbRelation(docid, arg1, rel, arg2, sentence, confidence);			
 			relations.add(relation);
 		}
 		
@@ -523,8 +510,7 @@ public class Main {
 		
 		return doc;
 	}
-	
-	
+		
 	public static void evaluation(Map<String, SFQuery> queries) {
 		
 		int correct_slots = 0;
@@ -535,147 +521,192 @@ public class Main {
 		for (String keyQ : keys) {
 			
 			SFQuery q = queries.get(keyQ);
-			System.out.println('\n' + q.query_id + '\t' + q.name + '\t' + q.coverage + '\t' + q.documents.size());						
-			Set<String> answers = q.system_answers.keySet();
+			System.out.println(q.query_id + '\t' + q.name + '\t' + q.coverage + '\t' + q.documents.size());			
+			
+			Set<String> answers = q.correct_answers.keySet();			
+			System.out.println("\ncorrect answers: ");
 			
 			for (String a : answers) {				
-				Set<SystemAnswer> answersSet = q.system_answers.get(a);
-				
-				if (answersSet.size()>0) {
-					System.out.println("slot name: " + a + '\t' + answersSet.size());
-					for (SystemAnswer systemAnswer : answersSet) {						
-						System.out.println("\tsystem answer: " + '\t' + systemAnswer.slot_filler);
-					}
-				}				
-				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(a);
-				
-				if (correctAnswers.size()>0) {				
+				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(a);								
+				if (correctAnswers.size()>0) {					
 					for (AnswerGoldenStandard correctAnswer : correctAnswers) {						
-						System.out.println("\tcorrect answer: " + '\t' + correctAnswer.response);
+						System.out.println(correctAnswer.slot_name + "\t\t" + correctAnswer.response + "\t\t" + correctAnswer.docid);
 					}
+				}
+				
+			}
+			
+			if (q.coverage>0.5) {				
+				//TODO: print only relations that match a pattern
+				for (DocumentRelations docRelations : q.relations) {
+					System.out.println("\n");
+					System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
+					for (ReverbRelation relation : docRelations.relations) {
+						System.out.println(relation.arg1 + ' ' + relation.rel + ' ' + relation.arg2);
+					}				
 				}				
 			}
+			
+			
+			
+			/*
+			answers = q.system_answers.keySet();			
+			System.out.println("\nsystem answers: ");
+			for (String a : answers) {			
+				Set<SystemAnswer> systemAnswers = q.system_answers.get(a);
+				if (systemAnswers.size()>0) {
+					for (SystemAnswer systemAnswer : systemAnswers) {						
+						System.out.println(systemAnswer.slot_name + "\t\t" + systemAnswer.slot_filler + "\t\t" + systemAnswer.relation.docid);												
+						//System.out.println(systemAnswer.relation.arg1_tagged);
+						//System.out.println(systemAnswer.relation.arg2_tagged);
+						//System.out.println(systemAnswer.relation.sentence_tagged);
+					}
+				}
+			}
+			*/
+			System.out.println("\n");
 		}
 	}
-
 	
-	public static void selectExtractions(Map<String, SFQuery> queries) throws Exception {
+	public static void getExtractions(Map<String, SFQuery> queries) throws Exception {
+
+		System.out.println("Retrieving relations...");
 		
 		Set<String> keys = queries.keySet();		
 		
 		for (String keyQ : keys) {			
 			SFQuery q = queries.get(keyQ);
 			
-			System.out.println("query: " + q.name);
-			System.out.println("support document: " + q.docid);
-			System.out.println();
+			System.out.println(q.query_id + '\t' + q.name);
 			
-			/* Retrieve all relations extracted by ReVerb for each document retrieved and
-			/* extract relations based on the slots that have to be filled, using the patterns mappings */
-			
+			/* Retrieve all relations extracted by ReVerb for each document */ 
 			for (Document d : q.documents) {			
 				DocumentRelations relations = getExtractions(d.get("docid"),q);				
-				if (q.etype.equalsIgnoreCase("PER")) {					
-					for (ReverbRelation relation : relations.relations) {						
-						for (String attribute: PER_attributes) {							
-							if (!q.ignore.contains(attribute)) {
-								
-								/* place_of_residence */
-								if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
-									LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
-									for (String pattern : patterns) {
-										if (relation.rel.equalsIgnoreCase(pattern)) {
-											SystemAnswer answer = new SystemAnswer();
-											answer.confidence_score = relation.confidence;
-											answer.justify = d.get("docid");
-											//TODO: determine if place is country, state or city
-											answer.slot_name = "per:place_of_residence";											
-											answer.slot_filler = relation.arg1;
-											//TODO: get the offsets of sentence and args
-											answer.start_offset_filler = 0;
-											answer.end_offset_filler = 0;
-											answer.start_offset_justification = 0;
-											answer.end_offset_justification = 0;											
-											q.system_answers.put("per:place_of_residence", answer);
-										}
-									}
+				q.relations.add(relations);
+			}
+		}
+	}
+
+	public static void selectExtractions( Map<String, SFQuery> queries ) {
+		
+		Set<String> train_queries_keys = queries.keySet();
+		
+		for (String q_id : train_queries_keys) {			
+			SFQuery q = queries.get(q_id);			
+			System.out.print(q.query_id + '\t' + q.name);
+			
+			for (DocumentRelations docRelations : q.relations) {
+				System.out.println("\n");
+				System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
+				for (ReverbRelation relation : docRelations.relations) {
+					System.out.println(relation.arg1 + ' ' + relation.rel + ' ' + relation.arg2);
+				}				
+			}
+		}
+		
+		/*
+		if (q.etype.equalsIgnoreCase("PER")) {					
+			for (ReverbRelation relation : relations.relations) {
+				for (String attribute: PER_attributes) {							
+					if (!q.ignore.contains(attribute)) {								
+						/* place_of_residence 
+						if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
+							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
+							for (String pattern : patterns) {
+								if (relation.rel.equalsIgnoreCase(pattern)) {
+									SystemAnswer answer = new SystemAnswer();
+									answer.confidence_score = relation.confidence;
+									answer.justify = d.get("docid");
+									//TODO: determine if place is country, state or city
+									answer.slot_name = "per:place_of_residence";											
+									answer.slot_filler = relation.arg2;
+									//TODO: get the offsets of sentence and args
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;
+									q.system_answers.put("per:place_of_residence", answer);
 								}
-								
-								/* place_of_death */									
-								else if (attribute.equalsIgnoreCase("per:city_of_death") || attribute.equalsIgnoreCase("per:stateorprovince_of_death") || attribute.equalsIgnoreCase("per:country_of_death")) {									
-									LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_death");
-									for (String pattern : patterns) {
-										if (relation.rel.equalsIgnoreCase(pattern)) {
-											SystemAnswer answer = new SystemAnswer();
-											answer.confidence_score = relation.confidence;
-											answer.justify = d.get("docid");
-											//TODO: determine if place is country, state or city
-											answer.slot_name = "per:place_of_death";											
-											answer.slot_filler = relation.arg1;
-											//TODO: get the offsets of sentence and args
-											answer.start_offset_filler = 0;
-											answer.end_offset_filler = 0;
-											answer.start_offset_justification = 0;
-											answer.end_offset_justification = 0;											
-											q.system_answers.put("per:place_of_death", answer);
-										}
-									}
-								}
-								/* place_of_birth */
-								else if (attribute.equalsIgnoreCase("per:country_of_birth") || attribute.equalsIgnoreCase("per:stateorprovince_of_birth") || attribute.equalsIgnoreCase("per:city_of_birth")) {									
-									LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_birth");
-									for (String pattern : patterns) {										
-										if (relation.rel.equalsIgnoreCase(pattern)) {
-											SystemAnswer answer = new SystemAnswer();
-											answer.confidence_score = relation.confidence;
-											answer.justify = d.get("docid");
-											//TODO: determine if place is country, state or city
-											answer.slot_name = "per:place_of_birth";											
-											answer.slot_filler = relation.arg1;
-											//TODO: get the offsets of sentence and args
-											answer.start_offset_filler = 0;
-											answer.end_offset_filler = 0;
-											answer.start_offset_justification = 0;
-											answer.end_offset_justification = 0;											
-											q.system_answers.put("per:place_of_birth", answer);
-										}
-									}
-								}
-								
-								else {
-									/* other patterns */
-									LinkedList<String> patterns = PERSlots.slots_patterns.get(attribute);
-									for (String pattern : patterns) {
-										if (relation.rel.equalsIgnoreCase(pattern)) {
-											System.out.println("MATCH!");
-											SystemAnswer answer = new SystemAnswer();
-											answer.confidence_score = relation.confidence;
-											answer.justify = d.get("docid");
-											answer.slot_name = attribute;											
-											answer.slot_filler = relation.arg1;
-											//TODO: get the offsets of sentence and args
-											answer.start_offset_filler = 0;
-											answer.end_offset_filler = 0;
-											answer.start_offset_justification = 0;
-											answer.end_offset_justification = 0;											
-											q.system_answers.put(attribute, answer);
-										}
-									}
-									
-								}								
 							}
 						}
+						
+						/* place_of_death 								
+						else if (attribute.equalsIgnoreCase("per:city_of_death") || attribute.equalsIgnoreCase("per:stateorprovince_of_death") || attribute.equalsIgnoreCase("per:country_of_death")) {									
+							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_death");
+							for (String pattern : patterns) {
+								if (relation.rel.equalsIgnoreCase(pattern)) {
+									SystemAnswer answer = new SystemAnswer();
+									answer.confidence_score = relation.confidence;
+									answer.justify = d.get("docid");
+									//TODO: determine if place is country, state or city
+									answer.slot_name = "per:place_of_death";											
+									answer.slot_filler = relation.arg2;
+									//TODO: get the offsets of sentence and args
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;
+									q.system_answers.put("per:place_of_death", answer);
+								}
+							}
+						}
+						/* place_of_birth 
+						else if (attribute.equalsIgnoreCase("per:country_of_birth") || attribute.equalsIgnoreCase("per:stateorprovince_of_birth") || attribute.equalsIgnoreCase("per:city_of_birth")) {									
+							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_birth");
+							for (String pattern : patterns) {										
+								if (relation.rel.equalsIgnoreCase(pattern)) {
+									SystemAnswer answer = new SystemAnswer();
+									answer.confidence_score = relation.confidence;
+									answer.justify = d.get("docid");
+									//TODO: determine if place is country, state or city
+									answer.slot_name = "per:place_of_birth";											
+									answer.slot_filler = relation.arg1;
+									//TODO: get the offsets of sentence and args
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;
+									q.system_answers.put("per:place_of_birth", answer);
+								}
+							}
+						}
+						
+						else {
+							/* other patterns 
+							LinkedList<String> patterns = PERSlots.slots_patterns.get(attribute);
+							for (String pattern : patterns) {
+								if (relation.rel.equalsIgnoreCase(pattern)) {
+									SystemAnswer answer = new SystemAnswer();
+									answer.confidence_score = relation.confidence;
+									answer.justify = d.get("docid");
+									answer.slot_name = attribute;											
+									answer.slot_filler = relation.arg2;
+									//TODO: get the offsets of sentence and args
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;											
+									q.system_answers.put(attribute, answer);
+								}
+							}
+						}								
 					}
-					
 				}
-			
-				else if (q.etype.equalsIgnoreCase("ORG"))  {
-				
-				}
-			}			
-		}		
+			}
+		}
+	
+		else if (q.etype.equalsIgnoreCase("ORG"))  {		
+		}
+	}	
+	*/
 	}
-		
+
+	
+					
 	/*
 	public static void outputresults(Map<String, SFQuery> queries) throws IOException {
 		
