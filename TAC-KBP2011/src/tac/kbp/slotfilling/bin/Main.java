@@ -473,15 +473,16 @@ public class Main {
 		
 		PreparedStatement stm = (PreparedStatement) Definitions.connection.prepareStatement(
 				
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction1 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction2 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction3 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction4 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction5 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction6 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction7 WHERE file_name_sha1 = ? UNION " +
-			"SELECT arg1, rel, arg2, confidence, sentence FROM extraction8 WHERE file_name_sha1 = ? " +
-			"ORDER BY confidence DESC"			
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction1 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction2 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction3 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction4 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction5 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction6 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction7 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction8 WHERE file_name_sha1 = ? UNION " +
+			"SELECT arg1, rel, arg2, confidence, sentence, filename, sentence_number FROM extraction9 WHERE file_name_sha1 = ? " +
+			"ORDER BY filename,sentence_number ASC"			
 			);
 		
 		stm.setString(1, filename_sha1);
@@ -492,6 +493,7 @@ public class Main {
 		stm.setString(6, filename_sha1);
 		stm.setString(7, filename_sha1);
 		stm.setString(8, filename_sha1);
+		stm.setString(9, filename_sha1);
 		
 		ResultSet resultSet = stm.executeQuery();
 		LinkedList<ReverbRelation> relations = new LinkedList<ReverbRelation>();
@@ -542,7 +544,13 @@ public class Main {
 					System.out.println("\n");
 					System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
 					for (ReverbRelation relation : docRelations.relations) {
-						System.out.println(relation.arg1 + ' ' + relation.rel + ' ' + relation.arg2);
+						System.out.println(relation.arg1 + " - " + relation.rel + " - " + relation.arg2);
+					}				
+				}
+				
+				if (q.relations.size() == 0) {
+					for (Document doc : q.documents) {
+						System.out.println(doc.get("docid"));
 					}				
 				}				
 			}
@@ -599,7 +607,7 @@ public class Main {
 				System.out.println("\n");
 				System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
 				for (ReverbRelation relation : docRelations.relations) {
-					System.out.println(relation.arg1 + ' ' + relation.rel + ' ' + relation.arg2);
+					System.out.println(relation.arg1 + " - " + relation.rel + " - " + relation.arg2);
 				}				
 			}
 		}
