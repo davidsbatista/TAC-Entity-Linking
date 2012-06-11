@@ -115,6 +115,19 @@ public class SFQuery {
 		
 	}
 	
+	public void TAGRelations() {
+		
+		for (DocumentRelations document : this.relations) {
+			for (ReverbRelation relation : document.relations) {
+				
+				relation.arg1_tagged = tac.kbp.slotfilling.configuration.Definitions.classifier.classifyWithInlineXML(relation.arg1);
+				relation.arg2_tagged = tac.kbp.slotfilling.configuration.Definitions.classifier.classifyWithInlineXML(relation.arg2);
+				relation.sentence = tac.kbp.slotfilling.configuration.Definitions.classifier.classifyWithInlineXML(relation.sentence);
+			}			
+		}
+
+	}
+	
 	public void getSupportDocument() throws IOException {
         Term t = new Term("docid", this.docid); 
         Query query = new TermQuery(t);

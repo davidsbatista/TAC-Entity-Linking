@@ -31,7 +31,6 @@ import tac.kbp.slotfilling.patterns.slots.PERSlots;
 import tac.kbp.slotfilling.queries.AnswerGoldenStandard;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
-import tac.kbp.slotfilling.queries.SystemAnswer;
 import tac.kbp.slotfilling.relations.DocumentRelations;
 import tac.kbp.slotfilling.relations.ReverbRelation;
 import tac.kbp.utils.SHA1;
