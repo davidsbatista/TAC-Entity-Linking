@@ -20,17 +20,38 @@ public class ORGSlots {
 		
 		
 		/* org:top_members_employees */
-		patterns = new LinkedList<String>();				
+		patterns = new LinkedList<String>();
+		patterns.add("heads the");
+		patterns.add("secretary general");
+		patterns.add("vice president of");
+		patterns.add("leader of");
+		patterns.add("director of");
+		patterns.add("general of");
+		patterns.add("chairman of");
+		patterns.add("chief of");
+		patterns.add("chief executive of");
+		patterns.add("archbishop of");
+		patterns.add("president of");
+		patterns.add("manager of");
+		patterns.add("chief commissioner of");
+		patterns.add("head of");
+		patterns.add("president for");
+		patterns.add("managing director");
+		patterns.add("chief executive");
 		ORGSlots.slots_patterns.put("org:top_members_employees", patterns);
 		
 		
 		/* org:number_of_employees_members */
-		patterns = new LinkedList<String>();		
+		patterns = new LinkedList<String>();
+		patterns.add("employs");
 		ORGSlots.slots_patterns.put("org:number_of_employees_members", patterns);
 		
 		
 		/* org:members */
 		patterns = new LinkedList<String>();		
+		patterns.add("the parent of");
+		patterns.add("owns");
+		patterns.add("acquired by");
 		ORGSlots.slots_patterns.put("org:members", patterns);
 		
 		

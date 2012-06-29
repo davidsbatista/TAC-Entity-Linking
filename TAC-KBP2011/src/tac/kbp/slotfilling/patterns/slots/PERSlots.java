@@ -12,7 +12,7 @@ public class PERSlots {
 		/* per:country_of_birth
 		 * per:stateorprovince_of_birth
 		 * per:city_of_birth
-		 */		
+		 */	
 		LinkedList<String> patterns = new LinkedList<String>();
 		patterns.add("born in");
 		patterns.add("originally from");

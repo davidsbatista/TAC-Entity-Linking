@@ -3,6 +3,7 @@ package tac.kbp.slotfilling.bin;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
@@ -31,10 +32,12 @@ import tac.kbp.slotfilling.patterns.slots.PERSlots;
 import tac.kbp.slotfilling.queries.AnswerGoldenStandard;
 import tac.kbp.slotfilling.queries.LoadQueries;
 import tac.kbp.slotfilling.queries.SFQuery;
+import tac.kbp.slotfilling.queries.SystemAnswer;
 import tac.kbp.slotfilling.relations.DocumentRelations;
 import tac.kbp.slotfilling.relations.ReverbRelation;
 import tac.kbp.utils.SHA1;
 
+import com.google.common.collect.Multiset;
 import com.mysql.jdbc.PreparedStatement;
 
 public class Main {
@@ -51,15 +54,11 @@ public class Main {
 		options.addOption("run", false, "complete run");
 		
 		// add argument options
-		Option queriesTrain = OptionBuilder.withArgName("queriesTrain").hasArg().withDescription("XML file containing queries for trainning").create( "queriesTrain" );
-		Option queriesTest = OptionBuilder.withArgName("queriesTest").hasArg().withDescription("XML file containing queries for testing").create( "queriesTest" );
-		Option queriesTestAnswers = OptionBuilder.withArgName("queriesTestAnswers").hasArg().withDescription("test queries answers").create( "queriesTestAnswers" );
-		Option queriesTrainAnswers = OptionBuilder.withArgName("queriesTrainAnswers").hasArg().withDescription("train queries answers").create( "queriesTrainAnswers" );
-				
-		options.addOption(queriesTrain);
-		options.addOption(queriesTrainAnswers);
-		options.addOption(queriesTest);
-		options.addOption(queriesTestAnswers);
+		Option queries = OptionBuilder.withArgName("queries").hasArg().withDescription("XML file containing queries for trainning").create("queries");		
+		Option answers = OptionBuilder.withArgName("answers").hasArg().withDescription("queries answers").create("answers");
+						
+		options.addOption(queries);
+		options.addOption(answers);
 				
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse( options, args );
@@ -85,11 +84,6 @@ public class Main {
 			
 			SFQuery q = queries.get(k);
 			
-			/*
-			System.out.println("q_id: " + q.query_id);
-			System.out.println("name: " + q.name);	
-			System.out.println("ignore:" + q.ignore);
-			*/			
 			q.getSupportDocument();
 			
 			// get nodeid from KB: wiki_text, other attributes
@@ -161,7 +155,6 @@ public class Main {
 					}
 					
 					//System.out.println(slot_name + "\t #answers: "+answer.size() + "\t#docs with answers:"+docs_hold_answers.size());
-					
 					
 					Set<String> docs_found = new HashSet<String>();
 					/* Check if any of the retrieved docs is in the set */
@@ -348,21 +341,14 @@ public class Main {
 		Definitions.getDBConnection();
 		loadAttributes();
 		
-		/* Load Train Queries + answers */
-		String queriesTrainFile = line.getOptionValue("queriesTrain");
+		/* Load Queries + answers */
+		String queriesTrainFile = line.getOptionValue("queries");
 		System.out.println("\nLoading train queries from: " + queriesTrainFile);
 		Map<String, SFQuery> train_queries = LoadQueries.loadXML(queriesTrainFile);		
-		String queriesTrainAnswers = line.getOptionValue("queriesTrainAnswers");
+		String queriesTrainAnswers = line.getOptionValue("answers");
 		loadQueriesAnswers(queriesTrainAnswers,train_queries);
 		
-		System.out.println("Loaded: " + train_queries.size() + " train queries");
-		
-		/* Load Test Queries + answers */
-		String queriesTestFile = line.getOptionValue("queriesTest");
-		System.out.println("\nLoading test queries from: " + queriesTestFile);
-		Map<String, SFQuery> test_queries = LoadQueries.loadXML(queriesTestFile);		
-		String queriesTestAnswers = line.getOptionValue("queriesTestAnswers");
-		loadQueriesAnswers(queriesTestAnswers,test_queries);
+		System.out.println("Loaded: " + train_queries.size() + " queries");
 		
 		/*
 		 * Load patterns to extract slot answers
@@ -370,8 +356,6 @@ public class Main {
 		
 		PERSlots.load_patterns();
 		ORGSlots.load_patterns();
-		
-		System.out.println("Loaded: " + test_queries.size() + " test queries");
 		
 		/* For the Train Queries: 
 		 * 		get document answer for each attribute;
@@ -459,10 +443,10 @@ public class Main {
 		
 		parseQueries(train_queries);		
 		recall(train_queries);
-		getExtractions(train_queries);
-		//selectExtractions(train_queries);
+		getExtractions(train_queries);		
+		selectExtractions(train_queries);		
 		evaluation(train_queries);		
-		//outputresults(train_queries);
+		outputresults(train_queries);		
 		Definitions.closeDBConnection();
 	}
 	
@@ -584,68 +568,93 @@ public class Main {
 		for (String keyQ : keys) {			
 			SFQuery q = queries.get(keyQ);
 			
-			System.out.println(q.query_id + '\t' + q.name);
+			System.out.print(q.query_id + '\t' + q.name + '\t' + "#documents: " + q.documents.size());
+			
+			int total_relations = 0;
 			
 			/* Retrieve all relations extracted by ReVerb for each document */ 
 			for (Document d : q.documents) {			
-				DocumentRelations relations = getExtractions(d.get("docid"),q);				
+				DocumentRelations relations = getExtractions(d.get("docid"),q);
+				total_relations += relations.relations.size();
 				q.relations.add(relations);
 			}
+			
+			System.out.println("\t#relations: " + total_relations );
 		}
 	}
 
 	public static void selectExtractions( Map<String, SFQuery> queries ) {
 		
-		Set<String> train_queries_keys = queries.keySet();
+		//TODO: fazer match de forma a evitar falsos positivos
 		
-		for (String q_id : train_queries_keys) {			
+		/* falsely accused of being*/
+		/* have never been accused of */
+		/* were wrongly accused of */
+
+		/* was not born in */
+		
+		/* joined by */
+		/* joined in */
+		/* joined to */
+		/* joined at */
+		/* joined forces with */
+		/* joined [A-Z]+ of */
+		/* joined [A-Z]+ for */
+		/* joined [A-Z]+ as */
+		/* joined with */
+		/* joined from*/
+		
+		/* can also be paid by */
+		
+		Set<String> queries_keys = queries.keySet();
+		
+		for (String q_id : queries_keys) {			
 			SFQuery q = queries.get(q_id);			
 			System.out.print(q.query_id + '\t' + q.name);
-			
-			for (DocumentRelations docRelations : q.relations) {
-				System.out.println("\n");
-				System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
-				for (ReverbRelation relation : docRelations.relations) {
-					System.out.println(relation.arg1 + " - " + relation.rel + " - " + relation.arg2);
-				}				
-			}
-		}
 		
-		/*
-		if (q.etype.equalsIgnoreCase("PER")) {					
-			for (ReverbRelation relation : relations.relations) {
-				for (String attribute: PER_attributes) {							
-					if (!q.ignore.contains(attribute)) {								
-						/* place_of_residence 
-						if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
-							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
-							for (String pattern : patterns) {
-								if (relation.rel.equalsIgnoreCase(pattern)) {
-									SystemAnswer answer = new SystemAnswer();
-									answer.confidence_score = relation.confidence;
-									answer.justify = d.get("docid");
-									//TODO: determine if place is country, state or city
-									answer.slot_name = "per:place_of_residence";											
-									answer.slot_filler = relation.arg2;
-									//TODO: get the offsets of sentence and args
-									answer.start_offset_filler = 0;
-									answer.end_offset_filler = 0;
-									answer.start_offset_justification = 0;
-									answer.end_offset_justification = 0;
-									answer.relation = relation;
-									q.system_answers.put("per:place_of_residence", answer);
+		if (q.etype.equalsIgnoreCase("PER")) {
+			
+			for (DocumentRelations docRelations : q.relations) { 
+				for (ReverbRelation relation : docRelations.relations) {
+					for (String attribute: PER_attributes) {							
+						
+						if (!q.ignore.contains(attribute)) {
+							
+							/* place_of_residence */ 
+							if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
+								LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
+								
+								for (String pattern : patterns) {
+									
+									//TODO: fazer outro tipo de matching: regex ou similaridade de strings */
+									
+									if (relation.rel.equalsIgnoreCase(pattern)) {
+										SystemAnswer answer = new SystemAnswer();
+										answer.confidence_score = relation.confidence;
+										answer.justify = docRelations.docid;
+										//TODO: determine if place is country, state or city
+										answer.slot_name = "per:place_of_residence";											
+										answer.slot_filler = relation.arg2;
+										//TODO: get the offsets of sentence and args
+										answer.start_offset_filler = 0;
+										answer.end_offset_filler = 0;
+										answer.start_offset_justification = 0;
+										answer.end_offset_justification = 0;
+										answer.relation = relation;
+										q.system_answers.put("per:place_of_residence", answer);
+									}							
 								}
 							}
-						}
 						
-						/* place_of_death 								
+						
+						/* place_of_death */ 								
 						else if (attribute.equalsIgnoreCase("per:city_of_death") || attribute.equalsIgnoreCase("per:stateorprovince_of_death") || attribute.equalsIgnoreCase("per:country_of_death")) {									
 							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_death");
 							for (String pattern : patterns) {
 								if (relation.rel.equalsIgnoreCase(pattern)) {
 									SystemAnswer answer = new SystemAnswer();
 									answer.confidence_score = relation.confidence;
-									answer.justify = d.get("docid");
+									answer.justify = docRelations.docid;
 									//TODO: determine if place is country, state or city
 									answer.slot_name = "per:place_of_death";											
 									answer.slot_filler = relation.arg2;
@@ -659,14 +668,15 @@ public class Main {
 								}
 							}
 						}
-						/* place_of_birth 
+							
+						/* place_of_birth */
 						else if (attribute.equalsIgnoreCase("per:country_of_birth") || attribute.equalsIgnoreCase("per:stateorprovince_of_birth") || attribute.equalsIgnoreCase("per:city_of_birth")) {									
 							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_birth");
 							for (String pattern : patterns) {										
 								if (relation.rel.equalsIgnoreCase(pattern)) {
 									SystemAnswer answer = new SystemAnswer();
 									answer.confidence_score = relation.confidence;
-									answer.justify = d.get("docid");
+									answer.justify = docRelations.docid;
 									//TODO: determine if place is country, state or city
 									answer.slot_name = "per:place_of_birth";											
 									answer.slot_filler = relation.arg1;
@@ -682,13 +692,13 @@ public class Main {
 						}
 						
 						else {
-							/* other patterns 
+							/* other patterns */ 
 							LinkedList<String> patterns = PERSlots.slots_patterns.get(attribute);
 							for (String pattern : patterns) {
 								if (relation.rel.equalsIgnoreCase(pattern)) {
 									SystemAnswer answer = new SystemAnswer();
 									answer.confidence_score = relation.confidence;
-									answer.justify = d.get("docid");
+									answer.justify = docRelations.docid;
 									answer.slot_name = attribute;											
 									answer.slot_filler = relation.arg2;
 									//TODO: get the offsets of sentence and args
@@ -701,6 +711,7 @@ public class Main {
 								}
 							}
 						}								
+						}
 					}
 				}
 			}
@@ -709,12 +720,8 @@ public class Main {
 		else if (q.etype.equalsIgnoreCase("ORG"))  {		
 		}
 	}	
-	*/
 	}
 
-	
-					
-	/*
 	public static void outputresults(Map<String, SFQuery> queries) throws IOException {
 		
 		int unique_run_id = 0;		
@@ -724,18 +731,25 @@ public class Main {
 		for (String keyQ : keys) {			
 			SFQuery q = queries.get(keyQ);
 			
-			for (HashMap<String, String> answer : q.system_answers) {
+			Multiset<String> answers_keys = q.system_answers.keys();
 				
-				output.write(q.query_id + '\t' + answer.get("slot_name") + '\t' + Integer.toString(unique_run_id) + '\t' + answer.get("justify") + 
-						'\t' + answer.get("slot_filler") + '\t' + answer.get("start_offset_filler") + '\t' + answer.get("end_offset_filler") + '\t'
-						+ answer.get("start_offset_justification") + '\t' + answer.get("end_offset_justification") + '\t' + 
-						answer.get("confidence_score") + '\n');
+			for (String key : answers_keys) {				
+				Set<SystemAnswer> answers = q.system_answers.get(key);								
+				float top_score = 0;
+				SystemAnswer answer = new SystemAnswer();				
+				for (SystemAnswer systemAnswer : answers) {					
+					if (systemAnswer.confidence_score > top_score) {
+						answer = systemAnswer;
+					}
+				}
+				output.write(q.query_id + '\t' + answer.slot_name + '\t' + Integer.toString(unique_run_id) + '\t' + answer.justify + 
+						'\t' + answer.slot_filler + '\t' + answer.start_offset_filler + '\t' + answer.end_offset_filler + '\t'
+						+ answer.start_offset_justification + '\t' + answer.end_offset_justification + '\t' + answer.confidence_score + '\n');
 			}
 		}
 		
 		output.close();
 	}
-	*/
 	
 	public static void printResults(Map<String, SFQuery> queries) throws Exception {
 		//TODO: for which slots were the documents with the answer retrieved and for which slots were not
