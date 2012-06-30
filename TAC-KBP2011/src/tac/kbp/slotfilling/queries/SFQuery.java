@@ -68,6 +68,7 @@ public class SFQuery {
 	
 	/* query system answers */
 	public HashMultimap<String,SystemAnswer> system_answers;
+	public HashMap<String,SystemAnswer> selected_answers;
 	
 	/* query document's relations */
 	public LinkedList<DocumentRelations> relations;
@@ -112,6 +113,9 @@ public class SFQuery {
 		
 		/* slots to be ignored */
 		this.ignore = new HashSet<String>();
+		
+		/* single answer for some slots */
+		this.selected_answers = new HashMap<String, SystemAnswer>();
 		
 	}
 	
@@ -255,7 +259,7 @@ public class SFQuery {
 			((PhraseQuery) query).add(new Term("text", name_parts[i]) );
 		}
 						
-	    TopDocs docs = Definitions.documents.search(query, 50);	    
+	    TopDocs docs = Definitions.documents.search(query, Definitions.max_docs);	    
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
 	    System.out.println(this.query_id + '\t' + this.name + '\t' + scoredocs.length);
 	    

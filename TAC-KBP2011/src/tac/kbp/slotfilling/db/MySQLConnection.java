@@ -19,7 +19,6 @@ public class MySQLConnection {
 		}
 		
 		catch (Exception e) {
-			// TODO: handle exception
 			System.out.println(e);
 			e.printStackTrace();
 		}

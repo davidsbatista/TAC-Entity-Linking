@@ -4,14 +4,13 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Set;
 
 import org.apache.lucene.index.CorruptIndexException;
@@ -21,21 +20,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import redis.clients.jedis.Jedis;
-import tac.kbp.entitylinking.queries.GoldQuery;
-import tac.kbp.entitylinking.queries.ELQuery;
 import tac.kbp.kb.index.spellchecker.SpellChecker;
 import tac.kbp.slotfilling.db.MySQLConnection;
-import tac.kbp.utils.misc.BigFile;
 
 import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.ExactDictionaryChunker;
 import com.aliasi.dict.MapDictionary;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
-
-import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
-import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
-import de.tudarmstadt.ukp.wikipedia.api.WikiConstants.Language;
-import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
@@ -43,6 +34,8 @@ import edu.stanford.nlp.ie.crf.CRFClassifier;
 public class Definitions {
 		
 	public static String basePath = "/collections/TAC-2011/";
+	
+	public static int max_docs = 70;
 	
 	/* indexes locations */
 	public static String KB_location = basePath+"index";	
@@ -61,10 +54,8 @@ public class Definitions {
 	public static String entities = basePath+"resources/entities.txt";
 	public static ExactDictionaryChunker chunker = null;
 	
-
 	/* Lucene indexes */
 	public static IndexSearcher knowledge_base = null;
-	public static IndexSearcher wikipediaEn = null;
 	public static IndexSearcher documents = null;
 	public static SpellChecker spellchecker = null;
 	
@@ -83,16 +74,96 @@ public class Definitions {
 	public static Connection connection = null;
 	
 	
+	/* lists of facts and entities */
+	public static HashMap<String,LinkedList<String>> lists_of_answers = new HashMap<String, LinkedList<String>>();
+
+	/* slots with only one answer */
+	public static HashSet<String> one_answer_only = new HashSet<String>();
+	
+
+	/* load slots that have only one possibly answer */
+	public static void oneAnswersSlots() {
+		
+		/*
+	 	 *	just one correct answer:
+		 *
+		 *	per:place of birth
+		 *	per:date of death
+		 *	per:cause of death 	 
+		 *	per:place of death
+		 *  per:date of birth
+		 *  per:age
+		 *  per:origin
+		 *  per:religion
+		 *  
+		 *  several correct answers
+		 *  
+		 *  per:charges
+		 *  per:spouse
+		 *  per:schools attended  
+		 *	per:place of residence 	 
+		 *	per:alternative name  
+		 *	per:title
+		 *	per:member of 
+		 *	per:employee of 	 
+		 *	per:children  
+		 *	per:siblings 
+		 *	per:other family
+		 *	per:parents 
+		 */
+		
+		one_answer_only.add("per:place_of_birth");
+		one_answer_only.add("per:date_of_death");
+		one_answer_only.add("per:cause_of_death");
+		one_answer_only.add("per:place_of_death");
+		one_answer_only.add("per:date_of_birth");
+		one_answer_only.add("per:age");
+		one_answer_only.add("per:origin");
+		one_answer_only.add("per:religion");
+		
+	}
+	
+	
+	/* load lists */
+	public static void loadLists(String path) throws IOException {
+		
+		File folder = new File(path);
+		File[] listOfFiles = folder.listFiles(); 
+		                    
+		for (int i = 0; i < listOfFiles.length; i++) {
+			if (listOfFiles[i].isFile()) { 
+				BufferedReader input = new BufferedReader( new FileReader(path+listOfFiles[i].getName()) );
+				lists_of_answers.put(listOfFiles[i].getName(), new LinkedList<String>());
+				
+				LinkedList<String> list = new LinkedList<String>();
+				
+		    	String aux = null;	    	
+				while ((aux=input.readLine())!=null) {			
+					if (aux.length()==0)
+						continue;
+			
+					list.add(aux);
+				}
+				
+				lists_of_answers.put(listOfFiles[i].getName(), list);
+			}	
+		}
+		
+		Set<String> lists = lists_of_answers.keySet();
+		
+		for (String key : lists) {
+			System.out.println(key + '\t' + lists_of_answers.get(key).size());
+		}
+	}
+	
 	
 	public static void getDBConnection() throws Exception{
 		connection = MySQLConnection.getConnection("root", "07dqeuedm", "jdbc:mysql://borat/reverb-extractions");
 	}
 	
-	
 	public static void closeDBConnection() throws Exception{
 		connection.close();
 	}
-	
 		
 	/* builds a dictionary of entities from the KB */
 	public static void buildDictionary() throws IOException {
@@ -131,14 +202,6 @@ public class Definitions {
 		System.out.println("Document Collection index: " + DocumentCollection_location);		
 		Directory DocsIndexDirectory = FSDirectory.open(new File(DocumentCollection_location));		
 		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));		
-	}
-
-	/* Wikipedia Index */		
-	public static void loadWikipediaIndex() throws CorruptIndexException, IOException {
-		
-		System.out.println("Wikpedia index: " + WikipediaIndexEn_location);		
-		Directory WikiIndexDirectory = FSDirectory.open(new File(WikipediaIndexEn_location));		
-		wikipediaEn = new IndexSearcher((IndexReader.open(WikiIndexDirectory)));	
 	}
 	
 	/* REDIS Connection */
