@@ -10,7 +10,7 @@ public class ORG_Attributes extends Attributes {
 		super();
 		this.attributes = new HashMap<String, Attribute>();
 		this.attributes.put("org:alternate_names", new Attribute());
-		this.attributes.put("org:political/religious_affiliation", new Attribute());
+		this.attributes.put("org:political_religious_affiliation", new Attribute());
 		this.attributes.put("org:top_members/employees", new Attribute());
 		this.attributes.put("org:number_of_employees/members", new Attribute());		
 		this.attributes.put("org:members", new Attribute());
