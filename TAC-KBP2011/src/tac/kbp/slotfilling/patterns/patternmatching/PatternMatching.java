@@ -125,7 +125,7 @@ public class PatternMatching {
 				System.out.println("response: "   + '\t' + pattern.response_value);
 				System.out.println(pattern.sentence);
 				
-				//TODO: tokenize sentence
+				//tokenize sentence
 				//		replace answer and value for ANSWER/VALUE
 				//		extract pattern
 				

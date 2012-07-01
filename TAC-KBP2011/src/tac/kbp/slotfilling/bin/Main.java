@@ -116,18 +116,24 @@ public class Main {
 		
 	}
 	
-	public static void calculate_coverage(Map<String, SFQuery> queries) {
+	public static void statistics(Map<String, SFQuery> queries) {
 				
 		Set<SFQuery> queries_with_zero_docs = new HashSet<SFQuery>();		
-		Set<String> keys = queries.keySet();		
+		Set<String> keys = queries.keySet();
+		
+		int total_n_docs = 0;
+		int total_n_relations = 0;
 		
 		for (String k : keys) {			
 			SFQuery q = queries.get(k);
+			total_n_docs += q.documents.size();
 			
-			//System.out.println('\n' + q.query_id + '\t' + q.name + '\t' + q.documents.size());
+			for (DocumentRelations docRel : q.relations) {
+				total_n_relations += docRel.relations.size();
+			}			 
 			
 			if (q.documents.size()==0) {
-				queries_with_zero_docs.add(q);
+				queries_with_zero_docs.add(q);				
 				Set<String> answers = q.correct_answers.keySet();				
 				for (String slot_name : answers) {
 					Set<AnswerGoldenStandard> answer = q.correct_answers.get(slot_name);
@@ -169,13 +175,12 @@ public class Main {
 							}
 						}					
 					}
-					q.coverages.put(slot_name, (float) docs_found.size() / (float) docs_hold_answers.size());
-					//System.out.println(slot_name + '\t' + q.coverages.get(slot_name));					
+					q.coverages.put(slot_name, (float) docs_found.size() / (float) docs_hold_answers.size());					
 				}				
 			}
 		}
 		
-		System.out.println("\nQueries with 0 docs retrieved: " + queries_with_zero_docs.size());
+				
 		
 		float avg_coverage = 0;
 		int no_answers = 0;
@@ -194,14 +199,15 @@ public class Main {
 					q.coverage += q.coverages.get(string);
 				}
 				
-				q.coverage = q.coverage / q.coverages.size();
-				//TODO: write this to an output file				
-				//System.out.println(q.query_id + '\t' + q.name + '\t' +q.coverage);				
+				q.coverage = q.coverage / q.coverages.size();				
 				avg_coverage += q.coverage;				
 			}
 		}
 		
+		System.out.println("Queries with 0 docs retrieved: " + queries_with_zero_docs.size());
+		System.out.println("Average docs p/ query: " + (float) total_n_docs / (float) queries.size());
 		System.out.println("Average coverage: " + (float) avg_coverage / (float) (queries.size()-no_answers));		
+		System.out.println("Average relations p/ query: " + (float) (float) total_n_relations / (float) queries.size());
 	}
 	
 	public static void loadQueriesAnswers(String filename, Map<String, SFQuery> queries) throws IOException {
@@ -358,10 +364,11 @@ public class Main {
 		ORGSlots.load_patterns();
 		
 		/* parse the queries: alternative senses + extract documents */
+		System.out.println("\nParsing queries...");
 		parseQueries(queries);		
 		
 		/* extract relations from documents */
-		getExtractions(queries);
+		retrieveRelations(queries);
 		
 		/* select relations based on pattern matching */
 		matchPatternExtractions(queries);
@@ -369,13 +376,11 @@ public class Main {
 		/* select best answers for each slot */
 		selectExtractions(queries);
 		
-		/* calculate coverage, recall, precision and other stats*/
-		//TODO: average docs p/ query; 
-		//TODO: average relations per query
-		//TODO: which patterns give more answers
+		/* calculate coverage, avg docs per query, avg relations per query */				
+		statistics(queries);
 		
-		calculate_coverage(queries);		
-		evaluation(queries);
+		/* calculates precision for each query */
+		precision(queries);
 		
 		/* write results file */
 		outputresults(queries);		
@@ -517,16 +522,16 @@ public class Main {
 		return doc;
 	}
 	
-	public static void getExtractions(Map<String, SFQuery> queries) throws Exception {
+	public static void retrieveRelations(Map<String, SFQuery> queries) throws Exception {
 
-		System.out.println("Retrieving relations...\n");
+		System.out.println("\nRetrieving relations...\n");
 		
 		Set<String> keys = queries.keySet();		
 		
 		for (String keyQ : keys) {			
 			SFQuery q = queries.get(keyQ);
 			
-			System.out.print(q.query_id + '\t' + q.name + "\t\t" + q.documents.size());
+			System.out.print(q.query_id + '\t'+ q.etype + '\t' + q.name + "\t" + q.documents.size());
 			
 			int total_relations = 0;
 			
@@ -536,19 +541,21 @@ public class Main {
 				total_relations += relations.relations.size();
 				q.relations.add(relations);
 			}
-			
-			System.out.println("\t#relations: " + total_relations );
+			q.TAGRelations();			
+			System.out.println("\t" + total_relations );
 		}
 	}
 	
-	public static void evaluation(Map<String, SFQuery> queries) {
+	public static void precision(Map<String, SFQuery> queries) {
+		
+		//TODO: substituir: place_of_birth, place_of_death, place_of_headquarters pelo nome correct
 		
 		Set<String> keys = queries.keySet();
 		
 		for (String keyQ : keys) {
 			
 			SFQuery q = queries.get(keyQ);
-			System.out.print(q.query_id + '\t' + q.name + "\t\t" + q.coverage + "\t" + q.documents.size());			
+			System.out.print(q.query_id + '\t' + q.etype + '\t' + q.name + "\t\t" + q.coverage + "\t" + q.documents.size());			
 			
 			/* print correct answers for each slot */
 			/*
@@ -566,8 +573,9 @@ public class Main {
 			*/
 			
 			/*
-			if (q.coverage>0.5) {				
-				//TODO: print only relations that match a pattern
+			 * print relations with coverage > 0.5 */
+			/*
+			if (q.coverage>0.5) {								
 				for (DocumentRelations docRelations : q.relations) {
 					System.out.println("\n");
 					System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
@@ -600,41 +608,29 @@ public class Main {
 			
 			Set<String> slotsWithAnswer = q.correct_answers.keySet();
 			
-			for (String slot : slotsWithAnswer) {
-				
-				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(slot);
-				
-				for (AnswerGoldenStandard correctAnswer : correctAnswers) {
-				
-					if (Definitions.one_answer_only.contains(slot)) {
-						
-						try {
-							
+			for (String slot : slotsWithAnswer) {				
+				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(slot);				
+				for (AnswerGoldenStandard correctAnswer : correctAnswers) {				
+					if (Definitions.one_answer_only.contains(slot)) {						
+						try {							
 							if (q.selected_answers.get(slot).slot_filler.equalsIgnoreCase(correctAnswer.response) || q.selected_answers.get(slot).slot_filler.equalsIgnoreCase(correctAnswer.norm_response)) {
 								correct += 1;
 								continue;
 							}
-						} 
-						
-						catch (Exception e) {
-						
+						} 						
+						catch (Exception e) {						
 						}
-					}
-					
+					}					
 					else {
-						
 						Set<SystemAnswer> systemAnswers;
-							
 						try {						
 							systemAnswers = q.system_answers.get(slot);
 							for (SystemAnswer systemAnswer : systemAnswers) {
 								if ( correctAnswer.response.equalsIgnoreCase(systemAnswer.slot_filler) || correctAnswer.norm_response.equalsIgnoreCase(systemAnswer.slot_filler) )
 									correct += 1;
 								}
-						}
-							
+						}							
 						catch (Exception e) {
-							
 						}
 					}
 				}
@@ -650,11 +646,240 @@ public class Main {
 			}
 			
 			system = q.selected_answers.size();			
-			System.out.println("\t " + (float) correct / (float) system );
+			System.out.println("\t correct: " + correct + "\tsystem: " + system + '\t' + "precision: " + (float) correct / (float) system );
 		}
 	}
+	
+	public static boolean inList(String arg2, LinkedList<String> list) {
+		return list.contains(arg2); 
+	}
+	
+	public static void matchPERPatterns(SFQuery q) {
 
+		for (DocumentRelations docRelations : q.relations) {
+				
+				for (ReverbRelation relation : docRelations.relations) {
+					
+					for (String attribute: PER_attributes) {
+						
+						if (!q.ignore.contains(attribute)) {
+							
+							/* place_of_residence */ 
+							if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
+								LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
+								for (String pattern : patterns) {
+									
+									if (relation.rel.matches(pattern)) {
+										
+										if (relation.arg2_tagged.contains("LOCATION")) {
+										
+											SystemAnswer answer = new SystemAnswer();
+											answer.confidence_score = relation.confidence;
+											answer.justify = docRelations.docid;
+											answer.slot_name = "per:place_of_residence";											
+											answer.slot_filler = relation.arg2;											
+											answer.start_offset_filler = 0;
+											answer.end_offset_filler = 0;
+											answer.start_offset_justification = 0;
+											answer.end_offset_justification = 0;
+											answer.relation = relation;
+											q.system_answers.put("per:place_of_residence", answer);
+										}
+									}							
+								}
+							}
+						
+						/* place_of_death */						
+						else if (attribute.equalsIgnoreCase("per:city_of_death") || attribute.equalsIgnoreCase("per:stateorprovince_of_death") || attribute.equalsIgnoreCase("per:country_of_death")) {									
+							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_death");
+							for (String pattern : patterns) {
+								
+								if (relation.rel.matches(pattern)) {
+									
+									if (relation.arg2_tagged.contains("LOCATION")) {
+									
+										SystemAnswer answer = new SystemAnswer();
+										answer.confidence_score = relation.confidence;
+										answer.justify = docRelations.docid;
+										answer.slot_name = "per:place_of_death";											
+										answer.slot_filler = relation.arg2;
+										answer.start_offset_filler = 0;
+										answer.end_offset_filler = 0;
+										answer.start_offset_justification = 0;
+										answer.end_offset_justification = 0;
+										answer.relation = relation;
+										q.system_answers.put("per:place_of_death", answer);
+									}
+								}
+							}
+						}
+							
+						/* place_of_birth */
+						else if (attribute.equalsIgnoreCase("per:country_of_birth") || attribute.equalsIgnoreCase("per:stateorprovince_of_birth") || attribute.equalsIgnoreCase("per:city_of_birth")) {									
+							LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_birth");
+							for (String pattern : patterns) {
+								if (relation.rel.matches(pattern)) {	
+									
+									if (relation.arg2_tagged.contains("LOCATION")) {
+										
+										SystemAnswer answer = new SystemAnswer();
+										answer.confidence_score = relation.confidence;
+										answer.justify = docRelations.docid;
+										answer.slot_name = "per:place_of_birth";											
+										answer.slot_filler = relation.arg1;
+										answer.start_offset_filler = 0;
+										answer.end_offset_filler = 0;
+										answer.start_offset_justification = 0;
+										answer.end_offset_justification = 0;
+										answer.relation = relation;
+										q.system_answers.put("per:place_of_birth", answer);
+									}
+								}
+							}
+						}
+						
+						else {
+							/* other patterns */
+							LinkedList<String> patterns = PERSlots.slots_patterns.get(attribute);
+							for (String pattern : patterns) {									
+								if (relation.rel.matches(pattern)) {
+									
+									SystemAnswer answer = new SystemAnswer();
+									
+									if ( attribute.equalsIgnoreCase("per:date_of_birth") && relation.arg2_tagged.contains("DATE") 	||
+										 attribute.equalsIgnoreCase("per:date_of_death") && relation.arg2_tagged.contains("DATE") 	||
+										 attribute.equalsIgnoreCase("per:origin") && relation.arg2_tagged.contains("LOCATION") 		||
+										 attribute.equalsIgnoreCase("per:spouse") && relation.arg2_tagged.contains("PERSON") 		||
+										 attribute.equalsIgnoreCase("per:other_family") && relation.arg2_tagged.contains("PERSON") 	||
+										 attribute.equalsIgnoreCase("per:siblings") && relation.arg2_tagged.contains("PERSON") 		||
+										 attribute.equalsIgnoreCase("per:children") && relation.arg2_tagged.contains("PERSON") 		||
+										 attribute.equalsIgnoreCase("per:parents") && relation.arg2_tagged.contains("PERSON") 		||
+										 attribute.equalsIgnoreCase("per:age") && relation.arg2_tagged.contains("NUMBER") 			||
+										 (attribute.equalsIgnoreCase("per:schools_attended") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_schools.txt")))) ||
+										 (attribute.equalsIgnoreCase("per:member_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_companies.txt")))) || 
+										 (attribute.equalsIgnoreCase("per:employ_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_companies.txt"))))											 
+
+									) {
+										
+											answer.confidence_score = relation.confidence;
+											answer.justify = docRelations.docid;
+											answer.slot_name = attribute;											
+											answer.slot_filler = relation.arg2;
+											answer.start_offset_filler = 0;
+											answer.end_offset_filler = 0;
+											answer.start_offset_justification = 0;
+											answer.end_offset_justification = 0;
+											answer.relation = relation;											
+											q.system_answers.put(attribute, answer);
+										}
+									
+									else {
+										 //attribute.equalsIgnoreCase("per:alternate_names")	PERSON										 
+										 //attribute.equalsIgnoreCase("per:charges")			list_of_charges
+										 //attribute.equalsIgnoreCase("per:religion")			list of religions
+										 //attribute.equalsIgnoreCase("per:title")				list of positions
+										
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public static void matchORGPatterns(SFQuery q) {
+		
+		for (DocumentRelations docRelations : q.relations) {
+			
+			for (ReverbRelation relation : docRelations.relations) {
+				
+				for (String attribute: ORG_attributes) {
+					
+					if (!q.ignore.contains(attribute)) {
+						
+						/* place_of_headquarters */ 
+						if (attribute.equalsIgnoreCase("org:country_of_headquarters") || attribute.equalsIgnoreCase("org:stateorprovince_of_headquarters") || attribute.equalsIgnoreCase("org:city_of_headquarters")) {
+							LinkedList<String> patterns = ORGSlots.slots_patterns.get("org:place_of_headquarters");									
+							for (String pattern : patterns) {
+								
+								if (relation.rel.matches(pattern)) {
+									SystemAnswer answer = new SystemAnswer();
+									answer.confidence_score = relation.confidence;
+									answer.justify = docRelations.docid;
+									answer.slot_name = "org:place_of_headquarters";											
+									answer.slot_filler = relation.arg2;											
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;
+									q.system_answers.put("org:place_of_headquarters", answer);					
+								}
+							}	
+						}
+						
+						else {
+							/* other patterns */
+							LinkedList<String> patterns = ORGSlots.slots_patterns.get(attribute);
+							
+							for (String pattern : patterns) {									
+								if (relation.rel.matches(pattern + ".*")) {
+									
+									SystemAnswer answer = new SystemAnswer();
+									
+									/*
+									System.out.println(pattern + '\t' + relation.arg2_tagged);
+									
+									if (attribute.equalsIgnoreCase("per:date_of_birth")) {
+										String expectedEntityType = "DATE";
+										
+										System.out.println("place of birth arg2: " + relation.arg2_tagged);
+									}
+									*/
+									
+									answer.confidence_score = relation.confidence;
+									answer.justify = docRelations.docid;
+									answer.slot_name = attribute;											
+									answer.slot_filler = relation.arg2;
+									answer.start_offset_filler = 0;
+									answer.end_offset_filler = 0;
+									answer.start_offset_justification = 0;
+									answer.end_offset_justification = 0;
+									answer.relation = relation;											
+									q.system_answers.put(attribute, answer);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public static void matchPatternExtractions( Map<String, SFQuery> queries ) {
+		
+		Set<String> queries_keys = queries.keySet();
+		
+		System.out.println("\nLooking for relations matching patterns\n");
+		
+		for (String q_id : queries_keys) {
+			SFQuery q = queries.get(q_id);		
+			System.out.print(q.query_id + '\t' + q.etype + '\t' + q.name + '\n');
+
+			if (q.etype.equalsIgnoreCase("PER"))
+				matchPERPatterns(q);
+			else if (q.etype.equalsIgnoreCase("ORG"))
+				matchORGPatterns(q);
+		}
+		System.out.println();
+	}
+
+	public static void selectExtractions(Map<String, SFQuery> queries) {
+								
+		//TODO: determine if place is country, state or city			
+		//TODO: get the offsets of sentence and args
 		
 		//TODO: fazer match de forma a evitar falsos positivos
 		
@@ -677,137 +902,6 @@ public class Main {
 		
 		/* can also be paid by */
 		
-		Set<String> queries_keys = queries.keySet();
-		
-		System.out.println("\nLooking for relations matching patterns\n");
-		
-		for (String q_id : queries_keys) {			
-			SFQuery q = queries.get(q_id);		
-			System.out.print(q.query_id + '\t' + q.name);
-			
-			//TODO: fazer outro tipo de matching: regex ou similaridade de strings */
-			
-			//TODO: aplicar os patterns com os arg1 e arg2 tagged com NER
-			
-			//TODO: determine if place is country, state or city
-			
-			//TODO: get the offsets of sentence and args		
-			
-			if (q.etype.equalsIgnoreCase("PER")) {
-				
-				for (DocumentRelations docRelations : q.relations) { 
-					for (ReverbRelation relation : docRelations.relations) {
-						for (String attribute: PER_attributes) {							
-							
-							if (!q.ignore.contains(attribute)) {
-								
-								/* place_of_residence */ 
-								if (attribute.equalsIgnoreCase("per:countries_of_residence") || attribute.equalsIgnoreCase("per:stateorprovinces_of_residence") || attribute.equalsIgnoreCase("per:cities_of_residence")) {									
-									LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_residence");									
-									for (String pattern : patterns) {										
-										if (relation.rel.equalsIgnoreCase(pattern)) {
-											SystemAnswer answer = new SystemAnswer();
-											answer.confidence_score = relation.confidence;
-											answer.justify = docRelations.docid;
-											answer.slot_name = "per:place_of_residence";											
-											answer.slot_filler = relation.arg2;											
-											answer.start_offset_filler = 0;
-											answer.end_offset_filler = 0;
-											answer.start_offset_justification = 0;
-											answer.end_offset_justification = 0;
-											answer.relation = relation;
-											q.system_answers.put("per:place_of_residence", answer);
-										}							
-									}
-								}
-							
-							
-							/* place_of_death */ 								
-							else if (attribute.equalsIgnoreCase("per:city_of_death") || attribute.equalsIgnoreCase("per:stateorprovince_of_death") || attribute.equalsIgnoreCase("per:country_of_death")) {									
-								LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_death");
-								for (String pattern : patterns) {
-									if (relation.rel.equalsIgnoreCase(pattern)) {
-										
-										System.out.println("match: " + pattern);
-										
-										SystemAnswer answer = new SystemAnswer();
-										answer.confidence_score = relation.confidence;
-										answer.justify = docRelations.docid;
-										//TODO: determine if place is country, state or city
-										answer.slot_name = "per:place_of_death";											
-										answer.slot_filler = relation.arg2;
-										//TODO: get the offsets of sentence and args
-										answer.start_offset_filler = 0;
-										answer.end_offset_filler = 0;
-										answer.start_offset_justification = 0;
-										answer.end_offset_justification = 0;
-										answer.relation = relation;
-										q.system_answers.put("per:place_of_death", answer);
-									}
-								}
-							}
-								
-							/* place_of_birth */
-							else if (attribute.equalsIgnoreCase("per:country_of_birth") || attribute.equalsIgnoreCase("per:stateorprovince_of_birth") || attribute.equalsIgnoreCase("per:city_of_birth")) {									
-								LinkedList<String> patterns = PERSlots.slots_patterns.get("per:place_of_birth");
-								for (String pattern : patterns) {										
-									if (relation.rel.equalsIgnoreCase(pattern)) {
-										
-										//System.out.println("match: " + pattern);
-										
-										SystemAnswer answer = new SystemAnswer();
-										answer.confidence_score = relation.confidence;
-										answer.justify = docRelations.docid;
-										answer.slot_name = "per:place_of_birth";											
-										answer.slot_filler = relation.arg1;
-										answer.start_offset_filler = 0;
-										answer.end_offset_filler = 0;
-										answer.start_offset_justification = 0;
-										answer.end_offset_justification = 0;
-										answer.relation = relation;
-										q.system_answers.put("per:place_of_birth", answer);
-									}
-								}
-							}
-							
-							else {
-								/* other patterns */ 
-								LinkedList<String> patterns = PERSlots.slots_patterns.get(attribute);
-								for (String pattern : patterns) {
-									if (relation.rel.equalsIgnoreCase(pattern)) {
-										
-										//System.out.println("match: " + pattern);
-										
-										SystemAnswer answer = new SystemAnswer();
-										answer.confidence_score = relation.confidence;
-										answer.justify = docRelations.docid;
-										answer.slot_name = attribute;											
-										answer.slot_filler = relation.arg2;
-										//TODO: get the offsets of sentence and args
-										answer.start_offset_filler = 0;
-										answer.end_offset_filler = 0;
-										answer.start_offset_justification = 0;
-										answer.end_offset_justification = 0;
-										answer.relation = relation;											
-										q.system_answers.put(attribute, answer);
-									}
-								}
-							}								
-							}
-						}
-					}
-				}
-			}
-		
-			else if (q.etype.equalsIgnoreCase("ORG"))  {
-				
-			}			
-		System.out.println();	
-		}
-	}
-
-	public static void selectExtractions(Map<String, SFQuery> queries) {
-		
 		Set<String> keys = queries.keySet();
 		
 		for (String keyQ : keys) {
@@ -821,6 +915,40 @@ public class Main {
 				
 				if (Definitions.one_answer_only.contains(slot)) {
 					
+					if (slot.equalsIgnoreCase("per:date_of_birth")) {
+						String expectedEntityType = "DATE";
+					}
+					
+					
+					if (slot.equalsIgnoreCase("per:date_of_death")) {
+						String expectedEntityType = "DATE";
+					}
+					
+					if (slot.equalsIgnoreCase("per:place_of_birth")) {
+						String expectedEntityType = "LOCATION";
+					}
+					
+					if (slot.equalsIgnoreCase("per:place of death")) {
+						String expectedEntityType = "LOCATION";
+					}
+					
+					if (slot.equalsIgnoreCase("per:age")) {
+						String expectedEntityType1 = "NUMBER";
+						String expectedEntityType2 = "DATE";
+					}
+					
+					if (slot.equalsIgnoreCase("per:origin")) {
+						String expectedEntityType1 = "LOCATION";
+					}
+					
+					if (slot.equalsIgnoreCase("per:religion")) {
+						String expectedEntityType = "LOCATION";
+					}
+					
+					if (slot.equalsIgnoreCase("per:cause_of_death")) {
+						
+					}
+					
 					/* choose only one best answer */					
 					float top_score = 0;
 					SystemAnswer answer = new SystemAnswer();
@@ -832,11 +960,14 @@ public class Main {
 					}					
 					q.selected_answers.put(slot, answer);					
 				}
+				
+				else {
+					
+				}
 			}
 		}
 	}
-	
-	
+		
 	public static void outputresults(Map<String, SFQuery> queries) throws IOException {
 		
 		int unique_run_id = 0;

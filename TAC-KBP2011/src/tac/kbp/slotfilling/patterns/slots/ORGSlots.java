@@ -13,7 +13,6 @@ public class ORGSlots {
 		LinkedList<String> patterns = new LinkedList<String>();
 		ORGSlots.slots_patterns.put("org:alternate_names", patterns);
 		
-		
 		/* org:political_religious_affiliation */
 		patterns = new LinkedList<String>();
 		ORGSlots.slots_patterns.put("org:political_religious_affiliation", patterns);
@@ -56,51 +55,115 @@ public class ORGSlots {
 		
 		
 		/* org:member_of */
-		patterns = new LinkedList<String>();						
+		patterns = new LinkedList<String>();		
+		patterns.add("representative of");
+		patterns.add("comprises of");
+		patterns.add("the parent of");
+		patterns.add("owns");
+		patterns.add("acquired by");
 		ORGSlots.slots_patterns.put("org:member_of", patterns);
 		
 		
 		/* org:subsidiaries */
 		patterns = new LinkedList<String>();
+		patterns.add("launched");
+		patterns.add(".*a subsidiary of.*");
+		patterns.add("runs outlets");
+		patterns.add("has outlets");
+		patterns.add("was run by");
+		patterns.add("is run by");
+		patterns.add("completed a boyout of");
+		patterns.add("bought");
+		patterns.add("operates");
 		ORGSlots.slots_patterns.put("org:subsidiaries", patterns);
 		
 
 		/* org:parents */
-		patterns = new LinkedList<String>();		
+		patterns = new LinkedList<String>();
+		patterns.add("takeover bid for");
+		patterns.add("subsidiary of");
+		patterns.add("joint venture of");
+		patterns.add("former parent company");
+		patterns.add("new parent company");
+		patterns.add("parent company");		
 		ORGSlots.slots_patterns.put("org:parents", patterns);
 		
 		
 		/* org:founded_by */
-		patterns = new LinkedList<String>();		
+		patterns = new LinkedList<String>();
+		patterns.add("founder");
+		patterns.add("established in");
+		patterns.add("created");
+		patterns.add("founded by");
+		patterns.add("founded the");
+		patterns.add("founder");
+		patterns.add("set up by");
 		ORGSlots.slots_patterns.put("org:founded_by", patterns);
-		
 		
 		/* org:founded */
 		patterns = new LinkedList<String>();
+		patterns.add("founded in");
+		patterns.add("fouding in");
+		patterns.add("created in");
+		patterns.add("dates to");
+		patterns.add("a company launched in");
+		patterns.add("established in");
+		patterns.add("started its operations in");
+		patterns.add("league started in");
+		patterns.add("opened its doors");
+		patterns.add("since its inception in");		
 		ORGSlots.slots_patterns.put("org:founded", patterns);
 
 		
 		/* org:dissolved */ 
-		patterns = new LinkedList<String>();		
+		patterns = new LinkedList<String>();
+		patterns.add("was dissolved");
+		patterns.add("merged with");
+		patterns.add("closed down");
 		ORGSlots.slots_patterns.put("org:dissolved", patterns);
 
 		
-		/* org:country_of_headquarters */
+		/* org:place_of_headquarters */
 		patterns = new LinkedList<String>();
-		ORGSlots.slots_patterns.put("org:country_of_headquarters", patterns);
-		
-		
-		/* org:city_of_headquarters */
-		patterns = new LinkedList<String>();		
-		ORGSlots.slots_patterns.put("org:city_of_headquarters", patterns);
+		patterns.add("base in");
+		patterns.add("based in");
+		patterns.add("headquarters in");
+		patterns.add("established in");
+		patterns.add("has executive offices in");
+		ORGSlots.slots_patterns.put("org:place_of_headquarters", patterns);
 		
 		
 		/* org:shareholders */
-		patterns = new LinkedList<String>();		
+		patterns = new LinkedList<String>();
+		patterns.add("majority owner of");
+		patterns.add("shares of");
+		patterns.add("initial investment");
+		patterns.add("increases stake in");
+		patterns.add("has stakes");
+		patterns.add("holds stakes");
+		//patterns.add("holds % stakes");
+		//patterns.add("acquired % stakes");
+		//patterns.add("owns % stakes");
+		patterns.add("purchased");
+		patterns.add("bought");
+		patterns.add("increases shares");
+		patterns.add("has shares");
+		patterns.add("holds shares");
+		//patterns.add("holds % shares");
+		//patterns.add("acquired % shares");
+		//patterns.add("owns % shares");
+		//patterns.add("purchased % shares");
+		//patterns.add("bought % shares");
+		patterns.add("capital investment");
+		patterns.add("cash infusion");
+		//patterns.add("offered % share");				
 		ORGSlots.slots_patterns.put("org:shareholders", patterns);
-				
+		
 		/* org:website */
 		patterns = new LinkedList<String>();
 		ORGSlots.slots_patterns.put("org:website", patterns);
+		
+		
+		
 	}
 }
