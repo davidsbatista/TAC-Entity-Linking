@@ -44,6 +44,7 @@ public class Main {
 	
 	public static LinkedList<String> PER_attributes = new LinkedList<String>();
 	public static LinkedList<String> ORG_attributes = new LinkedList<String>();
+	public static int total_n_correct_slots = 0;
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -57,10 +58,12 @@ public class Main {
 		Option queries = OptionBuilder.withArgName("queries").hasArg().withDescription("XML file containing queries for trainning").create("queries");		
 		Option answers = OptionBuilder.withArgName("answers").hasArg().withDescription("queries answers").create("answers");
 		Option lists   = OptionBuilder.withArgName("lists").hasArg().withDescription("lists of facts and entities").create("lists");
+		Option max_docs   = OptionBuilder.withArgName("max_docs").hasArg().withDescription("lists of facts and entities").create("max_docs");
 						
 		options.addOption(queries);
 		options.addOption(answers);
 		options.addOption(lists);
+		options.addOption(max_docs);
 				
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = parser.parse( options, args );
@@ -349,12 +352,13 @@ public class Main {
 		Definitions.getDBConnection();
 		Definitions.loadLists(line.getOptionValue("lists"));
 		Definitions.oneAnswersSlots();
+		Definitions.max_docs = Integer.parseInt(line.getOptionValue("max_docs"));
 		loadAttributes();
 		
 		/* Load queries + answers */
 		String queriesPath = line.getOptionValue("queries");
 		System.out.println("\nLoading train queries from: " + queriesPath);
-		Map<String, SFQuery> queries = LoadQueries.loadXML(queriesPath);		
+		Map<String, SFQuery> queries = LoadQueries.loadXML(queriesPath);
 		String answers = line.getOptionValue("answers");
 		loadQueriesAnswers(answers,queries);		
 		System.out.println("Loaded: " + queries.size() + " queries");
@@ -364,7 +368,7 @@ public class Main {
 		ORGSlots.load_patterns();
 		
 		/* parse the queries: alternative senses + extract documents */
-		System.out.println("\nParsing queries...");
+		System.out.println("\nParsing queries...\n");
 		parseQueries(queries);		
 		
 		/* extract relations from documents */
@@ -383,7 +387,9 @@ public class Main {
 		precision(queries);
 		
 		/* write results file */
-		outputresults(queries);		
+		outputresults(queries);
+		
+		System.out.println("Total number of correct slots: " + total_n_correct_slots);
 		
 		Definitions.closeDBConnection();
 	}
@@ -546,51 +552,79 @@ public class Main {
 		}
 	}
 	
+	public static void printCorrectAnswers(SFQuery q) {
+		
+		/* print correct answers for each slot */
+		Set<String> answers = q.correct_answers.keySet();			
+		System.out.println("\ncorrect answers: ");			
+		for (String a : answers) {				
+			Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(a);								
+			if (correctAnswers.size()>0) {					
+				for (AnswerGoldenStandard correctAnswer : correctAnswers) {						
+					System.out.println(correctAnswer.slot_name + "\t" + correctAnswer.response + "\t" + correctAnswer.docid);
+				}
+			}
+		}		
+	}
+	
+	public static void printSystemAnswers(SFQuery q) {
+
+		System.out.println("\nsystem answers: ");
+		
+		Set<String> slotsKeys = q.selected_answers.keySet();
+		
+		System.out.println("selected answers: " + slotsKeys.size());
+		
+		for (String slotKey : slotsKeys) {
+			SystemAnswer answer = q.selected_answers.get(slotKey);
+			System.out.println(answer.slot_name + "\t" + answer.slot_filler + "\t" + answer.justify);		
+		}
+		
+		slotsKeys = q.system_answers.keySet();
+		
+		for (String slotKey : slotsKeys) {
+			if (!Definitions.one_answer_only.contains(slotKey)) {				
+				Set<SystemAnswer> systemAnswers = q.system_answers.get(slotKey);
+				
+				System.out.println("system_answers: " + systemAnswers.size());
+				
+				for (SystemAnswer answer : systemAnswers)				
+						System.out.println(answer.slot_name + "\t" + answer.slot_filler + "\t" + answer.justify);				
+			}
+		}
+	}
+		
+	public static void printSlotsIgnore(SFQuery q) {
+		
+		System.out.println("\nslots to ignore: " + q.ignore.size());
+		
+		for (String slot : q.ignore) {
+			System.out.println(slot);
+		}
+		
+	}
+	
+	public static void printRelationsExtracted(SFQuery q) {
+		
+		for (DocumentRelations doc : q.relations) {			
+			if (doc.relations.size()>0) {
+				System.out.println("doc: " + doc.docid);
+				for (ReverbRelation relation : doc.relations)
+					System.out.println('\t' + relation.arg1_tagged + '\t' + relation.rel + '\t' + relation.arg2_tagged);
+			}
+		}
+		
+	}
+	
 	public static void precision(Map<String, SFQuery> queries) {
-		
-		//TODO: substituir: place_of_birth, place_of_death, place_of_headquarters pelo nome correct
-		
+
 		Set<String> keys = queries.keySet();
 		
 		for (String keyQ : keys) {
 			
 			SFQuery q = queries.get(keyQ);
-			System.out.print(q.query_id + '\t' + q.etype + '\t' + q.name + "\t\t" + q.coverage + "\t" + q.documents.size());			
-			
-			/* print correct answers for each slot */
-			/*
-			Set<String> answers = q.correct_answers.keySet();			
-			System.out.println("\ncorrect answers: ");			
-			for (String a : answers) {				
-				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(a);								
-				if (correctAnswers.size()>0) {					
-					for (AnswerGoldenStandard correctAnswer : correctAnswers) {						
-						System.out.println(correctAnswer.slot_name + "\t\t" + correctAnswer.response + "\t\t" + correctAnswer.docid);
-					}
-				}
-				
-			}
-			*/
-			
-			/*
-			 * print relations with coverage > 0.5 */
-			/*
-			if (q.coverage>0.5) {								
-				for (DocumentRelations docRelations : q.relations) {
-					System.out.println("\n");
-					System.out.println(docRelations.docid + '\t' + docRelations.relations.size());
-					for (ReverbRelation relation : docRelations.relations) {
-						System.out.println(relation.arg1 + " - " + relation.rel + " - " + relation.arg2);
-					}				
-				}
-				
-				if (q.relations.size() == 0) {
-					for (Document doc : q.documents) {
-						System.out.println(doc.get("docid"));
-					}				
-				}				
-			}
-			*/
+			//System.out.println("===============================================================");
+			System.out.print(q.query_id + '\t' + q.etype + '\t' + q.name + "\tcoverage:" + q.coverage + "\t#docs:" + q.documents.size());			
 			
 			/*
 			 * Correct 		= number of non-NIL output slots judged correct
@@ -608,15 +642,18 @@ public class Main {
 			
 			Set<String> slotsWithAnswer = q.correct_answers.keySet();
 			
-			for (String slot : slotsWithAnswer) {				
+			for (String slot : slotsWithAnswer) {
+				
 				Set<AnswerGoldenStandard> correctAnswers = q.correct_answers.get(slot);				
+				
 				for (AnswerGoldenStandard correctAnswer : correctAnswers) {				
 					if (Definitions.one_answer_only.contains(slot)) {						
-						try {							
+						try {
+							system += 1;
 							if (q.selected_answers.get(slot).slot_filler.equalsIgnoreCase(correctAnswer.response) || q.selected_answers.get(slot).slot_filler.equalsIgnoreCase(correctAnswer.norm_response)) {
 								correct += 1;
 								continue;
-							}
+							}								
 						} 						
 						catch (Exception e) {						
 						}
@@ -641,13 +678,20 @@ public class Main {
 			
 			for (String slot : slots) {
 				if (!Definitions.one_answer_only.contains(slot)) {
+					//System.out.println(slot + '\t' + q.system_answers.get(slot).size());
 					system += q.system_answers.get(slot).size();
 				}
 			}
+						
+			System.out.println("\t correct slots: " + correct + "\ttotal slots: " + system + '\t' + "precision: " + (float) correct / (float) system );
 			
-			system = q.selected_answers.size();			
-			System.out.println("\t correct: " + correct + "\tsystem: " + system + '\t' + "precision: " + (float) correct / (float) system );
+			total_n_correct_slots += correct;
+			//printCorrectAnswers(q);			
+			//printSystemAnswers(q);
+			//printRelationsExtracted(q);
 		}
+		
+		
 	}
 	
 	public static boolean inList(String arg2, LinkedList<String> list) {
@@ -755,12 +799,11 @@ public class Main {
 										 attribute.equalsIgnoreCase("per:children") && relation.arg2_tagged.contains("PERSON") 		||
 										 attribute.equalsIgnoreCase("per:parents") && relation.arg2_tagged.contains("PERSON") 		||
 										 attribute.equalsIgnoreCase("per:age") && relation.arg2_tagged.contains("NUMBER") 			||
-										 (attribute.equalsIgnoreCase("per:schools_attended") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_schools.txt")))) ||
-										 (attribute.equalsIgnoreCase("per:member_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_companies.txt")))) || 
-										 (attribute.equalsIgnoreCase("per:employ_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2,Definitions.lists_of_answers.get("list_of_companies.txt"))))											 
+										 (attribute.equalsIgnoreCase("per:schools_attended") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2.toLowerCase(),Definitions.lists_of_answers.get("list_of_schools.txt")))) ||
+										 (attribute.equalsIgnoreCase("per:member_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2.toLowerCase(),Definitions.lists_of_answers.get("list_of_companies.txt")))) || 
+										 (attribute.equalsIgnoreCase("per:employ_of") && (relation.arg2_tagged.contains("ORGANIZATION") || inList(relation.arg2.toLowerCase(),Definitions.lists_of_answers.get("list_of_companies.txt"))))											 
 
-									) {
-										
+									) {										
 											answer.confidence_score = relation.confidence;
 											answer.justify = docRelations.docid;
 											answer.slot_name = attribute;											
@@ -774,10 +817,22 @@ public class Main {
 										}
 									
 									else {
+										
 										 //attribute.equalsIgnoreCase("per:alternate_names")	PERSON										 
 										 //attribute.equalsIgnoreCase("per:charges")			list_of_charges
 										 //attribute.equalsIgnoreCase("per:religion")			list of religions
 										 //attribute.equalsIgnoreCase("per:title")				list of positions
+										
+										answer.confidence_score = relation.confidence;
+										answer.justify = docRelations.docid;
+										answer.slot_name = attribute;											
+										answer.slot_filler = relation.arg2;
+										answer.start_offset_filler = 0;
+										answer.end_offset_filler = 0;
+										answer.start_offset_justification = 0;
+										answer.end_offset_justification = 0;
+										answer.relation = relation;											
+										q.system_answers.put(attribute, answer);
 										
 									}
 								}
@@ -959,10 +1014,6 @@ public class Main {
 						}
 					}					
 					q.selected_answers.put(slot, answer);					
-				}
-				
-				else {
-					
 				}
 			}
 		}

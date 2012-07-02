@@ -261,7 +261,7 @@ public class SFQuery {
 						
 	    TopDocs docs = Definitions.documents.search(query, Definitions.max_docs);	    
 	    ScoreDoc[] scoredocs = docs.scoreDocs;
-	    System.out.println(this.query_id + '\t' + etype + '\t' + this.name + '\t' + scoredocs.length);
+	    System.out.println(this.query_id + '\t' + etype + '\t' + this.name + '\t' + query + '\t' + scoredocs.length);
 	    
 	    //System.out.println("documents returned: " + docs.totalHits);
 	    //System.out.println("documents searched: " + scoredocs.length);
