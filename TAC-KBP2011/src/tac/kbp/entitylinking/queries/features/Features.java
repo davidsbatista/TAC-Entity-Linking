@@ -1,10 +1,10 @@
-package tac.kbp.queries.features;
+package tac.kbp.entitylinking.queries.features;
 
 import java.util.HashMap;
 import java.util.Set;
 
-import tac.kbp.bin.Definitions;
-import tac.kbp.bin.Definitions.NERType;
+import tac.kbp.configuration.Definitions;
+import tac.kbp.configuration.Definitions.NERType;
 
 public class Features {
 	
@@ -240,11 +240,3 @@ public class Features {
 		this.similarities.put("Levenshtein", Float.parseFloat((features[18])));
 	}
 }
-
-
-
-
-
-
-
-

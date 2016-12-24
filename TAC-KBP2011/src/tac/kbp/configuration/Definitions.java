@@ -99,7 +99,6 @@ public class Definitions {
 	public static IndexSearcher wikipediaEn = null;
 	public static IndexSearcher documents = null;
 	public static SpellChecker spellchecker = null;
-	
 	public static IndexReader docs_reader = null;
 
 	/* StanfordNER CRF classifier */
@@ -120,7 +119,7 @@ public class Definitions {
 	public static String SVMLightLearn = "svm_learn";
 	public static String SVMLightClassify = "svm_classify";
 	
-	public static void loadRecall(String n_candidates) throws CorruptIndexException, IOException {
+	public static void loadRecall(String n_candidates) throws IOException {
 		
 		/* KB Index */
 		System.out.println("Knowledge Base index: " + KB_location);
@@ -171,9 +170,7 @@ public class Definitions {
         System.out.println("Dictionary contains " + dictionary.size() + " entries.");
     }
 
-	
-	public static void loadKBIndex() throws CorruptIndexException, IOException {
-		
+	public static void loadKBIndex() throws IOException {
 		System.out.println("Knowledge Base index: " + KB_location);
 		Directory KBIndexDirectory = FSDirectory.open(new File(KB_location));		
 		knowledge_base = new IndexSearcher((IndexReader.open(KBIndexDirectory)));
@@ -181,52 +178,44 @@ public class Definitions {
 	}
 
 	/* SpellChecker Index */
-	public static void loadSpellCheckerIndex() throws CorruptIndexException, IOException {
-		
+	public static void loadSpellCheckerIndex() throws IOException {
 		System.out.println("SpellChecker index: " + SpellChecker_location);
 		FSDirectory spellDirectory = FSDirectory.open(new File(SpellChecker_location));
 		spellchecker = new SpellChecker(spellDirectory, "name", "id");
 	}
 	
 	/* Document Collection Index */		
-	public static void loadDocumentCollecion() throws CorruptIndexException, IOException {
-		
+	public static void loadDocumentCollecion() throws IOException {
 		System.out.println("Document Collection index: " + DocumentCollection_location);		
 		Directory DocsIndexDirectory = FSDirectory.open(new File(DocumentCollection_location));		
 		documents = new IndexSearcher((IndexReader.open(DocsIndexDirectory)));	
 	}
 
 	/* Document Collection Index */		
-	public static void loadWikipediaIndex() throws CorruptIndexException, IOException {
-		
+	public static void loadWikipediaIndex() throws IOException {
 		System.out.println("Wikpedia index: " + WikipediaIndexEn_location);		
 		Directory WikiIndexDirectory = FSDirectory.open(new File(WikipediaIndexEn_location));		
 		wikipediaEn = new IndexSearcher((IndexReader.open(WikiIndexDirectory)));	
 	}
-	
-	
+
 	/* Stop-Words */
 	public static void loadStopWords() {
-
 		System.out.println("Loading stopwords from: " + stop_words_location);
 		loadStopWords(stop_words_location);
 	}
 	
 	/* REDIS Connection */
-
 	public static void connectionREDIS() {
 		System.out.println("Connecting to REDIS server.. ");
 		jedis = new Jedis(redis_host, redis_port);
 	}
 
 	/* Stanford NER-CRF Classifier */
-	
 	public static void loadClassifier(String filename) {
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
 	}
 	
 	/* load StopWords list */
-	
 	public static void loadStopWords(String file) { 
 		
 		try{
@@ -295,14 +284,13 @@ public class Definitions {
 		}
 		return queriesAnswers;		
 	}
-	
-	
+
 	public static void initJWLPWikipedia() throws WikiApiException {
 		
-		String host = "borat.inesc-id.pt";
+		String host = "";
 		String database = "JWLPWikiEn";
 		String user = "wiki";
-		String password = "07dqeuedm"; 
+		String password = "";
 		
 		// configure the database connection parameters
 		dbConfig = new DatabaseConfiguration();
@@ -320,8 +308,7 @@ public class Definitions {
 		System.out.println("\t" + wiki.getWikipediaId());
 		 
 	}
-	
-	
+
 	public static void determineLDAFile(String queries) throws Exception {
 		
 		String lda_topics = null;
@@ -333,9 +320,9 @@ public class Definitions {
 		else if (queries.contains("test_queries_2010")) lda_topics = queries_lda_path+"test_queries_2010.txt.theta";
 		else if (queries.contains("test_queries_2011")) lda_topics = queries_lda_path+"test_queries_2011.txt.theta";
 			
-		//LDA topics for queries
+		// LDA topics for queries
 		System.out.print("Loading queries LDA topics from: " + lda_topics + "..." );
 		loadLDATopics(lda_topics,queries_topics);
-		
-	}	
+
+	}
 }

@@ -29,6 +29,7 @@ import tac.kbp.utils.string.ExtractAbbrev;
 
 import com.google.common.base.Joiner;
 
+
 public class Train {
 	
 	static int total_n_docs = 0;
@@ -187,7 +188,7 @@ public class Train {
 			}
 		}
 		
-		//if answer entity is not part of the retrieved entities and correct answer is not NIL, 
+		//if answer entity is not part of the retrieved entities and correct answer is not NIL,
 		//we retrieve answer entity from KB and extract features
 		
 		if (!foundCorrecEntity && !(q.gold_answer.startsWith("NIL")) ) {
@@ -358,8 +359,7 @@ public class Train {
 		
 		return q.candidates.size();		
 	}
-	
-	
+
 	static int getCandidates(ELQuery q) throws IOException, ParseException {
 		
 		WhitespaceAnalyzer analyzer = new WhitespaceAnalyzer(Version.LUCENE_35);

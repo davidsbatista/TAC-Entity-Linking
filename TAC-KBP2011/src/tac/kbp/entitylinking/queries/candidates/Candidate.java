@@ -1,4 +1,4 @@
-package tac.kbp.queries.candidates;
+package tac.kbp.entitylinking.queries.candidates;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,13 +8,13 @@ import java.util.Set;
 
 import org.apache.lucene.queryParser.ParseException;
 
-import tac.kbp.bin.Definitions;
-import tac.kbp.bin.Definitions.NERType;
+import tac.kbp.configuration.Definitions;
+import tac.kbp.configuration.Definitions.NERType;
 import tac.kbp.kb.index.xml.Entity;
-import tac.kbp.queries.KBPQuery;
-import tac.kbp.queries.features.Features;
-import tac.kbp.queries.features.LinkDisambiguation;
-import tac.kbp.queries.features.TextSimilarities;
+import tac.kbp.entitylinking.queries.KBPQuery;
+import tac.kbp.entitylinking.queries.features.Features;
+import tac.kbp.entitylinking.queries.features.LinkDisambiguation;
+import tac.kbp.entitylinking.queries.features.TextSimilarities;
 import edu.stanford.nlp.util.Triple;
 
 public class Candidate {
@@ -25,13 +25,11 @@ public class Candidate {
 	public HashSet<String> persons = null;
 	public HashSet<String> places = null;
 	public HashSet<String> organizations = null;
-	
-	//logistic regression
+
 	public double[] conditionalProbabilities;
 	
 	public Features features;
 
-	
 	// Constructors
 	public Candidate(String eid, Features features) {
 		super();
@@ -231,17 +229,17 @@ public class Candidate {
 	
 	public NERType determineType(){
 		if (entity.type.equalsIgnoreCase("PER")) {
-			return tac.kbp.bin.Definitions.NERType.PERSON;
+			return tac.kbp.configuration.Definitions.NERType.PERSON;
 		}
 		
 		if (entity.type.equalsIgnoreCase("ORG")) {
-			return tac.kbp.bin.Definitions.NERType.ORGANIZATION;
+			return tac.kbp.configuration.Definitions.NERType.ORGANIZATION;
 		}
 			
 		if (entity.type.equalsIgnoreCase("GPE")) {
-			return tac.kbp.bin.Definitions.NERType.PLACE;
+			return tac.kbp.configuration.Definitions.NERType.PLACE;
 		}
-		else return tac.kbp.bin.Definitions.NERType.UNK;
+		else return tac.kbp.configuration.Definitions.NERType.UNK;
 			
 			
 	}
@@ -266,14 +264,12 @@ public class Candidate {
 		//TODO: try to match each token, instead of the whole string		
 		return q.supportDocument.toUpperCase().indexOf(entity.name.toUpperCase()) != -1;
 	}
-	
-	
-	
+
 	// Named-Entities related methods
 	@SuppressWarnings("unchecked")
 	public void getNamedEntities() throws Exception {
 		
-		List<Triple<String, Integer, Integer>> entities = tac.kbp.bin.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());
+		List<Triple<String, Integer, Integer>> entities = tac.kbp.configuration.Definitions.classifier.classifyToCharacterOffsets(entity.getWiki_text());
 		
 		for (Triple<String, Integer, Integer> triple : entities) {			
 			String ename = entity.getWiki_text().substring(triple.second,triple.third);
@@ -345,7 +341,6 @@ public class Candidate {
 		
 	}
 
-	
 	// Other
 	public void isCorrect(KBPQuery q) {
 		if (this.entity.id.equalsIgnoreCase(q.gold_answer)) {

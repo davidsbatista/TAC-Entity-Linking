@@ -1,4 +1,4 @@
-package tac.kbp.queries.features;
+package tac.kbp.entitylinking.queries.features;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -11,17 +11,8 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 
-import tac.kbp.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 
-/**
- * 
- * Implements the vector space model for computing the similarity between two documents.
- * It assumes the existence of a document collection indexed by Lucene, from where it gets the 
- * document frequency of each term. 
- * 
- * @author ivo
- *
- */
 public final class TextSimilarities {
 
     public Integer numDocs;

@@ -1,4 +1,4 @@
-package tac.kbp.queries.features;
+package tac.kbp.entitylinking.queries.features;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,16 +15,20 @@ import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.dict.ExactDictionaryChunker;
 
-// Out-Degree
-// N = set of names of entities mentioned in the context g
-// C = set of articles of candidates from the Knowledge Base g
-// Search for each context name n in N in the article of each candidate c in C, if it's found an edge is made from c to n
+/*
+Out-Degree
+==========
+N = set of names of entities mentioned in the context g
+C = set of articles of candidates from the Knowledge Base g
+Search for each context name n in N in the article of each candidate c in C, if it's found an edge is made from c to n
 
-// In-Degree
-// N = f names of candidates from the Knowledge-Base g
-// C = f articles of entities mentioned in the context g
-// Search for each candidate name string n in N in the article of each context name c in C, if it's found an edge is made from c to n
-
+In-Degree
+=========
+N = f names of candidates from the Knowledge-Base g
+C = f articles of entities mentioned in the context g
+Search for each candidate name string n in N in the article of each context name c in C, if it's found an edge is
+made from c to n
+*/
 
 public class LinkDisambiguation {
 
@@ -65,15 +69,15 @@ public class LinkDisambiguation {
 		
     	String query = "wiki_title:" + '"' + pageID.replaceAll("\"", "").replace("&amp;","&") + '"';
     	
-		TopDocs docs = tac.kbp.bin.Definitions.searcher.search(queryParser.parse(query), 1);
-		Document doc = null;
+		TopDocs docs = tac.kbp.configuration.Definitions.searcher.search(queryParser.parse(query), 1);
+		Document doc;
 		
 		if (docs.totalHits == 0) {
 			System.out.println("Error!:" + query + "returned 0 documents");
 			return " ";
 		}
 		else {
-			doc = tac.kbp.bin.Definitions.searcher.doc(docs.scoreDocs[0].doc);
+			doc = tac.kbp.configuration.Definitions.searcher.doc(docs.scoreDocs[0].doc);
 			return doc.getField("wiki_text").stringValue();	
 		}
     }
@@ -115,8 +119,3 @@ public class LinkDisambiguation {
     */
 
 }
-
-
-
-
-

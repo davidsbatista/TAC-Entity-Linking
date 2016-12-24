@@ -63,7 +63,7 @@ public class Article {
 	    return new String(buffer);
 	}
 
-	public Document luceneDoc() throws CorruptIndexException, IOException{
+	public Document luceneDoc() throws IOException{
 		
 		Document doc = new Document();		
 		doc.add(new Field("docid", doc_id, Field.Store.YES, Field.Index.ANALYZED));	

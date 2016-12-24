@@ -580,13 +580,13 @@ public class Main {
 		Definitions.basePath = line.getOptionValue("basePath");		
 		System.out.println("using as base path: " + Definitions.basePath);
 		
-		/* Lucene Index */		
+		/* Lucene KB Index */
 		Definitions.loadKBIndex();
 		
 		/* SpellChecker Index */
 		Definitions.loadSpellCheckerIndex();
 		
-		/* Document Collection */
+		/* Document Collection Index */
 		Definitions.loadDocumentCollecion();
 		
 		System.out.println();
@@ -713,29 +713,7 @@ public class Main {
 			SVMRankOutputResults output = new SVMRankOutputResults();
 			output.results(predictionsFilePath,goundtruthFilePath);
  		}
-		
-		
-		// LambdaMART
-		else if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
-			//TODO: add code to use LambdaMART ranking model
-		}
-		
-		//TODO: train a logistic regression model
-		else if (line.getOptionValue("model").equalsIgnoreCase("logistic")) {
-					
-			//training logistic regression model
-			LogisticRegressionLingPipe trainning = new LogisticRegressionLingPipe(Train.inputs, Train.outputs);
-			trainning.trainModel();
-			
-			//save model to disk
-			String filename = line.getOptionValue("modelFilename");
-			
-			if (!filename.equalsIgnoreCase("")) {
-				trainning.writeModel(filename);
-			}
-			
-			else trainning.writeModel("linear-regression");
-		}
+
 	}
 	
 	static void svmresults(CommandLine line) throws Exception {
@@ -797,10 +775,4 @@ public class Main {
 		}
 		out.close();		
 	}
-
-	
 }
-
-
-
-

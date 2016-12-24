@@ -20,7 +20,7 @@ import org.apache.lucene.search.TopDocs;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import tac.kbp.entitylinking.bin.Definitions;
+import tac.kbp.configuration.Definitions;
 import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.kb.index.spellchecker.SuggestWord;
 import tac.kbp.utils.string.Abbreviations;
@@ -117,7 +117,7 @@ public class KBPQuery {
 	public void getNamedEntities() throws Exception {
 		getSupportDocument();
 		
-		List<Triple<String, Integer, Integer>> entities = tac.kbp.entitylinking.bin.Definitions.classifier.classifyToCharacterOffsets(supportDocument);
+		List<Triple<String, Integer, Integer>> entities = tac.kbp.configuration.Definitions.classifier.classifyToCharacterOffsets(supportDocument);
 		
 		for (Triple<String, Integer, Integer> triple : entities) {			
 			String ename = this.supportDocument.substring(triple.second,triple.third);
