@@ -1,13 +1,16 @@
 # TAC-Entity-Linking
 
-This repo contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task.
-The task consists in linking name-entity mentions in a document collection to entities in a Knowledge Base. 
+This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task.
+
+The task consists in linking name-entity mentions in a document collection to the correct entity in a Knowledge Base, dealing with disambiguation.
 
 
 Data
 ====
-- Knowledge Base
-- Source Document Collection
+- Knowledge Base: [LDC2009E58 TAC 2009 KBP Evaluation Reference Knowledge Base](https://catalog.ldc.upenn.edu/docs/LDC2014T16/README.txt)
+- Support Documents Collection: LDC2010E12: TAC 2010 KBP Source Data V1.1
+- Training Data/Queries: [TAC-KBP 2013 data](http://tac.nist.gov/2013/KBP/data.html)
+
 
 
 Training Data
