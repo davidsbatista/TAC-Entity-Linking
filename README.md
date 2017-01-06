@@ -6,7 +6,7 @@ The entity-linking task consists in linking name-entity mentions in a document c
 - Washington (state), United States
 - Washington, D.C., the capital of the United States
 
-This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied report of the system can be found [here](dsbatista-projecto_RI.pdf)
+This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied description of the prototype system can be found in this [report](dsbatista-projecto_RI.pdf)
 
 
 Data
@@ -27,15 +27,23 @@ Each training query consists of a:
 
 Pre-Processing
 ==============
+- 3 Lucene Indexes
+ - KB/Wikipedia article names
+ - KB/Wikipedia full-text
+ - Source Document Collection
 
 
 Query Expansion
 ===============
-
+- Generate a dictionary of alternative names based on:
+  - Acronyms expansion
+  - Wikipedia redirect pages
+- Dictionary of alternative names is kept in a REDIS instance
 
 
 Candidates Generation
 =====================
+- Generate Candidates by querying
 - Features Extraction
   - Topic Similarities (LDA)
   - String-Name Similarities
