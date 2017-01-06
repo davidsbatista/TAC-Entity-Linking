@@ -21,8 +21,8 @@ Training Data
 =============
 
 Each training query consists of a:
-- name_string: string representing the named-entity, i.e.: GPE, PER, ORG
-- doc_id: the id of a support document where the name-entity occurs
+- `name_string`: string representing the named-entity, of 3 possible types (i.e.: GPE, PER, ORG)
+- `doc_id`: the id of a support document where the name-entity occurs
 
 
 Pre-Processing
