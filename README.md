@@ -1,8 +1,12 @@
 # TAC-Entity-Linking
 
-This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task.
+The entity-linking task consists in linking name-entity mentions in a document collection to the correct entity in a Knowledge Base, dealing with disambiguation. For instance, the string-name `Washingon` in a document might represent:
 
-The task consists in linking name-entity mentions in a document collection to the correct entity in a Knowledge Base, dealing with disambiguation.
+- George Washington (1732–1799), first president of the United States
+- Washington (state), United States
+- Washington, D.C., the capital of the United States
+
+This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied report of the system can be found [here](dsbatista-projecto_RI.pdf)
 
 
 Data
