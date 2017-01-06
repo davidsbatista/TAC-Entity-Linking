@@ -33,6 +33,10 @@ Query Expansion
 Candidates Generation
 =====================
 - Features Extraction
+  - Topic Similarities (LDA)
+  - String-Name Similarities
+  - Textual Similarities
+  - Graph Structure
 
 
 Candidates Ranking
@@ -43,3 +47,11 @@ Candidates Ranking
 
 NIL Detection
 =============
+- An SVM to distiguinch between a correct candidate and a NIL (i.e., there is no KB representation)
+- Features
+ - Score
+ - Mean Score
+ - Difference to Mean Score
+ - Standard Deviation
+ - Dixion's Q Test for Outliers
+ - Grubb's Test for Outliers
