@@ -27,7 +27,11 @@ Each training query consists of a:
 
 Pre-Processing
 ==============
-- 3 Lucene Indexes
+- Create a dictionary of alternative names based on:
+  - Acronyms expansion
+  - Wikipedia redirect pages
+- The dictionary is kept in a REDIS instance
+- Create 3 Lucene Indexes
  - KB/Wikipedia article names
  - KB/Wikipedia full-text
  - Source Document Collection
@@ -35,16 +39,12 @@ Pre-Processing
 
 Query Expansion
 ===============
-- Generate a dictionary of alternative names based on:
-  - Acronyms expansion
-  - Wikipedia redirect pages
-- Dictionary of alternative names is kept in a REDIS instance
-
+- Get all possible alternative names/senses for a given query string
+- Extract the top-k articles, for each sense/name, from the KB/Wikipedia using the Lucene Index
 
 Candidates Generation
 =====================
-- Generate Candidates by querying
-- Features Extraction
+- Extract features for each candidate instance retrieved from the KB
   - Topic Similarities (LDA)
   - String-Name Similarities
   - Textual Similarities
