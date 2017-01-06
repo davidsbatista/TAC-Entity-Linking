@@ -33,11 +33,11 @@ public class SVMRank {
 		FileWriter fstream = new FileWriter(outputfile);
 		BufferedWriter out = new BufferedWriter(fstream);
 
-		//to avoid: "ERROR: Query ID's in data file have to be in increasing order" from SVMRank
-		//sort queries according to id  in increasing order
+		// to avoid: "ERROR: Query ID's in data file have to be in increasing order" from SVMRank
+		// sort queries according to id  in increasing order
 		Collections.sort(queries, new ELQueryComparator());
 		
-		//find max for each feature to be used in normalization: simply divide by the max value
+		// find max for each feature to be used in normalization: simply divide by the max value
 		double[] max = new double[24];
 		
 		for (int i = 0; i < max.length; i++) {
@@ -54,17 +54,18 @@ public class SVMRank {
 				}
 			}
 		}
-		
+
+		// use SVMRank in a simple way, correct answer ranked 1, all others ranked 0
+		// this reflects in a training procedure with less comparisons
 		
 		for (ELQuery q : queries) {
-			
+
 			out.write("#" + q.query_id + " " + q.gold_answer + "\n");
-			
+
 			for (Candidate c : q.candidates) {
-				
 				double[] vector = c.features.featuresVector();
-				
-				// correct entity (1) or just another candidate (0) 
+
+				// correct entity ranked 1, all candidates ranked 0
 				if (queries_answers.get(q.query_id).answer.equalsIgnoreCase(c.entity.id))
 					out.write("1"+" ");
 				else out.write("0"+" ");

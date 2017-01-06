@@ -56,8 +56,6 @@ public class ELQuery {
 	// list of suggested words from query
 	public List<SuggestWord> suggestedwords;
 
-	
-	
 	// Constructors	
 	public ELQuery() {
 		super();
@@ -78,8 +76,7 @@ public class ELQuery {
 		this.gold_answer = null;
 		this.alternative_names = new HashSet<String>();
 		this.abbreviations = new Vector<Abbreviations>();
-		this.candidates = new HashSet<Candidate>(); 
-		
+		this.candidates = new HashSet<Candidate>();
 		this.persons = new HashSet<String>();
 		this.places = new HashSet<String>();
 		this.organizations = new HashSet<String>();
@@ -308,11 +305,13 @@ public class ELQuery {
 		*/
 	}
 
-	
-	// builds a query to Lucene with:
-	// 	query name string of query: "Cedar Rapids"
-	//	individual tokens part of the query name string: "Cedar" + "Rapids"
-	//  the same thing as above for each alternative name
+
+	/*
+	 builds a query to Lucene with:
+	 	- query name string of query: "Cedar Rapids"
+	 	- individual tokens part of the query name string: "Cedar" + "Rapids"
+	 	- the same thing as above for each alternative name
+	*/
 	public HashMap<String, HashSet<String>> generateQuery() {
 		
 		HashSet<String> queryStrings = new HashSet<String>(); 		
@@ -342,7 +341,6 @@ public class ELQuery {
 					queryTokens.add('"' + tokens[i].trim() + '"');
 				}
 			}
-
 		}
 		
 		query.put("strings", queryStrings);

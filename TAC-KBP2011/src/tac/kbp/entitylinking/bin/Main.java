@@ -27,7 +27,6 @@ import tac.kbp.entitylinking.queries.candidates.Candidate;
 import tac.kbp.entitylinking.queries.candidates.CandidateComparatorInDegree;
 import tac.kbp.entitylinking.queries.candidates.CandidateComparatorOutDegree;
 import tac.kbp.entitylinking.queries.xml.ParseQueriesXMLFile;
-import tac.kbp.entitylinking.ranking.LogisticRegressionLingPipe;
 import tac.kbp.entitylinking.ranking.NILDetector;
 import tac.kbp.entitylinking.ranking.SVMRank;
 import tac.kbp.entitylinking.ranking.SVMRankOutputResults;
@@ -89,7 +88,7 @@ public class Main {
 			else if (line.hasOption("extract")) extract(line);
 			else if (line.hasOption("trainnil")) trainNIL(line);
 			
-			//close indexes
+			// close indexes
 			if (line.hasOption("train")) {
 				Definitions.knowledge_base.close();
 				Definitions.documents.close();
@@ -187,7 +186,7 @@ public class Main {
 		//close REDIS connection
 		Definitions.jedis.disconnect();
 		
-		//TRAINNING
+		// TRAINING
 		Train.generateFeatures(Definitions.queriesTrain);
 		Train.generateFeatures(Definitions.queriesTest);
 		
@@ -198,14 +197,14 @@ public class Main {
 		Runtime runtime = Runtime.getRuntime();
 		String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
 				
-		//Train a model
+		// Train a model
 		System.out.println("Training SVMRank model: ");
 		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 		Process svmRankLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 		svmRankLearn.waitFor();
 		
-		//Apply the trained model to the queries in TrainingQueries in order to get ranking scores 
-		//ranking scores are needed to extract features for training the NIL Detector
+		// Apply the trained model to the queries in TrainingQueries in order to get ranking scores
+		// ranking scores are needed to extract features for training the NIL Detector
 		System.out.println("\nApplying trained model to TrainingQueries to get ranking scores for trainning the NIL Detector");
 		String classify_arguments = "svmrank-train.dat svmrank-trained-model.dat svmrank-predictions_training_set";
 		System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
@@ -318,12 +317,12 @@ public class Main {
 		String queries = line.getOptionValue("queries");
 		SVMRank svmrank = new SVMRank();
 		
-		//generate train features for SVMRank
+		// generate train features for SVMRank
 		System.out.println("Writing extracted features to SVMRank format:");
 		System.out.println("loading features from: " + featuresDir);
 		System.out.println("loading answers from: " + queries);
 		
-		/* Queries answers file */
+		// queries answers file
 		HashMap<String, GoldQuery> answers = Definitions.loadQueriesAnswers(queries);
 		
 		svmrank.svmRankFormat(featuresDir, answers,"svmrank-train.dat");
@@ -454,40 +453,40 @@ public class Main {
 		
 		//use in-link and out-link measures to rank candidates and find out NIL
 		
-		/* Lucene Index */		
+		// Lucene Index
 		Definitions.loadKBIndex();
 		
-		/* SpellChecker Index */
+		// SpellChecker Index
 		Definitions.loadSpellCheckerIndex();
 		
-		/* Document Collection */
+		// Document Collection
 		Definitions.loadDocumentCollecion();
 		
-		/* Dictionary of name-entities based on the Knowledge Base */
+		// Dictionary of name-entities based on the Knowledge Base
 		Definitions.buildDictionary();
 		
-		/* Test queries XML file */
+		// Test queries XML file
 		String queriesTestFile = line.getOptionValue("queriesTest");
 		System.out.println("\nLoading queries from: " + queriesTestFile);
 		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
 		
-		/* Queries answers file */
+		// load queries answers file
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
-		/* set the answer for queries*/
+		// set the answer for queries
 		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
-		/* REDIS connection */
+		// open REDIS connection
 		Definitions.connectionREDIS();
 		
 		Train.process(Definitions.queriesTest, false, true);
 		
-		//close REDIS connection
+		// close REDIS connection
 		Definitions.jedis.disconnect();
 
-		// retrieve candidates and calculate in- and outDegree
+		// retrieve candidates and calculate in- and out-degree
 		int count = 0;
 		
 		for (ELQuery q : Definitions.queriesTest) {
@@ -501,7 +500,7 @@ public class Main {
 			count++;
 		}
 		
-		// sort according to inDegree
+		// sort according to in-degree
 		for (ELQuery q : Definitions.queriesTest) {
 			q.candidatesRanked = new ArrayList<Candidate>(q.candidates);
 			Collections.sort(q.candidatesRanked, new CandidateComparatorInDegree());
@@ -575,7 +574,7 @@ public class Main {
 		out.close();			
 	}
 	
-	static void train(CommandLine line) throws Exception, IOException {
+	static void train(CommandLine line) throws Exception {
 		
 		Definitions.basePath = line.getOptionValue("basePath");		
 		System.out.println("using as base path: " + Definitions.basePath);
@@ -639,25 +638,24 @@ public class Main {
 		System.out.println("\nLoading queries from: " + queriesTestFile);
 		Definitions.queriesTest = ParseQueriesXMLFile.loadQueries(queriesTestFile);
 		
-		/* Queries answers file */
+		// load queries answers
 		Definitions.queriesAnswersTest = Definitions.loadQueriesAnswers(queriesTestFile);
 		
-		/* set the answer for queries*/
+		// set the correct answer for queries
 		for (ELQuery q : Definitions.queriesTest) {
 			q.gold_answer = Definitions.queriesAnswersTest.get(q.query_id).answer;
 		}
 		
-		/* LDA Test Queries */
+		// LDA Test Queries
 		Definitions.determineLDAFile(queriesTestFile);		
 		
 		System.out.println("\n\nProcessing test queries:");
 		Train.process(Definitions.queriesTest, Definitions.topicalSimilarities, true);
 		
-		//close REDIS connection
+		// close REDIS connection
 		Definitions.jedis.disconnect();
-		
-		
-		//TRAINING
+
+		// TRAINING
 		System.out.println("\nGenerating features for training queries:");
 		Train.generateFeatures(Definitions.queriesTrain);
 				
@@ -670,17 +668,16 @@ public class Main {
 		//free memory of Train queries data
 		Definitions.queriesTrain = null;
 		
-		//TEST
+		// TEST
 		System.out.println("\nGenerating features for test queries:");
 		Train.generateFeatures(Definitions.queriesTest);
 		
-		//generate test features for SVMRank
+		// generate test features for SVMRank
 		svmrank.svmRankFormat(Definitions.queriesTest, Definitions.queriesAnswersTest,"svmrank-test.dat");
 		
-		//free memory of Test queries data
+		// free memory of Test queries data
 		Definitions.queriesTest = null;
 
-		
 		// SVMRank
 		if (line.getOptionValue("model").equalsIgnoreCase("svmrank")) {
 			
@@ -691,29 +688,28 @@ public class Main {
 			String learn_arguments = "-c 3 svmrank-train.dat svmrank-trained-model.dat";
 			String classify_arguments = "svmrank-test.dat svmrank-trained-model.dat svmrank-predictions";
 			
-			//Train a model
+			// train a model
 			System.out.println("Training SVMRank model: ");
 			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			
-			//call SVMRank
+			// call SVMRank
 			Process svmLearn = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklLearn+' '+learn_arguments);
 			svmLearn.waitFor();
 			
-			//Test the trained model
+			// test the trained model
 			System.out.println("\nTesting SVMRank model: ");
 			System.out.println(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
 			
-			//call SVMRank
+			// call SVMRank
 			Process svmClassify = runtime.exec(Definitions.SVMRankPath+Definitions.SVMRanklClassify+' '+classify_arguments);
 			svmClassify.waitFor();
 			
-			//calculate accuracy
+			// calculate accuracy
 			String predictionsFilePath = "svmrank-predictions";
-			String goundtruthFilePath = "svmrank-test.dat";
+			String groundTruthFilePath = "svmrank-test.dat";
 			SVMRankOutputResults output = new SVMRankOutputResults();
-			output.results(predictionsFilePath,goundtruthFilePath);
+			output.results(predictionsFilePath,groundTruthFilePath);
  		}
-
 	}
 	
 	static void svmresults(CommandLine line) throws Exception {

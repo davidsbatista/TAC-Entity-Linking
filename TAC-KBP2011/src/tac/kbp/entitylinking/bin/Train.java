@@ -170,17 +170,17 @@ public class Train {
 		PrintStream out = null;
 		
 		if (saveToFile) {
-			//file to where feature vectors are going to be written
+			// file to where feature vectors are going to be written
 			out = new PrintStream( new FileOutputStream(q.query_id+".txt"));
 		}
 		
-		boolean foundCorrecEntity = false;
+		boolean foundCorrectEntity = false;
 		
 		for (Candidate c : q.candidates) {
 			System.out.print(".");
 			c.extractFeatures(q);
 			if (c.features.correct_answer) {
-				foundCorrecEntity = true;
+				foundCorrectEntity = true;
 			}
 			if (saveToFile) {
 				writeFeaturesVectortoFile(out, c);
@@ -188,12 +188,12 @@ public class Train {
 			}
 		}
 		
-		//if answer entity is not part of the retrieved entities and correct answer is not NIL,
-		//we retrieve answer entity from KB and extract features
+		// if the correct answer is not part of the retrieved candidate entities and the correct answer is not NIL,
+		// retrieve the correct answer from KB and extract features
 		
-		if (!foundCorrecEntity && !(q.gold_answer.startsWith("NIL")) ) {
+		if (!foundCorrectEntity && !(q.gold_answer.startsWith("NIL")) ) {
 			QueryParser queryParser = new QueryParser(org.apache.lucene.util.Version.LUCENE_35,"id", new WhitespaceAnalyzer(Version.LUCENE_35));
-			ScoreDoc[] scoreDocs = null;
+			ScoreDoc[] scoreDocs;
 			String queryS = "id:" + q.gold_answer;
 			
 			TopDocs docs = tac.kbp.configuration.Definitions.knowledge_base.search(queryParser.parse(queryS), 1);				
@@ -204,10 +204,10 @@ public class Train {
 				
 				Candidate c = new Candidate(doc,scoreDocs[0].doc);
 				
-				//associate candidate with query
+				// associate candidate with query
 				q.candidates.add(c);
 				
-				//extract features
+				// extract features
 				c.extractFeatures(q);
 				if (saveToFile) {
 					writeFeaturesVectortoFile(out, c);
