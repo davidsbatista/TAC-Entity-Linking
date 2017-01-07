@@ -5,6 +5,7 @@ The entity-linking task consists in linking name-entity mentions in a document c
 - George Washington (1732–1799), first president of the United States
 - Washington (state), United States
 - Washington, D.C., the capital of the United States
+- NIL in case that the `Washington`that the document is refering does not exist in the KB
 
 This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied description of the prototype system can be found in this [report](dsbatista-projecto_RI.pdf)
 
@@ -54,7 +55,7 @@ Candidates Generation
 Candidates Ranking
 ==================
 - Pairwise learning to rank: [SVMRank](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html)
-- Graph Analysis
+- [A Graph-based Method for Entity Linking](http://www.aclweb.org/anthology/I11-1113)
 
 
 NIL Detection
