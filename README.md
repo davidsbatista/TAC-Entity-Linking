@@ -53,7 +53,7 @@ Candidates Generation
 
 Candidates Ranking
 ==================
-- Pairwise learning to rank: SVMRank
+- Pairwise learning to rank: [SVMRank](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html)
 - Graph Analysis
 
 
