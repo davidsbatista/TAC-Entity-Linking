@@ -12,7 +12,7 @@ This repository contains the code for an entity linking prototype, trained and t
 Data
 ====
 - Knowledge Base: [LDC2009E58 TAC 2009 KBP Evaluation Reference Knowledge Base](https://catalog.ldc.upenn.edu/docs/LDC2014T16/README.txt)
-- Support Documents Collection: LDC2010E12: TAC 2010 KBP Source Data V1.1
+- Support Documents Collection: LDC2010E12 TAC 2010 KBP Source Data V1.1
 - Training Data/Queries: [TAC-KBP 2013 data](http://tac.nist.gov/2013/KBP/data.html)
 
 
