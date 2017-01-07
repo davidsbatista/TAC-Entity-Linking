@@ -55,6 +55,8 @@ Candidates Generation
 Candidates Ranking
 ==================
 - Pairwise learning to rank: [SVMRank](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html)
+ - Correct answer is ranked as first
+ - All others candidates are ranked as second
 - [A Graph-based Method for Entity Linking](http://www.aclweb.org/anthology/I11-1113)
 
 
