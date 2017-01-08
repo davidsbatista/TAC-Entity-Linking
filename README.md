@@ -60,9 +60,9 @@ Candidates Ranking
  - All others candidates are ranked as second
 - [A Graph-based Method for Entity Linking](http://www.aclweb.org/anthology/I11-1113) which exploits the graph structure of Wikipedia to perform named entity disambiguation based on two measures
     
-  - Out-Degree: the nodes in the graph consist of: named entities present in the support document that also correspond to entities in the KB and the text articles of the candidates. There is a directed edge from an article node to a name node when the name is mentioned in the article.
+  - Out-Degree: nodes in the graph consist of named entities present in the support document which also correspond to entities in the KB, and the text articles of the candidates. There is a directed edge from an article node to a name node when the name is mentioned in the article.
 
-  - In-Degree the nodes are the name string of the candidates entities and the text articles of named entities, which are also entities in the KB, present in the support document. There is a directed edge that links an article to a candidate name string when the article of a context named entity contains that name.
+  - In-Degree: nodes are the name string of the candidates entities and the text articles of named entities, which are also entities in the KB, present in the support document. There is a directed edge that links an article to a candidate name string when the article of a context named entity contains that name.
 
 
 NIL Detection
