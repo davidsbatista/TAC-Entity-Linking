@@ -7,7 +7,7 @@ The entity-linking task consists in linking name-entity mentions in a document c
 - Washington, D.C., the capital of the United States
 - NIL in case the `Washington` which the document is refering to does not exist in the KB
 
-This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied description of the prototype system can be found in this [report](dsbatista-projecto_RI.pdf)
+This repository contains the code for an entity linking prototype, trained and tested with the datasets from the TAC Entity-Linking sub-task. A detaied description of the prototype system can be found in this [report](dsbatista-projecto_RI.pdf).
 
 
 Data
