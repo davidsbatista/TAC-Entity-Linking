@@ -24,7 +24,7 @@ Training Data
 Each training query consists of a:
 - `name_string`: string representing the named-entity, of 3 possible types (i.e.: GPE, PER, ORG)
 - `doc_id`: the id of a support document where the name-entity occurs
-
+- `kb_id`: the id in the Knowlege Base (Wikipedia) corresponding to the correct entity in Wikipedia
 
 Pre-Processing
 ==============
